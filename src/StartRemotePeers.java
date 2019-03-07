@@ -26,7 +26,7 @@ public class StartRemotePeers {
 		int i1;
 		peerInfoVector = new Vector<RemotePeerInfo>();
 		try {
-			BufferedReader in = new BufferedReader(new FileReader("PeerInfo.cfg"));
+			BufferedReader in = new BufferedReader(new FileReader("config/PeerInfo.cfg"));
 			while((st = in.readLine()) != null) {
 				
 				 String[] tokens = st.split("\\s+");
