@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.List;
+import java.util.logging.*;
+
 
 public class PeerV1 {
     private static final String CONFIG_DIR = "config";
@@ -23,6 +25,7 @@ public class PeerV1 {
 
     private static BitSet bitField;
     private static List<byte[]> fileChunks;
+    private static Logger logger;
 
     public static void main(String[] args){
         // Parse common config file
@@ -31,6 +34,9 @@ public class PeerV1 {
         // Parse peer info file
         peerID = Integer.parseInt(args[0]);
         parsePeerInfoConfigFile(peerID);
+        //Setup the logger
+        setUpLogger(peerID);
+        
 
         // Set the bitField array for the peer
         bitField = new BitSet();
@@ -104,5 +110,27 @@ public class PeerV1 {
             e.printStackTrace();
         }
         return chunks;
+    }
+ /**
+     * Method to setup the logger for the peer class. THis should be called when the Peer class is setup.
+     * @param peerID integer value representing the peer id
+     * 
+     */    
+    private static void setUpLogger(int peerID){
+        try{
+            FileHandler fh;
+            SimpleFormatter formatter = new SimpleFormatter();
+            System.setProperty("java.util.logging.SimpleFormatter.format",
+              "[%1$tF %1$tT] %5$s %n");
+            logger = Logger.getLogger("log_peer_"+peerID);
+            logger.setUseParentHandlers(false);
+            fh = new FileHandler("log_peer_"+peerID+".log");
+            logger.addHandler(fh);
+            fh.setFormatter(formatter);
+
+            } catch (Exception e) {
+            }
+
+           
     }
 }
