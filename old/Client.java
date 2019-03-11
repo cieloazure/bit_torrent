@@ -17,8 +17,8 @@ public class Client {
 	{
 		try{
 			//create a socket to connect to the server
-			requestSocket = new Socket("localhost", 8000);
-			System.out.println("Connected to localhost in port 8000");
+			requestSocket = new Socket("localhost", 1001);
+			System.out.println("Connected to localhost in port 1001");
 			//initialize inputStream and outputStream
 			out = new ObjectOutputStream(requestSocket.getOutputStream());
 			out.flush();
