@@ -3,17 +3,25 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 public class WaitForHandshakeMessageState implements PeerState{
+    private boolean reply;
+
+    public WaitForHandshakeMessageState(boolean reply){
+        this.reply = reply;
+    }
 
     @Override
-    public void handleMessage(Peer.NeighbourInputHandler context, PeerInfo peer, ObjectInputStream inputStream, ObjectOutputStream outputStream) {
+    public void handleMessage(Peer.Handler context, PeerInfo peer, ObjectInputStream inputStream, ObjectOutputStream outputStream) {
         try {
-            System.out.println("Waiting for a handshake message....");
             HandshakeMessage message = (HandshakeMessage)inputStream.readObject();
-            if(message.isValid()){
-                HandshakeMessage reply = new HandshakeMessage(peer.peerID);
-                outputStream.writeObject(reply);
+            System.out.println("Got a handshake message....");
+
+            if(this.reply){
+                if(message.isValid()){
+                    HandshakeMessage reply = new HandshakeMessage(peer.peerID);
+                    outputStream.writeObject(reply);
+                }
             }
-            context.setState(new WaitForBitFieldMessageState());
+            context.setState(new WaitForBitFieldMessageState(true));
         } catch (IOException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {

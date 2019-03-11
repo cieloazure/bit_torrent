@@ -4,7 +4,6 @@ public class PeerInfo {
 
     public  int peerID;
     public  String hostName;
-
     public  int portNumber;
     public  boolean hasFile;
     public  BitSet bitField;

@@ -4,18 +4,25 @@ import java.io.ObjectOutputStream;
 import java.util.BitSet;
 
 public class WaitForBitFieldMessageState implements PeerState {
+    boolean reply;
+
+    public WaitForBitFieldMessageState(boolean reply){
+        this.reply = reply;
+    }
+
     @Override
-    public void handleMessage(Peer.NeighbourInputHandler context, PeerInfo peer, ObjectInputStream inputStream, ObjectOutputStream outputStream) {
+    public void handleMessage(Peer.Handler context, PeerInfo peer, ObjectInputStream inputStream, ObjectOutputStream outputStream) {
         try {
             ActualMessage message = (ActualMessage)inputStream.readObject();
             if(message.getMessageType() == MessageType.BITFIELD){
                 // Get their bitfield
                 BitSet theirPayload = BitSet.valueOf(message.payload);
-                System.out.println("Their payload:"+theirPayload);
+                if(this.reply){
+                    // send our bitfield
+                    ActualMessage reply = new ActualMessage(MessageType.BITFIELD, peer.bitField.toByteArray());
+                    outputStream.writeObject(reply);
+                }
 
-                // send our bitfield
-                ActualMessage reply = new ActualMessage(MessageType.BITFIELD, peer.bitField.toByteArray());
-                outputStream.writeObject(reply);
                 context.setState(new WaitForUnknownMessage());
             }
         } catch (ClassNotFoundException e) {
