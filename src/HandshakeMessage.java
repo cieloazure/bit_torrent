@@ -91,4 +91,9 @@ class HandshakeMessage implements Message, Serializable {
     public boolean isValid(){
         return isValid;
     }
+
+    @Override
+    public Object getReplyObject(PeerInfo p) {
+        return new HandshakeMessage(p.peerID);
+    }
 }

@@ -1,10 +1,13 @@
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-class ActualMessage implements Message{
+class ActualMessage implements Message, Serializable {
+    private static final long serialVersionUID = 42L;
+
     public static final MessageType[] messageValues = MessageType.values();
     public int messageLength;
     public MessageType messageType;
@@ -86,5 +89,13 @@ class ActualMessage implements Message{
     @Override
     public boolean isValid() {
         return isValid;
+    }
+
+    @Override
+    public Object getReplyObject(PeerInfo p) {
+        if(this.messageType == MessageType.BITFIELD){
+            return new ActualMessage(MessageType.BITFIELD, p.bitField.toByteArray());
+        }
+        return null;
     }
 }
