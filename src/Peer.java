@@ -93,6 +93,8 @@ public class Peer {
             int neighbourPortNumber = Integer.parseInt(splitLine[2]);
 
             while(linePeerId != peerID){
+
+                // Make a connection with the peer
                 Socket newConnection = new Socket(neighbourHostName, neighbourPortNumber);
                 ObjectOutputStream out = new ObjectOutputStream(newConnection.getOutputStream());
                 ObjectInputStream inp = new ObjectInputStream(newConnection.getInputStream());
@@ -185,7 +187,7 @@ public class Peer {
         return chunks;
     }
 
-    public static class NeighbourOutputHandler extends Handler implements  Runnable{
+    public static class NeighbourOutputHandler implements  Handler, Runnable{
         public Socket connection;
         public ObjectOutputStream out;
         public ObjectInputStream in;
@@ -254,7 +256,7 @@ public class Peer {
 
     }
 
-    public static class NeighbourInputHandler extends Handler implements Runnable{
+    public static class NeighbourInputHandler implements Handler, Runnable{
         public Socket connection;
         public ObjectOutputStream out;
         public ObjectInputStream in;
@@ -351,6 +353,7 @@ public class Peer {
                     new Thread(inputHandler).start();
                     new Thread(outputHandler).start();
 
+                    /* Listen for handshake message */
                     inputState = new WaitForHandshakeMessageState(true);
                     synchronized (inputHandlerMutex){
                         inputHandlerMutex.notify();

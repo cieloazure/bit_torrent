@@ -24,8 +24,9 @@ public class WaitForBitFieldMessageState implements PeerState {
                     // send our bitfield
                     ActualMessage reply = new ActualMessage(MessageType.BITFIELD, peer.bitField.toByteArray());
                     outputStream.writeObject(reply);
-                    context.setState(1, null);
+                    context.setState(1, new WaitForBitFieldMessageState(false));
                 }else{
+//                    context.setState(0, new ExpectedToSendInterestedMessage());
                     context.setState(0, null);
                 }
 
