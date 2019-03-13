@@ -5,7 +5,7 @@ import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-class ActualMessage implements Message, Serializable {
+public class ActualMessage implements Message, Serializable {
     private static final long serialVersionUID = 42L;
 
     public static final MessageType[] messageValues = MessageType.values();

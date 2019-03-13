@@ -5,7 +5,7 @@ import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-class HandshakeMessage implements Message, Serializable {
+public class HandshakeMessage implements Message, Serializable {
     private static final long serialVersionUID = 42L;
 
     private static final String header = "P2PFILESHARINGPROJ";
