@@ -50,6 +50,15 @@ public class Peer {
         if(!myPeerInfo.hasFile()){
             // Connect to peers in PeerInfo.cfg which appear above the current line
             makeConnections();
+            System.out.println("TCP Connections done, moving to handshakes.....");
+            doHandshakes();
+        }
+    }
+
+    private static void doHandshakes() {
+        System.out.println(peerIndex);
+        for(int peer = 0; peer < peerIndex; peer++){
+            sendMessage(peer, new ExpectedToSendHandshakeMessageState(neighbourConnectionsMap));
         }
     }
 
@@ -85,8 +94,6 @@ public class Peer {
 
                 // Send a handshake message
                 // TODO: synchronize on peerIndex
-                int pieces = (int)Math.ceil(commonConfig.getFileSize()/commonConfig.getPieceSize());
-                sendMessage(peerIndex - 1, new ExpectedToSendHandshakeMessageState(neighbourConnectionsMap));
 
                 // read next line
                 peerInfoFileLine = in.readLine();
@@ -395,6 +402,8 @@ public class Peer {
     }
 
     private static void handleNewConnection(Socket newConnection) throws IOException {
+
+        System.out.println("Handling new connection at peer index: "+ peerIndex);
         /* Get output and input streams for the connection */
         ObjectOutputStream out = new ObjectOutputStream(newConnection.getOutputStream());
         ObjectInputStream in = new ObjectInputStream(newConnection.getInputStream());

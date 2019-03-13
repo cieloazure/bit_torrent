@@ -1,3 +1,4 @@
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -17,6 +18,8 @@ public class WaitForInterestedOrNotInterestedMessageState implements PeerState {
         try {
             System.out.println("NOT IMPLEMENTED! Wait for interested or not interested message state");
             inputStream.readObject();
+        }catch(EOFException e){
+            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {

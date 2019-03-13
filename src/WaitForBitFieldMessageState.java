@@ -1,3 +1,4 @@
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -43,6 +44,8 @@ public class WaitForBitFieldMessageState implements PeerState {
             }
 
         } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }catch(EOFException e){
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
