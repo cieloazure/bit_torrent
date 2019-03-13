@@ -16,7 +16,7 @@ public class WaitForHandshakeMessageState implements PeerState{
     @Override
     public void handleMessage(Peer.Handler context, PeerInfo myPeerInfo, ObjectInputStream inputStream, ObjectOutputStream outputStream) {
         try {
-            System.out.println("Waiting for handshake message....");
+            System.out.println("Waiting for handshake message....with reply:" + this.reply);
             HandshakeMessage message = (HandshakeMessage) inputStream.readObject();
 
             PeerInfo.Builder builder = new PeerInfo.Builder()

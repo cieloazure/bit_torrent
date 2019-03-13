@@ -140,7 +140,7 @@ public class Peer {
                 }else{
                     this.wait = false;
                 }
-            }else{
+            }else if(whichState == 1){
                 input.setState(newState);
                 output.setState(null);
                 if(this.whichHandler != 1){
@@ -151,6 +151,10 @@ public class Peer {
                 }else{
                     this.wait = false;
                 }
+            }else{
+                this.wait = true;
+                input.setState(null);
+                output.setState(null);
             }
         }
 

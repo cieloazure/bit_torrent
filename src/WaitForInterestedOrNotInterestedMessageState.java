@@ -15,7 +15,7 @@ public class WaitForInterestedOrNotInterestedMessageState implements PeerState {
     @Override
     public void handleMessage(Peer.Handler context, PeerInfo peer, ObjectInputStream inputStream, ObjectOutputStream outputStream) {
         try {
-            System.out.println("NOT IMPLEMENTED! Wait for intereted or not interested message state");
+            System.out.println("NOT IMPLEMENTED! Wait for interested or not interested message state");
             inputStream.readObject();
         } catch (IOException e) {
             e.printStackTrace();
