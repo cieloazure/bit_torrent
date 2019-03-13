@@ -1,3 +1,4 @@
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -13,22 +14,35 @@ public class WaitForHandshakeMessageState implements PeerState{
     }
 
     @Override
-    public void handleMessage(Peer.Handler context, PeerInfo peerInfo, ObjectInputStream inputStream, ObjectOutputStream outputStream) {
+    public void handleMessage(Peer.Handler context, PeerInfo myPeerInfo, ObjectInputStream inputStream, ObjectOutputStream outputStream) {
         try {
             System.out.println("Waiting for handshake message....");
-            HandshakeMessage message = (HandshakeMessage)inputStream.readObject();
-            System.out.println("Got a handshake message....");
+            HandshakeMessage message = (HandshakeMessage) inputStream.readObject();
 
-            if(this.reply){
+            PeerInfo.Builder builder = new PeerInfo.Builder()
+                    .withPeerID(message.getPeerID())
+                    .withHostNameAndPortNumber(context.getHostName(), context.getPortNumber())
+                    .withPeerIndex(context.getTheirPeerIndex());
+
+            PeerInfo theirPeerInfo = builder.build();
+            neighbourConnectionsInfo.putIfAbsent(theirPeerInfo.getPeerID(), theirPeerInfo);
+
+            System.out.println("Got a handshake message....And set concurrent hashmap");
+
+            if (this.reply) {
                 System.out.println("Sending a reply message....");
-                if(message.isValid()){
-                    HandshakeMessage reply = new HandshakeMessage(peerInfo.getPeerID());
+                if (message.isValid()) {
+                    HandshakeMessage reply = new HandshakeMessage(myPeerInfo.getPeerID());
                     outputStream.writeObject(reply);
                 }
-                context.setState(1, new WaitForBitFieldMessageState(true));
-            }else{
-                context.setState(0, new ExpectedToSendBitFieldMessageState());
+                System.out.println("Setting state, going to sleep to sync");
+                context.setState(1, new WaitForBitFieldMessageState(true, neighbourConnectionsInfo));
+            } else {
+                context.setState(0, new ExpectedToSendBitFieldMessageState(neighbourConnectionsInfo));
             }
+
+        }catch (EOFException e){
+            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {

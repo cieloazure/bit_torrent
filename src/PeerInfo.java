@@ -110,6 +110,21 @@ public class PeerInfo {
         return bitField;
     }
 
+    public byte[] getBitFieldByteArray(int defaultPieces){
+        byte[] array = this.bitField.toByteArray();
+        System.out.println("bitfield size: "+array.length);
+        if(array.length == 0){
+            int length = (defaultPieces + 7)/8;
+            byte[] newArray = new byte[length];
+            for(int i = 0; i < length; i++){
+                newArray[i] = (int)0;
+            }
+            System.out.println("default bitfield size: " + newArray.length);
+            return newArray;
+        }
+        return array;
+    }
+
     public void setBitField(BitSet bitField) {
         this.bitField = bitField;
     }
@@ -126,4 +141,3 @@ public class PeerInfo {
         System.out.println("PeerInfo object" + this);
     }
 }
-

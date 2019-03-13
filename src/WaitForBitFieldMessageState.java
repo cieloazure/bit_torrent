@@ -2,32 +2,42 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.BitSet;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class WaitForBitFieldMessageState implements PeerState {
     boolean reply;
+    private ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionsInfo;
 
-    public WaitForBitFieldMessageState(boolean reply){
+
+    public WaitForBitFieldMessageState(boolean reply, ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionsInfo){
         this.reply = reply;
+        this.neighbourConnectionsInfo = neighbourConnectionsInfo;
     }
 
     @Override
-    public void handleMessage(Peer.Handler context, PeerInfo peer, ObjectInputStream inputStream, ObjectOutputStream outputStream) {
+    public void handleMessage(Peer.Handler context, PeerInfo myPeerInfo, ObjectInputStream inputStream, ObjectOutputStream outputStream) {
         try {
+            System.out.println("Waiting for bitfield message....");
             ActualMessage message = (ActualMessage)inputStream.readObject();
+
+            System.out.println("Got a bitfield message.....");
+            // TODO: Handle error if the message is not a bitfield
+            // TODO: Proposal: Write a error handler class in case of unexpected message types
             if(message.getMessageType() == MessageType.BITFIELD){
 
                 // Get their bitfield
-                // TODO: check payload and perform operations
+                // TODO: check payload and transition to next state
                 BitSet theirPayload = BitSet.valueOf(message.payload);
 
                 if(this.reply){
+                    System.out.println("Sending a reply");
                     // send our bitfield
-                    ActualMessage reply = new ActualMessage(MessageType.BITFIELD, peer.getBitField().toByteArray());
+                    ActualMessage reply = new ActualMessage(MessageType.BITFIELD, myPeerInfo.getBitField().toByteArray());
                     outputStream.writeObject(reply);
-                    context.setState(1, new WaitForBitFieldMessageState(false));
+                    context.setState(1, new WaitForInterestedOrNotInterestedMessageState(true, neighbourConnectionsInfo));
                 }else{
 //                    context.setState(0, new ExpectedToSendInterestedMessage());
-                    context.setState(0, null);
+                    context.setState(0,new ExpectedToSendInterestedOrNotInterestedMessageState(neighbourConnectionsInfo));
                 }
 
             }
