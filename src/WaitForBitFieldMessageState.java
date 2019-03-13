@@ -11,7 +11,7 @@ public class WaitForBitFieldMessageState implements PeerState {
     }
 
     @Override
-    public void handleMessage(Handler context, PeerInfo peer, ObjectInputStream inputStream, ObjectOutputStream outputStream) {
+    public void handleMessage(Peer.Handler context, PeerInfo peer, ObjectInputStream inputStream, ObjectOutputStream outputStream) {
         try {
             ActualMessage message = (ActualMessage)inputStream.readObject();
             if(message.getMessageType() == MessageType.BITFIELD){
@@ -22,7 +22,7 @@ public class WaitForBitFieldMessageState implements PeerState {
 
                 if(this.reply){
                     // send our bitfield
-                    ActualMessage reply = new ActualMessage(MessageType.BITFIELD, peer.bitField.toByteArray());
+                    ActualMessage reply = new ActualMessage(MessageType.BITFIELD, peer.getBitField().toByteArray());
                     outputStream.writeObject(reply);
                     context.setState(1, new WaitForBitFieldMessageState(false));
                 }else{

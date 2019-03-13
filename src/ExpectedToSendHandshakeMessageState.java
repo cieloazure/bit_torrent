@@ -4,9 +4,9 @@ import java.io.ObjectOutputStream;
 
 public class ExpectedToSendHandshakeMessageState implements PeerState{
     @Override
-    public void handleMessage(Handler context, PeerInfo peer, ObjectInputStream inputStream, ObjectOutputStream outputStream) {
+    public void handleMessage(Peer.Handler context, PeerInfo peer, ObjectInputStream inputStream, ObjectOutputStream outputStream) {
         try{
-            HandshakeMessage message = new HandshakeMessage(peer.peerID);
+            HandshakeMessage message = new HandshakeMessage(peer.getPeerID());
             System.out.println("Sent handshake message....");
             outputStream.writeObject(message);
             context.setState(1, new WaitForHandshakeMessageState(false));

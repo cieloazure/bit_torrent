@@ -1,16 +1,19 @@
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class WaitForHandshakeMessageState implements PeerState{
     private boolean reply;
+    private ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionsInfo;
 
-    public WaitForHandshakeMessageState(boolean reply){
+    public WaitForHandshakeMessageState(boolean reply, ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionsInfo){
         this.reply = reply;
+        this.neighbourConnectionsInfo = neighbourConnectionsInfo;
     }
 
     @Override
-    public void handleMessage(Handler context, PeerInfo peer, ObjectInputStream inputStream, ObjectOutputStream outputStream) {
+    public void handleMessage(Peer.Handler context, PeerInfo peerInfo, ObjectInputStream inputStream, ObjectOutputStream outputStream) {
         try {
             System.out.println("Waiting for handshake message....");
             HandshakeMessage message = (HandshakeMessage)inputStream.readObject();
@@ -19,7 +22,7 @@ public class WaitForHandshakeMessageState implements PeerState{
             if(this.reply){
                 System.out.println("Sending a reply message....");
                 if(message.isValid()){
-                    HandshakeMessage reply = new HandshakeMessage(peer.peerID);
+                    HandshakeMessage reply = new HandshakeMessage(peerInfo.getPeerID());
                     outputStream.writeObject(reply);
                 }
                 context.setState(1, new WaitForBitFieldMessageState(true));

@@ -3,81 +3,63 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.BitSet;
-import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Peer {
-    public static final String CONFIG_DIR = "config";
-    public static final String COMMON_CONFIGURATION_FILE = "Common.cfg";
-    public static final String PEER_INFO_CONFIGURATION_FILE = "PeerInfo.cfg";
+    private static final String CONFIG_DIR = "config";
+    private static final String COMMON_CONFIGURATION_FILE = "Common.cfg";
+    private static final String PEER_INFO_CONFIGURATION_FILE = "PeerInfo.cfg";
 
     /* Configuration variables */
-    public static int numOfPreferredNeighbours;
-    public static int unchokingInterval;
-    public static int optimisticUnchokingInterval;
-    public static String fileName;
-    public static long fileSize;
-    public static long pieceSize;
+    private static CommonConfig commonConfig;
 
     /* Self peer info variables */
-    public static int peerID;
-    public static String hostName;
+    private static PeerInfo myPeerInfo;
 
-    public static int portNumber;
-    public static boolean hasFile;
-    public static BitSet bitField;
-    public static List<byte[]> fileChunks;
+    /* Track connected peers */
+    private static volatile ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionsMap = new ConcurrentHashMap<>();
 
-    public static List<Socket> neighbourConnections;
-    public static HashMap<Integer, PeerInfo> neighbourConnectionsMap;
-
-    public static volatile PeerState inputState = null;
-    public static volatile PeerState outputState = null;
-
-    public static Object inputHandlerMutex = new Object();
-    public static Object outputHandlerMutex = new Object();
+    /* Peer Index, state and mutex */
+    private static Integer peerIndex = 0;
+    private static volatile List<Pair<Object, PeerState>>  inputHandlersAndTheirMutexes = new ArrayList<>();
+    private static volatile List<Pair<Object, PeerState>>  outputHandlersAndTheirMutexes = new ArrayList<>();
 
     public static void main(String[] args){
         // Parse common config file
-        parseCommonConfigFile();
+        CommonConfig.Builder configBuilder = new CommonConfig.Builder();
+        parseCommonConfigFile(configBuilder);
+        commonConfig = configBuilder.build();
+
+        PeerInfo.Builder peerInfoBuilder = new PeerInfo.Builder();
+
+        // Set peer ID
+        // TODO: Check for NAN exception, terminate program in that case
+        int peerID = Integer.parseInt(args[0]);
+        peerInfoBuilder.withPeerID(peerID);
 
         // Parse peer info file
-        peerID = Integer.parseInt(args[0]);
-        parsePeerInfoConfigFile(peerID);
+        parsePeerInfoConfigFile(peerID, commonConfig, peerInfoBuilder);
 
-        // Set the bitField array for the peer
-        bitField = new BitSet();
-        if(hasFile){
-            setBitField();
-            fileChunks = splitFileIntoChunks(fileName, fileSize, pieceSize);
-        }
 
-        PeerInfo peer = new PeerInfo(peerID, hostName, portNumber, hasFile, bitField);
-        startListenerThread(peer);
+        myPeerInfo = peerInfoBuilder.build();
 
-        // Make connections to other peers yourself
-        if(!hasFile){
-            neighbourConnections = new ArrayList<>();
-            makeConnections(peerID, neighbourConnections, peer);
+        startListenerThread(myPeerInfo);
+
+        if(!myPeerInfo.hasFile()){
+            // Connect to peers in PeerInfo.cfg which appear above the current line
+            makeConnections();
         }
     }
 
-    private static void setBitField() {
-        int pieces = (int)Math.ceil(fileSize/pieceSize);
-        for(int i = 0; i < pieces; i++){
-            bitField.set(i);
-        }
-    }
-
-    private static void startListenerThread(PeerInfo peer) {
+    private static void startListenerThread(PeerInfo peerInfo) {
         // Start the listener process to listen for new connections
-        // Connect to peers in PeerInfo.cfg
-        ConnectionListener listener = new ConnectionListener(peer, inputHandlerMutex, outputHandlerMutex);
+        ConnectionListener listener = new ConnectionListener(peerInfo);
         Thread listenerThread = new Thread(listener);
         listenerThread.start();
     }
 
-    public static void makeConnections(int peerID, List<Socket> neighbourConnections, PeerInfo peer){
+    public static void makeConnections(){
         try{
 
             BufferedReader in = new BufferedReader(new FileReader(CONFIG_DIR + "/" + PEER_INFO_CONFIGURATION_FILE));
@@ -92,24 +74,13 @@ public class Peer {
             String neighbourHostName = splitLine[1];
             int neighbourPortNumber = Integer.parseInt(splitLine[2]);
 
-            while(linePeerId != peerID){
+            while(linePeerId != myPeerInfo.getPeerID()){
 
                 // Make a connection with the peer
                 Socket newConnection = new Socket(neighbourHostName, neighbourPortNumber);
-                ObjectOutputStream out = new ObjectOutputStream(newConnection.getOutputStream());
-                ObjectInputStream inp = new ObjectInputStream(newConnection.getInputStream());
 
-                NeighbourInputHandler inputHandler = new NeighbourInputHandler(newConnection, peer, out, inp, inputHandlerMutex, outputHandlerMutex);
-
-                NeighbourOutputHandler outputHandler = new NeighbourOutputHandler(newConnection, peer, out, inp, inputHandlerMutex, outputHandlerMutex);
-
-                new Thread(inputHandler).start();
-                new Thread(outputHandler).start();
-
-                outputState = new ExpectedToSendHandshakeMessageState();
-                synchronized (outputHandlerMutex){
-                    outputHandlerMutex.notify();
-                }
+                // Spawn handlers for the new connection
+                handleNewConnection(newConnection);
 
                 // read next line
                 peerInfoFileLine = in.readLine();
@@ -127,15 +98,175 @@ public class Peer {
         }
     }
 
-    public static void parseCommonConfigFile() {
+    public static class Handler {
+        protected ObjectOutputStream out;
+        protected ObjectInputStream in;
+        protected PeerInfo myPeerInfo;
+        protected int theirPeerIndex;
+
+        public Handler(PeerInfo myPeerInfo, ObjectOutputStream out, ObjectInputStream in, int theirPeerIndex){
+            this.theirPeerIndex = theirPeerIndex;
+            this.out = out;
+            this.in = in;
+            this.myPeerInfo = myPeerInfo;
+        }
+
+        public void setState(int whichState, PeerState newState) {
+            Pair<Object, PeerState> output = outputHandlersAndTheirMutexes.get(this.theirPeerIndex);
+            Object outputHandlerMutex = output.first();
+
+            Pair<Object, PeerState> input = inputHandlersAndTheirMutexes.get(this.theirPeerIndex);
+            Object inputHandlerMutex = input.first();
+
+            if(whichState == 0){
+                output.setState(newState);
+                input.setState(null);
+                synchronized (outputHandlerMutex){
+                    if(output.getState() != null){
+                        outputHandlerMutex.notify();
+                    }
+                }
+            }else{
+                output.setState(null);
+                input.setState(newState);
+                synchronized (inputHandlerMutex){
+                    if(input.getState() != null){
+                        inputHandlerMutex.notify();
+                    }
+                }
+            }
+        }
+
+        public NeighbourOutputHandler getOutputHandler(){
+            return new NeighbourOutputHandler(this.myPeerInfo, this.out, this.in, this.theirPeerIndex);
+        }
+
+        public NeighbourInputHandler getInputHandler(){
+            return new NeighbourInputHandler(this.myPeerInfo, this.out, this.in, this.theirPeerIndex);
+        }
+    }
+
+    public static class NeighbourOutputHandler extends Handler implements  Runnable{
+
+        public NeighbourOutputHandler(PeerInfo myPeerInfo, ObjectOutputStream out, ObjectInputStream in, int theirPeerIndex){
+            super(myPeerInfo, out, in, theirPeerIndex);
+        }
+
+        public void handleMessage(ObjectOutputStream out, ObjectInputStream in){
+            PeerState outputHandlerState = outputHandlersAndTheirMutexes.get(this.theirPeerIndex).second();
+            outputHandlerState.handleMessage(this, this.myPeerInfo, in, out);
+        }
+
+        @Override
+        public void run() {
+            Pair<Object, PeerState> output = outputHandlersAndTheirMutexes.get(this.theirPeerIndex);
+            Object outputHandlerMutex = output.first();
+            PeerState outputHandlerState = output.second();
+
+            try{
+                while(true) {
+                    synchronized (outputHandlerMutex){
+                        System.out.println("Waiting for output handler  mutex");
+                        outputHandlerMutex.wait();
+                    }
+
+                    System.out.println("Output handler mutex released");
+                    if(outputHandlerState != null){
+                        handleMessage(out, in);
+                    }else{
+                        throw new RuntimeException("Output state is null");
+                    }
+                }
+
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    public static class NeighbourInputHandler extends  Handler implements Runnable{
+
+        public NeighbourInputHandler(PeerInfo myPeerInfo, ObjectOutputStream out, ObjectInputStream in, int theirPeerIndex){
+            super(myPeerInfo, out, in, theirPeerIndex);
+        }
+
+        public void handleMessage(ObjectOutputStream out, ObjectInputStream in){
+            PeerState inputHandlerState = inputHandlersAndTheirMutexes.get(this.theirPeerIndex).second();
+            inputHandlerState.handleMessage(this, this.myPeerInfo, in, out);
+        }
+
+        @Override
+        public void run() {
+            Pair<Object, PeerState> input = inputHandlersAndTheirMutexes.get(this.theirPeerIndex);
+            Object inputHandlerMutex = input.first();
+            PeerState inputHandlerState = input.second();
+
+            try{
+
+                while(true){
+                    synchronized (inputHandlerMutex){
+                        System.out.println("Waiting for input handler mutex");
+                        inputHandlerMutex.wait();
+                    }
+                    System.out.println("Input handler mutex released");
+                    if(inputHandlerState != null){
+                        handleMessage(out, in);
+                    }else{
+                        throw new RuntimeException("Input state is null");
+                    }
+                }
+
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static class ConnectionListener implements Runnable{
+        PeerInfo peer;
+
+
+        public ConnectionListener(PeerInfo peer){
+            this.peer = peer;
+        }
+
+        @Override
+        public void run() {
+            try{
+                ServerSocket listener = new ServerSocket(this.peer.getPortNumber());
+                while(true){
+                    System.out.println("Listening for connections....at "+ this.peer.getHostName() + ":" + this.peer.getPortNumber());
+
+                    Socket newConnection = listener.accept();
+
+                    // Spawn handlers for the new connection
+                    handleNewConnection(newConnection);
+
+                    System.out.println("Got a peer connection! Spawning Handlers for a peer");
+                }
+            }catch(IOException e){
+                e.printStackTrace();
+                System.out.println(e.getMessage());
+            }
+        }
+    }
+
+    private static void parseCommonConfigFile(CommonConfig.Builder configBuilder) {
         try {
             BufferedReader in = new BufferedReader(new FileReader(CONFIG_DIR + "/" +COMMON_CONFIGURATION_FILE));
-            numOfPreferredNeighbours = Integer.parseInt(in.readLine().split(" ")[1]);
-            unchokingInterval = Integer.parseInt(in.readLine().split(" ")[1]);
-            optimisticUnchokingInterval = Integer.parseInt(in.readLine().split(" ")[1]);
-            fileName = in.readLine().split(" ")[1].trim();
-            fileSize = Long.parseLong(in.readLine().split(" ")[1]);
-            pieceSize = Long.parseLong(in.readLine().split(" ")[1]);
+            int numOfPreferredNeighbours = Integer.parseInt(in.readLine().split(" ")[1]);
+            int unchokingInterval = Integer.parseInt(in.readLine().split(" ")[1]);
+            int optimisticUnchokingInterval = Integer.parseInt(in.readLine().split(" ")[1]);
+            String fileName = in.readLine().split(" ")[1].trim();
+            long fileSize = Long.parseLong(in.readLine().split(" ")[1]);
+            long pieceSize = Long.parseLong(in.readLine().split(" ")[1]);
+
+            configBuilder.withNumOfPreferredNeighboursAs(numOfPreferredNeighbours)
+                         .withOptimisticUnchokingIntervalAs(optimisticUnchokingInterval)
+                         .withUnchokingIntervalAs(unchokingInterval)
+                         .withFileParametersAs(fileName, fileSize, pieceSize);
+
         } catch (FileNotFoundException e) {
             System.err.println("[ERROR]: Common configuration file not found");
             e.printStackTrace();
@@ -145,19 +276,34 @@ public class Peer {
         }
     }
 
-    public static void parsePeerInfoConfigFile(int peerID) {
+    private static void parsePeerInfoConfigFile(int peerID, CommonConfig commonConfig, PeerInfo.Builder builder) {
         try{
             BufferedReader in = new BufferedReader(new FileReader(CONFIG_DIR + "/" + PEER_INFO_CONFIGURATION_FILE));
             String peerInfoFileLine = in.readLine();
             int linePeerId = Integer.parseInt(peerInfoFileLine.split(" ")[0]);
             while(linePeerId != peerID){
-               peerInfoFileLine = in.readLine();
-               linePeerId = Integer.parseInt(peerInfoFileLine.split(" ")[0]);
+                peerInfoFileLine = in.readLine();
+                linePeerId = Integer.parseInt(peerInfoFileLine.split(" ")[0]);
             }
             String[] splitLine = peerInfoFileLine.split(" ");
-            hostName = splitLine[1];
-            portNumber = Integer.parseInt(splitLine[2]);
-            hasFile = Integer.parseInt(splitLine[3]) == 1;
+
+            String hostName = splitLine[1];
+            int portNumber = Integer.parseInt(splitLine[2]);
+            builder.withHostNameAndPortNumber(hostName, portNumber);
+
+            boolean hasFile = Integer.parseInt(splitLine[3]) == 1;
+            builder.withHasFile(hasFile);
+
+
+            BitSet bitField = new BitSet();
+            if(hasFile){
+                int pieces = (int)Math.ceil(commonConfig.getFileSize()/commonConfig.getPieceSize());
+                for(int i = 0; i < pieces; i++){
+                    bitField.set(i);
+                }
+                List<byte[]> fileChunks = splitFileIntoChunks(commonConfig.getFileName(), commonConfig.getFileSize(), commonConfig.getPieceSize());
+                builder.withBitFieldAndFileChunks(bitField, fileChunks);
+            }
         } catch (FileNotFoundException e) {
             System.err.println("[ERROR]: Peer Info configuration file not found");
             e.printStackTrace();
@@ -167,7 +313,7 @@ public class Peer {
         }
     }
 
-    public static List<byte[]> splitFileIntoChunks(String fileName, long fileSize, long pieceSize){
+    private static List<byte[]> splitFileIntoChunks(String fileName, long fileSize, long pieceSize){
         List<byte[]> chunks = new ArrayList<>();
         try {
             File f = new File(fileName);
@@ -187,184 +333,34 @@ public class Peer {
         return chunks;
     }
 
-    public static class NeighbourOutputHandler implements  Handler, Runnable{
-        public Socket connection;
-        public ObjectOutputStream out;
-        public ObjectInputStream in;
-        public PeerInfo peer;
+    private static void handleNewConnection(Socket newConnection) throws IOException {
+        /* Get output and input streams for the connection */
+        ObjectOutputStream out = new ObjectOutputStream(newConnection.getOutputStream());
+        ObjectInputStream in = new ObjectInputStream(newConnection.getInputStream());
 
-        private Object inputHandlerMutex;
-        private Object outputHandlerMutex;
+        /* Set mutexes and initial states */
+        Pair<Object, PeerState> input = new Pair<>(new Object(), null);
+        inputHandlersAndTheirMutexes.set(peerIndex, input);
 
+        Pair<Object, PeerState> output = new Pair<>(new Object(), null);
+        outputHandlersAndTheirMutexes.set(peerIndex, output);
 
-        public NeighbourOutputHandler(Socket connection, PeerInfo peer, ObjectOutputStream out, ObjectInputStream in, Object inputHandlerMutex, Object outputHandlerMutex){
-            this.connection = connection;
-            this.peer = peer;
-            this.out = out;
-            this.in = in;
+        /* Initialize handler super class */
+        Handler handler = new Handler(myPeerInfo, out, in, peerIndex);
 
-            this.inputHandlerMutex = inputHandlerMutex;
-            this.outputHandlerMutex = outputHandlerMutex;
-        }
+        /* Factory methods */
+        NeighbourInputHandler inputHandler = handler.getInputHandler();
+        NeighbourOutputHandler outputHandler = handler.getOutputHandler();
 
-        public void handleMessage(ObjectOutputStream out, ObjectInputStream in){
-            outputState.handleMessage(this, this.peer, in, out);
-        }
+        new Thread(inputHandler).start();
+        new Thread(outputHandler).start();
 
-        @Override
-        public void setState(int whichState, PeerState newState) {
-            if(whichState == 0){
-                outputState = newState;
-                inputState = null;
-                synchronized (this.outputHandlerMutex){
-                    if(outputState != null){
-                        this.outputHandlerMutex.notify();
-                    }
-                }
-            }else{
-                outputState = null;
-                inputState = newState;
-                synchronized (this.inputHandlerMutex){
-                    if(inputState != null){
-                        this.inputHandlerMutex.notify();
-                    }
-                }
-            }
-        }
-
-        @Override
-        public void run() {
-            try{
-                while(true) {
-                    synchronized (this.outputHandlerMutex){
-                        System.out.println("Waiting for output handler  mutex");
-                        this.outputHandlerMutex.wait();
-                    }
-
-                    System.out.println("Output handler mutex released");
-                    if(outputState != null){
-                        handleMessage(out, in);
-                    }else{
-                        throw new RuntimeException("Output state is null");
-                    }
-                }
-
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
+        peerIndex++;
     }
 
-    public static class NeighbourInputHandler implements Handler, Runnable{
-        public Socket connection;
-        public ObjectOutputStream out;
-        public ObjectInputStream in;
-        public PeerInfo peer;
-
-        private Object inputHandlerMutex;
-        private Object outputHandlerMutex;
-
-        public NeighbourInputHandler(Socket connection, PeerInfo peer, ObjectOutputStream out, ObjectInputStream in, Object inputHandlerMutex, Object outputHandlerMutex){
-            this.connection = connection;
-            this.peer = peer;
-            this.out = out;
-            this.in = in;
-
-            this.inputHandlerMutex = inputHandlerMutex;
-            this.outputHandlerMutex = outputHandlerMutex;
-        }
-
-        public void handleMessage(ObjectOutputStream out, ObjectInputStream in){
-            inputState.handleMessage(this, this.peer, in, out);
-        }
-
-        public void setState(int whichState, PeerState newState){
-            if(whichState == 0){
-                outputState = newState;
-                inputState = null;
-                synchronized (this.outputHandlerMutex){
-                    if(outputState != null){
-                        this.outputHandlerMutex.notify();
-                    }
-                }
-            }else{
-                outputState = null;
-                inputState = newState;
-                synchronized (this.inputHandlerMutex){
-                    if(inputState != null){
-                        this.inputHandlerMutex.notify();
-                    }
-                }
-            }
-        }
-
-        @Override
-        public void run() {
-            try{
-
-                while(true){
-                    synchronized (inputHandlerMutex){
-                        System.out.println("Waiting for input handler mutex");
-                        inputHandlerMutex.wait();
-                    }
-                    System.out.println("Input handler mutex released");
-                    if(inputState != null){
-                        handleMessage(out, in);
-                    }else{
-                        throw new RuntimeException("Input state is null");
-                    }
-                }
-
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+    private void sendMessage(int toPeerId, PeerState whichMessageState){
     }
 
-    public static class ConnectionListener implements Runnable{
-        PeerInfo peer;
-
-
-        Object inputHandlerMutex;
-        Object outputHandlerMutex;
-
-        public ConnectionListener(PeerInfo peer, Object inputHandlerMutex, Object outputHandlerMutex){
-            this.peer = peer;
-            this.inputHandlerMutex = inputHandlerMutex;
-            this.outputHandlerMutex = outputHandlerMutex;
-        }
-
-        @Override
-        public void run() {
-            try{
-                ServerSocket listener = new ServerSocket(this.peer.portNumber);
-                while(true){
-                    System.out.println("Listening for connections....at "+ this.peer.hostName + ":" + this.peer.portNumber);
-
-                    Socket newConnection = listener.accept();
-                    ObjectInputStream in = new ObjectInputStream(newConnection.getInputStream());
-                    ObjectOutputStream out = new ObjectOutputStream(newConnection.getOutputStream());
-
-                    NeighbourInputHandler inputHandler = new NeighbourInputHandler(newConnection, peer, out, in, this.inputHandlerMutex, this.outputHandlerMutex);
-
-                    NeighbourOutputHandler outputHandler = new NeighbourOutputHandler(newConnection, peer, out, in, this.inputHandlerMutex, this.outputHandlerMutex);
-
-                    new Thread(inputHandler).start();
-                    new Thread(outputHandler).start();
-
-                    /* Listen for handshake message */
-                    inputState = new WaitForHandshakeMessageState(true);
-                    synchronized (inputHandlerMutex){
-                        inputHandlerMutex.notify();
-                    }
-
-                    System.out.println("Got a peer connection! Spawning Handlers for a peer");
-                }
-            }catch(IOException e){
-                e.printStackTrace();
-                System.out.println(e.getMessage());
-            }
-        }
+    private void expectMessage(int fromPeerId, PeerState whichExpectMessageState){
     }
 }

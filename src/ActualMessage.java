@@ -94,7 +94,7 @@ class ActualMessage implements Message, Serializable {
     @Override
     public Object getReplyObject(PeerInfo p) {
         if(this.messageType == MessageType.BITFIELD){
-            return new ActualMessage(MessageType.BITFIELD, p.bitField.toByteArray());
+            return new ActualMessage(MessageType.BITFIELD, p.getBitField().toByteArray());
         }
         return null;
     }

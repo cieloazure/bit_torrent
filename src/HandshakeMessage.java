@@ -94,6 +94,6 @@ class HandshakeMessage implements Message, Serializable {
 
     @Override
     public Object getReplyObject(PeerInfo p) {
-        return new HandshakeMessage(p.peerID);
+        return new HandshakeMessage(p.getPeerID());
     }
 }
