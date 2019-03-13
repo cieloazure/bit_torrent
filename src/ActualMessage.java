@@ -1,11 +1,22 @@
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-class ActualMessage implements Message{
-    private static final MessageType[] messageValues = MessageType.values();
-    private int messageLength;
-    private MessageType messageType;
-    private byte[] payload;
+class ActualMessage implements Message, Serializable {
+    private static final long serialVersionUID = 42L;
+
+    public static final MessageType[] messageValues = MessageType.values();
+    public int messageLength;
+    public MessageType messageType;
+    public byte[] payload;
+    public boolean isValid;
+
+    public MessageType getMessageType() {
+        return messageType;
+    }
 
     public ActualMessage(MessageType messageType){
         this.messageType = messageType;
@@ -21,6 +32,20 @@ class ActualMessage implements Message{
     public void setPayload(byte[] payload) {
         this.payload = payload;
         this.messageLength += payload.length;
+    }
+
+    private void writeObject(ObjectOutputStream out)
+            throws IOException {
+        byte[] result = serialize();
+        System.out.println("Actual message, write object:" + result.length);
+        out.write(result);
+    }
+
+    private void readObject(ObjectInputStream in)
+            throws IOException, ClassNotFoundException{
+        byte[] message = in.readAllBytes();
+        System.out.println("Actual message, read object:" + message.length);
+        deserialize(message);
     }
 
     @Override
@@ -43,13 +68,36 @@ class ActualMessage implements Message{
 
     @Override
     public void deserialize(byte[] message) {
-        byte[] messageLengthByteArr = Arrays.copyOfRange(message, 0, 3);
+        byte[] messageLengthByteArr = Arrays.copyOfRange(message, 0, 4);
         ByteBuffer messageLengthBuffer = ByteBuffer.wrap(messageLengthByteArr);
-        this.messageLength = messageLengthBuffer.getInt();
+        this.messageLength = messageLengthBuffer.getInt(); // 2
+        System.out.println(this.messageLength);
+        if(messageLength < 0){
+            this.isValid = false;
+            return;
+        }
+        int messageTypeInt = (int)message[4];
+        if(messageTypeInt < 0 || messageTypeInt > messageValues.length){
+            this.isValid = false;
+            return;
+        }
         this.messageType = messageValues[(int)message[4]];
-        this.payload = new byte[this.messageLength - 2];
+        this.payload = new byte[this.messageLength - 1]; // 1
         for(int i = 5, j = 0; i < message.length; i++, j++){
             this.payload[j] = message[i];
         }
+    }
+
+    @Override
+    public boolean isValid() {
+        return isValid;
+    }
+
+    @Override
+    public Object getReplyObject(PeerInfo p) {
+        if(this.messageType == MessageType.BITFIELD){
+            return new ActualMessage(MessageType.BITFIELD, p.getBitField().toByteArray());
+        }
+        return null;
     }
 }

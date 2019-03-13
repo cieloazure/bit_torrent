@@ -1,8 +1,14 @@
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-class HandshakeMessage implements  Message{
-    private static String header = "P2PFILESHARINGPROJ";
+class HandshakeMessage implements Message, Serializable {
+    private static final long serialVersionUID = 42L;
+
+    private static final String header = "P2PFILESHARINGPROJ";
     private int peerID;
     private boolean isValid;
 
@@ -12,6 +18,19 @@ class HandshakeMessage implements  Message{
 
     public int getPeerID() {
         return peerID;
+    }
+
+    private void writeObject(ObjectOutputStream out)
+            throws IOException {
+        byte[] result = serialize();
+        out.write(result);
+    }
+
+    private void readObject(ObjectInputStream in)
+            throws IOException, ClassNotFoundException{
+        byte[] message = new byte[32];
+        in.read(message, 0, 32);
+        deserialize(message);
     }
 
     @Override
@@ -49,17 +68,32 @@ class HandshakeMessage implements  Message{
         }
         if(!s.toString().equals(header)){
             this.isValid = false;
+            return;
         }
 
         for(int i = header.length(); i < 10; i++){
             if((int)message[i] != 0){
                 this.isValid = false;
+                return;
             }
         }
 
         byte[] idByteArr = Arrays.copyOfRange(message, header.length() + 10, message.length);
         ByteBuffer pid = ByteBuffer.wrap(idByteArr);
         this.peerID = pid.getInt();
-        this.isValid = true;
+        if(this.peerID < 0){
+            this.isValid = false;
+        }else{
+            this.isValid = true;
+        }
+    }
+
+    public boolean isValid(){
+        return isValid;
+    }
+
+    @Override
+    public Object getReplyObject(PeerInfo p) {
+        return new HandshakeMessage(p.getPeerID());
     }
 }
