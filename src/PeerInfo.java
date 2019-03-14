@@ -1,5 +1,7 @@
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class PeerInfo {
 
@@ -10,8 +12,8 @@ public class PeerInfo {
     private  BitSet bitField;
     private  List<byte[]> fileChunks;
     private  Integer peerIndex;
-
-
+    private Logger logger;
+    private ArrayList<Integer> peerAddressToID;
     public static class Builder{
         private  String hostName;
         private  Integer portNumber;
@@ -20,7 +22,8 @@ public class PeerInfo {
         private  BitSet bitField;
         private  List<byte[]> fileChunks;
         private  Integer peerIndex;
-
+        private Logger logger;
+        private ArrayList<Integer> peerAddressToID;
 
         public Builder(){
         }
@@ -57,7 +60,14 @@ public class PeerInfo {
             this.fileChunks = fileChunks;
             return this;
         }
-
+        public Builder withLogger(Logger logger){
+            this.logger = logger;
+            return this;
+        }
+        public Builder withAddressToIDList(ArrayList<Integer> peerAddressToID){
+            this.peerAddressToID = peerAddressToID;
+            return this;
+        }
 
         public PeerInfo build(){
            return new PeerInfo(this);
@@ -71,6 +81,8 @@ public class PeerInfo {
         this.hasFile = b.hasFile;
         this.bitField = b.bitField;
         this.fileChunks = b.fileChunks;
+        this.logger = b.logger;
+        this.peerAddressToID = b.peerAddressToID;
     }
 
     public Integer getPeerID() {
@@ -110,6 +122,10 @@ public class PeerInfo {
         return bitField;
     }
 
+    public Logger getLogger(){return logger;}
+    public ArrayList<Integer> getAddressToIDHash(){
+        return peerAddressToID;
+    }
     public byte[] getBitFieldByteArray(int defaultPieces){
         byte[] array = this.bitField.toByteArray();
         System.out.println("bitfield size: "+array.length);
@@ -140,4 +156,5 @@ public class PeerInfo {
     public void print(){
         System.out.println("PeerInfo object" + this);
     }
+
 }
