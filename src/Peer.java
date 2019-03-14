@@ -3,7 +3,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.BitSet;
-import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.*;
@@ -44,7 +43,7 @@ public class Peer {
         peerInfoBuilder.withLogger(logger);
         // Parse peer info file
         parsePeerInfoConfigFile(peerID, commonConfig, peerInfoBuilder);
-        buildAddressToPeerIDHash(peerInfoBuilder);
+        buildAddressToPeerIDHash(peerID, peerInfoBuilder);
         // Build myPeerInfo object
         myPeerInfo = peerInfoBuilder.build();
         // Start listening for connections on this thread
@@ -91,7 +90,7 @@ public class Peer {
 
             while(linePeerId != myPeerInfo.getPeerID()){
                 System.out.println("adding log entry");
-                myPeerInfo.getLogger().info("Peer [ "+myPeerInfo.getPeerID()+"] makes a connection to Peer[peer_ID "+linePeerId+"]");
+                myPeerInfo.getLogger().info("Peer [peerID "+myPeerInfo.getPeerID()+"] makes a connection to Peer[peer_ID "+linePeerId+"]");
                 // Make a connection with the peer
                 Socket newConnection = new Socket(neighbourHostName, neighbourPortNumber);
                 System.out.println("neighbourPortNumber "+neighbourPortNumber );
@@ -313,16 +312,7 @@ public class Peer {
                     System.out.println("Listening for connections....at "+ this.peer.getHostName() + ":" + this.peer.getPortNumber());
 
                     Socket newConnection = listener.accept();
-                    peer.getLogger().info("port "+newConnection.getPort());
-                    peer.getLogger().info("inet address "+newConnection.getInetAddress());
-                    peer.getLogger().info("Local port "+newConnection.getRemoteSocketAddress());
-                    System.out.println("getLocalAddress I am receiving "+newConnection.getLocalAddress());
-                    System.out.println("getRemoteSocketAddress I am receiving "+newConnection.getRemoteSocketAddress());
-                    System.out.println("getLocalSocketAddress I am receiving "+newConnection.getLocalSocketAddress());
-                    System.out.println("getInetAddress I am receiving "+newConnection.getInetAddress());
-                    System.out.println("getLocalPort I am receiving "+newConnection.getLocalPort());
-                    System.out.println("getReuseAddress I am receiving "+newConnection.getReuseAddress());
-                    peer.getLogger().info("Peer [peer_ID "+peer.getPeerID()+"] is connected from Peer[peer_ID "+myPeerInfo.getAddressToIDHash().get("localhost:"+newConnection.getPort())+"]");
+                    peer.getLogger().info("Peer [peer_ID "+peer.getPeerID()+"] is connected from Peer[peer_ID "+myPeerInfo.getAddressToIDHash().get(peerIndex)+"]");
 
                     // Spawn handlers for the new connection
                     handleNewConnection(newConnection);
@@ -473,34 +463,45 @@ public class Peer {
 
     private static void setUpLogger(int peerID){
         try{
-            FileHandler fh;
+                FileHandler fh;
 
-            System.setProperty("java.util.logging.SimpleFormatter.format",
-              "[%1$tF %1$tT] %5$s %n");
-            SimpleFormatter formatter = new SimpleFormatter();
-            logger = Logger.getLogger("log_peer_"+peerID);
-            logger.setUseParentHandlers(false);
-            fh = new FileHandler("log_peer_"+peerID+".log");
-            logger.addHandler(fh);
-            fh.setFormatter(formatter);
-            System.out.println("Setup log");
-            } catch (Exception e) {
+                System.setProperty("java.util.logging.SimpleFormatter.format",
+                  "[%1$tF %1$tT] %5$s %n");
+                SimpleFormatter formatter = new SimpleFormatter();
+                logger = Logger.getLogger("log_peer_"+peerID);
+                logger.setUseParentHandlers(false);
+                fh = new FileHandler("logs/log_peer_"+peerID+".log");
+                logger.addHandler(fh);
+                fh.setFormatter(formatter);
+                System.out.println("Setup log");
+                } catch (Exception e) {
             }
 
 
     }
-    private static void buildAddressToPeerIDHash(PeerInfo.Builder builder){
+    private static void buildAddressToPeerIDHash(int ownerPeerID, PeerInfo.Builder builder){
         try{
             BufferedReader in = new BufferedReader(new FileReader(CONFIG_DIR + "/" + PEER_INFO_CONFIGURATION_FILE));
-            HashMap<String, Integer> addressToID = new HashMap<>();
+            ArrayList<Integer> addressToID = new ArrayList<>();
             String line = in.readLine();
-            while (line != null) {
-                String[] splitLine = line.split(" ");
-                addressToID.put(splitLine[1]+":"+splitLine[2], Integer.parseInt(splitLine[0]));
-                // read next line
+            int linePeerID =  Integer.parseInt(line.split(" ")[0]);
+            while (true) {
+                if(linePeerID!=ownerPeerID){
+                    String[] splitLine = line.split(" ");
+                    addressToID.add(Integer.parseInt(splitLine[0]));
+                    // read next line
+
+                }
                 line = in.readLine();
+                if (line == null){
+                    break;
+                }
+                else{
+                    linePeerID =  Integer.parseInt(line.split(" ")[0]);
+                }
+
             }
-            builder.withAddressToIDHash(addressToID);
+            builder.withAddressToIDList(addressToID);
 
             in.close();
         } catch (FileNotFoundException e) {

@@ -1,5 +1,5 @@
+import java.util.ArrayList;
 import java.util.BitSet;
-import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -13,7 +13,7 @@ public class PeerInfo {
     private  List<byte[]> fileChunks;
     private  Integer peerIndex;
     private Logger logger;
-    private HashMap<String, Integer> peerAddressToID;
+    private ArrayList<Integer> peerAddressToID;
     public static class Builder{
         private  String hostName;
         private  Integer portNumber;
@@ -23,7 +23,7 @@ public class PeerInfo {
         private  List<byte[]> fileChunks;
         private  Integer peerIndex;
         private Logger logger;
-        private HashMap<String, Integer> peerAddressToID;
+        private ArrayList<Integer> peerAddressToID;
 
         public Builder(){
         }
@@ -64,7 +64,7 @@ public class PeerInfo {
             this.logger = logger;
             return this;
         }
-        public Builder withAddressToIDHash(HashMap<String, Integer> peerAddressToID){
+        public Builder withAddressToIDList(ArrayList<Integer> peerAddressToID){
             this.peerAddressToID = peerAddressToID;
             return this;
         }
@@ -123,7 +123,7 @@ public class PeerInfo {
     }
 
     public Logger getLogger(){return logger;}
-    public HashMap<String, Integer> getAddressToIDHash(){
+    public ArrayList<Integer> getAddressToIDHash(){
         return peerAddressToID;
     }
     public byte[] getBitFieldByteArray(int defaultPieces){
