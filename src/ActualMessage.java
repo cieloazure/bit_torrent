@@ -57,16 +57,18 @@ class ActualMessage implements Message, Serializable {
             buffer.add((byte)bytesRead);
 //            outputStream.write(buffer,0,bytesRead);
         }
+
         Byte[] msg = new Byte[buffer.size()];
         byte[] message = new byte[buffer.size()];
+
         //Convert arrayList to array
         buffer.toArray(msg);
+
         //Convert Byte[] to byte[]
         for(int i = 0; i <buffer.size(); i++ ) {
             message[i]= msg[i];
         }
 //        byte[] message = ArrayUtils.toPrimitive(buffer.toArray(msg));
-
 //        byte[] message = outputStream.toByteArray();
 //        byte[] bytes = IOUtils.toByteArray(in);
 //        byte[] message = in.readAllBytes();
