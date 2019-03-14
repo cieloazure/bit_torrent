@@ -4,6 +4,8 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.io.ByteArrayOutputStream;
+//import org.apache.commons.io.IOUtils;
 
 class ActualMessage implements Message, Serializable {
     private static final long serialVersionUID = 42L;
@@ -43,7 +45,17 @@ class ActualMessage implements Message, Serializable {
 
     private void readObject(ObjectInputStream in)
             throws IOException, ClassNotFoundException{
-        byte[] message = in.readAllBytes();
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        int bytesRead;
+        byte[] buffer = new byte[1000];
+        while((bytesRead = in.read(buffer)) != -1) {
+            outputStream.write(buffer,0,bytesRead);
+        }
+        byte[] message = outputStream.toByteArray();
+//        byte[] bytes = IOUtils.toByteArray(in);
+
+//        byte[] message = in.readAllBytes();
         System.out.println("Actual message, read object:" + message.length);
         deserialize(message);
     }
