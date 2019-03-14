@@ -4,6 +4,8 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.ArrayList;
+
 import java.io.ByteArrayOutputStream;
 //import org.apache.commons.io.IOUtils;
 
@@ -48,13 +50,25 @@ class ActualMessage implements Message, Serializable {
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         int bytesRead;
-        byte[] buffer = new byte[1000];
-        while((bytesRead = in.read(buffer)) != -1) {
-            outputStream.write(buffer,0,bytesRead);
-        }
-        byte[] message = outputStream.toByteArray();
-//        byte[] bytes = IOUtils.toByteArray(in);
+        ArrayList<Byte> buffer = new ArrayList<Byte>();
+//        byte[] buffer = new byte[1000];
 
+        while((bytesRead = in.read()) != -1) {
+            buffer.add((byte)bytesRead);
+//            outputStream.write(buffer,0,bytesRead);
+        }
+        Byte[] msg = new Byte[buffer.size()];
+        byte[] message = new byte[buffer.size()];
+        //Convert arrayList to array
+        buffer.toArray(msg);
+        //Convert Byte[] to byte[]
+        for(int i = 0; i <buffer.size(); i++ ) {
+            message[i]= msg[i];
+        }
+//        byte[] message = ArrayUtils.toPrimitive(buffer.toArray(msg));
+
+//        byte[] message = outputStream.toByteArray();
+//        byte[] bytes = IOUtils.toByteArray(in);
 //        byte[] message = in.readAllBytes();
         System.out.println("Actual message, read object:" + message.length);
         deserialize(message);
