@@ -4,7 +4,10 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -221,12 +224,12 @@ public class Peer {
 
         // Set initial states
         AtomicReference<PeerState> inputStateRef = new AtomicReference<>(null);
-        AtomicReference<PeerState> outputStateRef = new AtomicReference<>(null);
+        BlockingQueue<PeerState> outputStateQueue = new LinkedBlockingDeque<>();
 
         // Get output and input streams of the socket
         PeerInfo.Builder hisPeerInfoBuilder = new PeerInfo.Builder();
         hisPeerInfoBuilder.withInputHandlerVars(inputMutex, inputStateRef);
-        hisPeerInfoBuilder.withOutputHandlerVars(outputMutex, outputStateRef);
+        hisPeerInfoBuilder.withOutputHandlerVars(outputMutex, outputStateQueue);
         try{
             // Output stream needs to be created before input stream
             // Output stream needs to flushed to write the headers over the wire
@@ -236,7 +239,7 @@ public class Peer {
             hisPeerInfoBuilder.withSocketAndItsStreams(connection, inputStream, outputStream);
 
             // Initialize handlers
-            Handler handler = new Handler(connection, myPeerInfo, inputStateRef,  outputStateRef,  inputStream, outputStream, inputMutex, outputMutex);
+            Handler handler = new Handler(connection, myPeerInfo, inputStateRef,  outputStateQueue,  inputStream, outputStream, inputMutex, outputMutex);
 
             NeighbourInputHandler inputHandler = handler.getInputHandler();
             NeighbourOutputHandler outputHandler = handler.getOutputHandler();
@@ -246,16 +249,10 @@ public class Peer {
             new Thread(inputHandler).start();
             new Thread(outputHandler).start();
 
-            try{
-                System.out.println("Sleeping for 3 secs...");
-                Thread.sleep(3000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
 
             if(sendHandshake){
                 synchronized (outputMutex){
-                    outputStateRef.set(new ExpectedToSendHandshakeMessageState(neighbourConnectionsMap, hisPeerInfoBuilder));
+                    outputStateQueue.offer(new ExpectedToSendHandshakeMessageState(neighbourConnectionsMap, hisPeerInfoBuilder));
                     outputMutex.notifyAll();
                 }
             }else{

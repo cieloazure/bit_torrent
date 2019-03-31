@@ -3,6 +3,7 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.BitSet;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -16,7 +17,7 @@ public class PeerInfo {
     private  BitSet bitField;
     private  List<byte[]> fileChunks;
     private AtomicReference<PeerState> inputStateRef;
-    private AtomicReference<PeerState> outputStateRef;
+    private BlockingQueue<PeerState> outputStateQueue;
     private Socket connection;
     private ObjectInputStream inputStream;
     private ObjectOutputStream outputStream;
@@ -33,7 +34,7 @@ public class PeerInfo {
         private  BitSet bitField;
         private  List<byte[]> fileChunks;
         private AtomicReference<PeerState> inputStateRef;
-        private AtomicReference<PeerState> outputStateRef;
+        private BlockingQueue<PeerState> outputStateQueue;
         private Socket connection;
         private ObjectInputStream inputStream;
         private ObjectOutputStream outputStream;
@@ -57,9 +58,9 @@ public class PeerInfo {
             return this;
         }
 
-        public Builder withOutputHandlerVars(Object outputMutex, AtomicReference<PeerState> outputStateRef){
-            this.outputStateRef = outputStateRef;
+        public Builder withOutputHandlerVars(Object outputMutex, BlockingQueue<PeerState> outputStateQueue){
             this.outputMutex = outputMutex;
+            this.outputStateQueue = outputStateQueue;
             return this;
         }
 

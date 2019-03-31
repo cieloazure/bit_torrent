@@ -1,9 +1,8 @@
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
 
 class Handler{
     protected Socket connection;
@@ -11,16 +10,16 @@ class Handler{
     protected ObjectOutputStream outputStream;
     protected PeerInfo myPeerInfo;
     protected AtomicReference<PeerState> inputStateRef;
-    protected AtomicReference<PeerState> outputStateRef;
+    protected BlockingQueue<PeerState> outputStateQueue;
     protected Object inputMutex;
     protected Object outputMutex;
     protected int whichHandler;
 
-    public Handler(Socket connection, PeerInfo myPeerInfo, AtomicReference<PeerState> inputStateRef, AtomicReference<PeerState> outputStateRef, ObjectInputStream inputStream, ObjectOutputStream outputStream, Object inputMutex, Object outputMutex){
+    public Handler(Socket connection, PeerInfo myPeerInfo, AtomicReference<PeerState> inputStateRef, BlockingQueue<PeerState> outputMessageQueue, ObjectInputStream inputStream, ObjectOutputStream outputStream, Object inputMutex, Object outputMutex){
         this.connection = connection;
         this.myPeerInfo = myPeerInfo;
         this.inputStateRef = inputStateRef;
-        this.outputStateRef = outputStateRef;
+        this.outputStateQueue = outputMessageQueue;
         this.inputStream = inputStream;
         this.outputStream = outputStream;
         this.inputMutex = inputMutex;
@@ -29,15 +28,13 @@ class Handler{
 
     public void setState(PeerState whichState, boolean isForInputState){
         if(isForInputState){
-            inputStateRef.set(whichState);
-            outputStateRef.set(null);
             synchronized (inputMutex){
+                inputStateRef.set(whichState);
                 inputMutex.notifyAll();
             }
         }else{
-            outputStateRef.set(whichState);
-            inputStateRef.set(null);
             synchronized (outputMutex){
+                outputStateQueue.offer(whichState);
                 outputMutex.notifyAll();
             }
         }
@@ -56,13 +53,13 @@ class Handler{
     }
 
     public NeighbourInputHandler getInputHandler(){
-        NeighbourInputHandler nih = new NeighbourInputHandler(this.connection, this.myPeerInfo, this.inputStateRef, this.outputStateRef, this.inputStream, this.outputStream, this.inputMutex, this.outputMutex);
+        NeighbourInputHandler nih = new NeighbourInputHandler(this.connection, this.myPeerInfo, this.inputStateRef, this.outputStateQueue, this.inputStream, this.outputStream, this.inputMutex, this.outputMutex);
         nih.setWhichHandler(1);
         return nih;
     }
 
     public NeighbourOutputHandler getOutputHandler(){
-        NeighbourOutputHandler noh = new NeighbourOutputHandler(this.connection, this.myPeerInfo, this.inputStateRef, this.outputStateRef, this.inputStream, this.outputStream, this.inputMutex, this.outputMutex);
+        NeighbourOutputHandler noh = new NeighbourOutputHandler(this.connection, this.myPeerInfo, this.inputStateRef, this.outputStateQueue, this.inputStream, this.outputStream, this.inputMutex, this.outputMutex);
         noh.setWhichHandler(0);
         return noh;
     }
