@@ -31,6 +31,8 @@ Peer to peer file sharing system to be implemnted for the computer networks cour
 3. Execution instructions
 
     - Currently expecting a `config/` folder with `Config.cfg` `PeerInfo.cfg` files in the root path of tha class files
+    - Currently expecting a `logs/` folder in the root path of the class files. This is were the Peer specific logs 
+      will be generated
     - Also expecting a file `alice.txt` in the root path of the class files
     - After setting up necessary config files and alice.txt we can execute our program using
         `java Peer <Peer ID>`

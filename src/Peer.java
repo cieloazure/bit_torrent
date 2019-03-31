@@ -4,14 +4,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.*;
 
 public class Peer {
     private static final String CONFIG_DIR = "config";
@@ -23,6 +16,8 @@ public class Peer {
 
     /* Self peer info variables */
     private static PeerInfo myPeerInfo;
+
+    private static Logger logger;
 
     public static void main(String[] args){
         // Parse common config file
@@ -36,10 +31,12 @@ public class Peer {
         // TODO: Check for NAN exception, terminate program in that case
         int peerID = Integer.parseInt(args[0]);
         peerInfoBuilder.withPeerID(peerID);
-
+        //Setting up the logger
+        setUpLogger(peerID);
+        peerInfoBuilder.withLogger(logger);
         // Parse peer info file
         parsePeerInfoConfigFile(peerID, commonConfig, peerInfoBuilder);
-
+        buildAddressToPeerIDHash(peerID, peerInfoBuilder);
         // Build myPeerInfo object
         myPeerInfo = peerInfoBuilder.build();
 
@@ -69,10 +66,10 @@ public class Peer {
             int neighbourPortNumber = Integer.parseInt(splitLine[2]);
 
             while(linePeerId != myPeerInfo.getPeerID()){
-
+                System.out.println("adding log entry");
+                myPeerInfo.getLogger().info("Peer [peerID "+myPeerInfo.getPeerID()+"] makes a connection to Peer[peer_ID "+linePeerId+"]");
                 // Make a connection with the peer
                 Socket newConnection = new Socket(neighbourHostName, neighbourPortNumber);
-
                 System.out.println("[PEER:"+ myPeerInfo.getPeerID() +"]Connecting to a peer "+ linePeerId + "....");
                 // Spawn handlers for the new connection
                 connection.handleNewConnection(newConnection, true);
@@ -156,7 +153,7 @@ public class Peer {
         }
     }
 
-    private static List<byte[]> splitFileIntoChunks(String fileName, long fileSize, long pieceSize){
+    private static List<byte[]> splitFileIntoChunks(String fileName,long fileSize, long pieceSize){
         List<byte[]> chunks = new ArrayList<>();
         try {
             File f = new File(fileName);
@@ -176,4 +173,53 @@ public class Peer {
         return chunks;
     }
 
+    private static void setUpLogger(int peerID){
+        try{
+                FileHandler fh;
+                System.setProperty("java.util.logging.SimpleFormatter.format",
+                  "[%1$tF %1$tT] %5$s %n");
+                SimpleFormatter formatter = new SimpleFormatter();
+                logger = Logger.getLogger("log_peer_"+peerID);
+                logger.setUseParentHandlers(false);
+                fh = new FileHandler("logs/log_peer_"+peerID+".log");
+                logger.addHandler(fh);
+                fh.setFormatter(formatter);
+                System.out.println("Setup log");
+                } catch (Exception e) {
+            }
+    }
+
+    private static void buildAddressToPeerIDHash(int ownerPeerID, PeerInfo.Builder builder){
+        try{
+            BufferedReader in = new BufferedReader(new FileReader(CONFIG_DIR + "/" + PEER_INFO_CONFIGURATION_FILE));
+            ArrayList<Integer> addressToID = new ArrayList<>();
+            String line = in.readLine();
+            int linePeerID =  Integer.parseInt(line.split(" ")[0]);
+            while (true) {
+                if(linePeerID!=ownerPeerID){
+                    String[] splitLine = line.split(" ");
+                    addressToID.add(Integer.parseInt(splitLine[0]));
+                    // read next line
+
+                }
+                line = in.readLine();
+                if (line == null){
+                    break;
+                }
+                else{
+                    linePeerID =  Integer.parseInt(line.split(" ")[0]);
+                }
+
+            }
+            builder.withAddressToIDList(addressToID);
+
+            in.close();
+        } catch (FileNotFoundException e) {
+            System.err.println("[ERROR]: Peer Info configuration file not found");
+            e.printStackTrace();
+        } catch (IOException e) {
+            System.err.println("[ERROR]: Error parsing Peer Info configuration file");
+            e.printStackTrace();
+        }
+    }
 }

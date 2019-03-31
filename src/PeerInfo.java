@@ -1,12 +1,12 @@
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
+import java.util.logging.Logger;
 
 public class PeerInfo {
 
@@ -24,8 +24,8 @@ public class PeerInfo {
     private Object inputMutex;
     private Object outputMutex;
     private Double downloadingSpeed;
-
-
+    private Logger logger;
+    private ArrayList<Integer> peerAddressToID;
 
     public static class Builder{
         private  String hostName;
@@ -41,8 +41,8 @@ public class PeerInfo {
         private ObjectOutputStream outputStream;
         private Object inputMutex;
         private Object outputMutex;
-
-
+        private Logger logger;
+        private ArrayList<Integer> peerAddressToID;
 
         public Builder(){
         }
@@ -93,7 +93,14 @@ public class PeerInfo {
             this.fileChunks = fileChunks;
             return this;
         }
-
+        public Builder withLogger(Logger logger){
+            this.logger = logger;
+            return this;
+        }
+        public Builder withAddressToIDList(ArrayList<Integer> peerAddressToID){
+            this.peerAddressToID = peerAddressToID;
+            return this;
+        }
 
         public PeerInfo build(){
            return new PeerInfo(this);
@@ -115,6 +122,8 @@ public class PeerInfo {
         this.inputStream = b.inputStream;
         this.outputStream = b.outputStream;
         this.downloadingSpeed = 0.0;
+        this.logger = b.logger;
+        this.peerAddressToID = b.peerAddressToID;
     }
 
     public Integer getPeerID() {
@@ -154,6 +163,10 @@ public class PeerInfo {
         return bitField;
     }
 
+    public Logger getLogger(){return logger;}
+    public ArrayList<Integer> getAddressToIDHash(){
+        return peerAddressToID;
+    }
     public byte[] getBitFieldByteArray(int defaultPieces){
         byte[] array = this.bitField.toByteArray();
         if(array.length == 0){
@@ -182,4 +195,5 @@ public class PeerInfo {
     public Double getDownloadingSpeed() {
         return downloadingSpeed;
     }
+
 }
