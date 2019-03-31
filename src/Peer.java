@@ -49,10 +49,8 @@ public class Peer {
         // Start listening for any new connections
         connection.startListenerThread();
 
-        if(!myPeerInfo.hasFile()){
-            // Connect to peers in PeerInfo.cfg which appear above the current line by parsing the peer info config file again
-            parsePeerInfoConfigToMakeConnections(connection);
-        }
+        // Connect to peers in PeerInfo.cfg which appear above the current line by parsing the peer info config file again
+        parsePeerInfoConfigToMakeConnections(connection);
     }
 
     private static void parsePeerInfoConfigToMakeConnections(PeerConnection connection){

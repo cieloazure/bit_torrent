@@ -2,12 +2,13 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 public class ExpectedToSendBitFieldMessageState implements PeerState{
 
-    private ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionInfo;
+    private ConcurrentSkipListSet<PeerInfo> neighbourConnectionInfo;
 
-    public ExpectedToSendBitFieldMessageState(ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionsInfo){
+    public ExpectedToSendBitFieldMessageState(ConcurrentSkipListSet<PeerInfo> neighbourConnectionsInfo){
         this.neighbourConnectionInfo = neighbourConnectionsInfo;
     }
 

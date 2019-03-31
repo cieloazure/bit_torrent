@@ -3,16 +3,17 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 public class WaitForHandshakeMessageState implements PeerState{
     private boolean reply;
-    private ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionsInfo;
+    private ConcurrentSkipListSet<PeerInfo> neighbourConnectionsInfo;
     private PeerInfo.Builder peerInfoBuilder;
 
-    public WaitForHandshakeMessageState(boolean reply, ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionsInfo, PeerInfo.Builder peerInfoBuilder){
+    public WaitForHandshakeMessageState(boolean reply, ConcurrentSkipListSet<PeerInfo> neighbourConnectionsInfo, PeerInfo.Builder peerInfoBuilder){
         this.reply = reply;
-        this.neighbourConnectionsInfo = neighbourConnectionsInfo;
         this.peerInfoBuilder = peerInfoBuilder;
+        this.neighbourConnectionsInfo = neighbourConnectionsInfo;
     }
 
     @Override
@@ -25,7 +26,7 @@ public class WaitForHandshakeMessageState implements PeerState{
                     .withHostNameAndPortNumber(context.getHostName(), context.getPortNumber());
 
             PeerInfo theirPeerInfo = peerInfoBuilder.build();
-            neighbourConnectionsInfo.putIfAbsent(theirPeerInfo.getPeerID(), theirPeerInfo);
+            neighbourConnectionsInfo.add(theirPeerInfo);
 
             context.setTheirPeerId(message.getPeerID());
 

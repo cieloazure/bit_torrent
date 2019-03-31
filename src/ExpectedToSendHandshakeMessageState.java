@@ -2,12 +2,13 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 public class ExpectedToSendHandshakeMessageState implements PeerState{
-    private ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionInfo;
+    private ConcurrentSkipListSet<PeerInfo> neighbourConnectionInfo;
     private PeerInfo.Builder peerInfoBuilder;
 
-    public ExpectedToSendHandshakeMessageState(ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionsInfo, PeerInfo.Builder peerInfoBuilder){
+    public ExpectedToSendHandshakeMessageState(ConcurrentSkipListSet<PeerInfo> neighbourConnectionsInfo, PeerInfo.Builder peerInfoBuilder){
         this.neighbourConnectionInfo = neighbourConnectionsInfo;
         this.peerInfoBuilder = peerInfoBuilder;
     }

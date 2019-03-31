@@ -3,13 +3,14 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 public class WaitForBitFieldMessageState implements PeerState {
     boolean reply;
-    private ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionsInfo;
+    private ConcurrentSkipListSet<PeerInfo> neighbourConnectionsInfo;
 
 
-    public WaitForBitFieldMessageState(boolean reply, ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionsInfo){
+    public WaitForBitFieldMessageState(boolean reply, ConcurrentSkipListSet<PeerInfo> neighbourConnectionsInfo){
         this.reply = reply;
         this.neighbourConnectionsInfo = neighbourConnectionsInfo;
     }

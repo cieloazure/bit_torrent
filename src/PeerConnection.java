@@ -3,9 +3,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingDeque;
+import java.util.Comparator;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class PeerConnection {
@@ -13,11 +12,20 @@ public class PeerConnection {
     private PeerInfo myPeerInfo;
 
     /* This peer's neighbours */
-    private ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionsMap;
+//    private ConcurrentSkipListSet<PeerInfo> neighbourConnectionsInfo;
+    private ConcurrentSkipListSet<PeerInfo> neighbourConnectionsInfo;
 
     PeerConnection(PeerInfo myPeerInfo){
         this.myPeerInfo = myPeerInfo;
-        this.neighbourConnectionsMap = new ConcurrentHashMap<>();
+        // Set a comparator on download speed so that it will always track top k
+        // Will have to check whether it updates dynamically or we need to remove the element in order to update it
+        Comparator<PeerInfo> comparator = new Comparator<PeerInfo>() {
+            @Override
+            public int compare(PeerInfo o1, PeerInfo o2) {
+                return o1.getDownloadingSpeed().compareTo(o2.getDownloadingSpeed());
+            }
+        };
+        this.neighbourConnectionsInfo = new ConcurrentSkipListSet<>(comparator);
     }
 
     public void startListenerThread() {
@@ -30,12 +38,12 @@ public class PeerConnection {
     private class ConnectionListener implements Runnable{
         PeerConnection peerConnection;
         PeerInfo peer;
-        ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionMap;
+        ConcurrentSkipListSet<PeerInfo> neighbourConnectionMap;
 
         public ConnectionListener(PeerConnection peerConnection){
             this.peerConnection = peerConnection;
             this.peer = this.peerConnection.getMyPeerInfo();
-            this.neighbourConnectionMap = this.peerConnection.getNeighbourConnectionsMap();
+            this.neighbourConnectionMap = this.peerConnection.getNeighbourConnectionsInfo();
         }
 
         @Override
@@ -96,12 +104,12 @@ public class PeerConnection {
 
             if(sendHandshake){
                 synchronized (outputMutex){
-                    outputStateQueue.offer(new ExpectedToSendHandshakeMessageState(neighbourConnectionsMap, hisPeerInfoBuilder));
+                    outputStateQueue.offer(new ExpectedToSendHandshakeMessageState(neighbourConnectionsInfo, hisPeerInfoBuilder));
                     outputMutex.notifyAll();
                 }
             }else{
                 synchronized (inputMutex){
-                    inputStateRef.set(new WaitForHandshakeMessageState(true, neighbourConnectionsMap, hisPeerInfoBuilder));
+                    inputStateRef.set(new WaitForHandshakeMessageState(true, neighbourConnectionsInfo, hisPeerInfoBuilder));
                     inputMutex.notifyAll();
                 }
             }
@@ -115,8 +123,8 @@ public class PeerConnection {
         return myPeerInfo;
     }
 
-    public ConcurrentHashMap<Integer, PeerInfo> getNeighbourConnectionsMap() {
-        return neighbourConnectionsMap;
+    public ConcurrentSkipListSet<PeerInfo> getNeighbourConnectionsInfo() {
+        return neighbourConnectionsInfo;
     }
 
 

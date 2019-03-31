@@ -23,6 +23,7 @@ public class PeerInfo {
     private ObjectOutputStream outputStream;
     private Object inputMutex;
     private Object outputMutex;
+    private Double downloadingSpeed;
 
 
 
@@ -106,6 +107,14 @@ public class PeerInfo {
         this.hasFile = b.hasFile;
         this.bitField = b.bitField;
         this.fileChunks = b.fileChunks;
+        this.inputMutex = b.inputMutex;
+        this.inputStateRef = b.inputStateRef;
+        this.outputMutex = b.outputMutex;
+        this.outputStateQueue = b.outputStateQueue;
+        this.connection = b.connection;
+        this.inputStream = b.inputStream;
+        this.outputStream = b.outputStream;
+        this.downloadingSpeed = 0.0;
     }
 
     public Integer getPeerID() {
@@ -170,7 +179,7 @@ public class PeerInfo {
         this.fileChunks = fileChunks;
     }
 
-    public void print(){
-        System.out.println("PeerInfo object" + this);
+    public Double getDownloadingSpeed() {
+        return downloadingSpeed;
     }
 }
