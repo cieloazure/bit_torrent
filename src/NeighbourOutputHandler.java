@@ -13,7 +13,6 @@ class NeighbourOutputHandler extends Handler implements Runnable{
 
     @Override
     public void run(){
-
         while(true){
             try{
                 synchronized (this.outputMutex){

@@ -14,6 +14,7 @@ class Handler{
     protected Object inputMutex;
     protected Object outputMutex;
     protected int whichHandler;
+    protected volatile int theirPeerId;
 
     public Handler(Socket connection, PeerInfo myPeerInfo, AtomicReference<PeerState> inputStateRef, BlockingQueue<PeerState> outputMessageQueue, ObjectInputStream inputStream, ObjectOutputStream outputStream, Object inputMutex, Object outputMutex){
         this.connection = connection;
@@ -35,6 +36,7 @@ class Handler{
         }else{
             synchronized (outputMutex){
                 outputStateQueue.offer(whichState);
+                inputStateRef.set(null);
                 outputMutex.notifyAll();
             }
         }
@@ -47,6 +49,10 @@ class Handler{
     public int getPortNumber(){
         return this.connection.getPort();
     }
+
+    public int getTheirPeerId(){ return this.theirPeerId; }
+
+    public void setTheirPeerId(int theirPeerId){ this.theirPeerId = theirPeerId; }
 
     public void setWhichHandler(int whichHandler) {
         this.whichHandler = whichHandler;

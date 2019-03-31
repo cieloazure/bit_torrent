@@ -37,14 +37,12 @@ class ActualMessage implements Message, Serializable {
     private void writeObject(ObjectOutputStream out)
             throws IOException {
         byte[] result = serialize();
-        System.out.println("Actual message, write object:" + result.length);
         out.write(result);
     }
 
     private void readObject(ObjectInputStream in)
             throws IOException, ClassNotFoundException{
         byte[] message = in.readAllBytes();
-        System.out.println("Actual message, read object:" + message.length);
         deserialize(message);
     }
 
@@ -71,7 +69,6 @@ class ActualMessage implements Message, Serializable {
         byte[] messageLengthByteArr = Arrays.copyOfRange(message, 0, 4);
         ByteBuffer messageLengthBuffer = ByteBuffer.wrap(messageLengthByteArr);
         this.messageLength = messageLengthBuffer.getInt(); // 2
-        System.out.println(this.messageLength);
         if(messageLength < 0){
             this.isValid = false;
             return;
