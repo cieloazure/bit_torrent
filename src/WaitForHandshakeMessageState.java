@@ -26,7 +26,6 @@ public class WaitForHandshakeMessageState implements PeerState{
 
             PeerInfo theirPeerInfo = builder.build();
             neighbourConnectionsInfo.putIfAbsent(theirPeerInfo.getPeerID(), theirPeerInfo);
-
             System.out.println("Got a handshake message....And set concurrent hashmap");
 
             if (this.reply) {

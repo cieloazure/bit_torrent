@@ -14,7 +14,7 @@ public class ExpectedToSendHandshakeMessageState implements PeerState{
     public void handleMessage(Peer.Handler context, PeerInfo myPeerInfo, ObjectInputStream inputStream, ObjectOutputStream outputStream) {
         try{
             HandshakeMessage message = new HandshakeMessage(myPeerInfo.getPeerID());
-            System.out.println("Sent handshake message....");
+            System.out.println("Sent handshake message");
             outputStream.writeObject(message);
             context.setState(1, new WaitForHandshakeMessageState(false, neighbourConnectionInfo));
         } catch (IOException e) {
