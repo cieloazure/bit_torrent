@@ -82,9 +82,9 @@ public class Peer {
                 // Make a connection with the peer
                 Socket newConnection = new Socket(neighbourHostName, neighbourPortNumber);
 
-                System.out.println("Connecting to a peer....");
+                System.out.println("[PEER:"+ myPeerInfo.getPeerID() +"]Connecting to a peer "+ linePeerId + "....");
                 // Spawn handlers for the new connection
-                handleNewConnection(newConnection, 1);
+                handleNewConnection(newConnection, true);
 
                 // read next line
                 peerInfoFileLine = in.readLine();
@@ -113,16 +113,15 @@ public class Peer {
         @Override
         public void run() {
             try{
+                System.out.println("[PEER:" + myPeerInfo.getPeerID() + "]Listening for connections....at "+ this.peer.getHostName() + ":" + this.peer.getPortNumber());
                 ServerSocket listener = new ServerSocket(this.peer.getPortNumber());
                 while(true){
-                    System.out.println("Listening for connections....at "+ this.peer.getHostName() + ":" + this.peer.getPortNumber());
-
                     Socket newConnection = listener.accept();
 
-                    System.out.println("Got a peer connection! Spawning Handlers for a peer");
+                    System.out.println("[PEER:"+ myPeerInfo.getPeerID() +"]Got a peer connection! Spawning Handlers for a peer...");
 
                     // Spawn handlers for the new connection
-                    handleNewConnection(newConnection, 0);
+                    handleNewConnection(newConnection, false);
                 }
             }catch(IOException e){
                 e.printStackTrace();
@@ -214,7 +213,7 @@ public class Peer {
         return chunks;
     }
 
-    private static void handleNewConnection(Socket connection,int direction){
+    private static void handleNewConnection(Socket connection, boolean sendHandshake){
         // Get locks and its condition variables
         Lock peerInputLock = new ReentrantLock();
         Condition inputStateIsNotNull = peerInputLock.newCondition();
@@ -243,9 +242,38 @@ public class Peer {
             NeighbourInputHandler inputHandler = handler.getInputHandler();
             NeighbourOutputHandler outputHandler = handler.getOutputHandler();
 
+
             //  Start threads for input and output
-            new Thread(inputHandler).run();
-            new Thread(outputHandler).run();
+            new Thread(inputHandler).start();
+            new Thread(outputHandler).start();
+
+
+            try{
+                System.out.println("Sleeping for 3 secs before activating input or output....");
+                Thread.sleep(3000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            if(sendHandshake){
+                peerOutputLock.lock();
+                try{
+                    outputStateRef.set(new ExpectedToSendHandshakeMessageState(neighbourConnectionsMap, hisPeerInfoBuilder));
+                    System.out.println("Signalling now...");
+                    outputStateIsNotNull.signalAll();
+                }finally {
+                    peerOutputLock.unlock();
+                }
+            }else{
+                peerInputLock.lock();
+                try{
+                    inputStateRef.set(new WaitForHandshakeMessageState(true, neighbourConnectionsMap, hisPeerInfoBuilder));
+                    System.out.println("Signalling now...");
+                    inputStateIsNotNull.signalAll();
+                }finally {
+                    peerInputLock.unlock();
+                }
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }

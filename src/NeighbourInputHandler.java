@@ -14,14 +14,14 @@ class NeighbourInputHandler extends Handler implements Runnable{
 
     @Override
     public void run(){
-        System.out.println("Started thread");
         while(true){
+            peerInputLock.lock();
             try{
-                peerInputLock.lock();
-                System.out.println("Waiting for input mutex!");
+                System.out.println("Waiting on input...");
                 while(inputStateRef.get() == null){
                     inputStateIsNotNull.await();
                 }
+                System.out.println("Waiting done.....");
                 PeerState inputState = inputStateRef.get();
                 inputState.handleMessage(this, this.myPeerInfo, this.inputStream, this.outputStream);
             } catch (InterruptedException e) {

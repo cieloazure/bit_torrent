@@ -33,20 +33,20 @@ class Handler{
 
     public void setState(PeerState whichState, boolean isForInputState){
         if(isForInputState){
-            inputStateRef.set(whichState);
-            outputStateRef.set(null);
+            this.peerInputLock.lock();
             try{
-                this.peerInputLock.lock();
-                inputStateIsNotNull.signalAll();
+                inputStateRef.set(whichState);
+                outputStateRef.set(null);
+                this.inputStateIsNotNull.signalAll();
             }finally {
                 this.peerInputLock.unlock();
             }
         }else{
-            outputStateRef.set(whichState);
-            inputStateRef.set(null);
+            this.peerOutputLock.lock();
             try{
-                this.peerOutputLock.lock();
-                outputStateIsNotNull.signalAll();
+                outputStateRef.set(whichState);
+                inputStateRef.set(null);
+                this.outputStateIsNotNull.signalAll();
             }finally {
                 this.peerOutputLock.unlock();
             }
