@@ -17,9 +17,8 @@ public class Peer {
     /* Self peer info variables */
     private static PeerInfo myPeerInfo;
 
-    private static Logger logger;
-
     public static void main(String[] args){
+        Logger logger = null;
         // Parse common config file
         CommonConfig.Builder configBuilder = new CommonConfig.Builder();
         parseCommonConfigFile(configBuilder);
@@ -32,7 +31,7 @@ public class Peer {
         int peerID = Integer.parseInt(args[0]);
         peerInfoBuilder.withPeerID(peerID);
         //Setting up the logger
-        setUpLogger(peerID);
+        logger = setUpLogger(peerID, logger);
         peerInfoBuilder.withLogger(logger);
         // Parse peer info file
         parsePeerInfoConfigFile(peerID, commonConfig, peerInfoBuilder);
@@ -96,6 +95,7 @@ public class Peer {
             int numOfPreferredNeighbours = Integer.parseInt(in.readLine().split(" ")[1]);
             int unchokingInterval = Integer.parseInt(in.readLine().split(" ")[1]);
             int optimisticUnchokingInterval = Integer.parseInt(in.readLine().split(" ")[1]);
+
             String fileName = in.readLine().split(" ")[1].trim();
             long fileSize = Long.parseLong(in.readLine().split(" ")[1]);
             long pieceSize = Long.parseLong(in.readLine().split(" ")[1]);
@@ -139,6 +139,8 @@ public class Peer {
                 for(int i = 0; i < pieces; i++){
                     bitField.set(i);
                 }
+                System.out.println("Tushar debug");
+                System.out.println(commonConfig.getFileName());
                 List<byte[]> fileChunks = splitFileIntoChunks(commonConfig.getFileName(), commonConfig.getFileSize(), commonConfig.getPieceSize());
                 builder.withBitFieldAndFileChunks(bitField, fileChunks);
             }else{
@@ -173,7 +175,12 @@ public class Peer {
         return chunks;
     }
 
-    private static void setUpLogger(int peerID){
+    /**
+     * Function to setup the peer specific logger
+     * @param peerID
+     * @return
+     */
+    private static Logger setUpLogger(int peerID, Logger logger){
         try{
                 FileHandler fh;
                 System.setProperty("java.util.logging.SimpleFormatter.format",
@@ -185,8 +192,11 @@ public class Peer {
                 logger.addHandler(fh);
                 fh.setFormatter(formatter);
                 System.out.println("Setup log");
-                } catch (Exception e) {
-            }
+
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+        return logger;
     }
 
     private static void buildAddressToPeerIDHash(int ownerPeerID, PeerInfo.Builder builder){

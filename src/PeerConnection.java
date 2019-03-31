@@ -54,6 +54,8 @@ public class PeerConnection {
                 while(true){
                     Socket newConnection = listener.accept();
 
+                    //Todo: Need to find a way to add this log
+                    //peer.getLogger().info("Peer [peer_ID "+peer.getPeerID()+"] is connected from Peer[peer_ID "+myPeerInfo.getAddressToIDHash().get(peerIndex)+"]");
                     System.out.println("[PEER:"+ this.peer.getPeerID() +"]Got a peer connection! Spawning Handlers for a peer...");
 
                     // Spawn handlers for the new connection
