@@ -13,9 +13,20 @@ Peer to peer file sharing system to be implemnted for the computer networks cour
     ```
 2. Setup Instructions
 
+    1. Without IntelliJ
     - The java files are in src/
     - Compile the code using `javac Peer.java`
     - It will generate `*.class` files
+    - `cp -r config/ src/`
+    - `cp -r alice.txt src/`
+    - `cd out/production/bit_torrent/`
+
+
+    2. With IntelliJ
+    - Compile the code using the Intellij IDE
+    - `cp -r config/ out/production/bit_torrent`
+    - `cp -r alice.txt out/production/bit_torrent`
+    - `cd out/production/bit_torrent/`
 
 3. Execution instructions
 

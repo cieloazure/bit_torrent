@@ -3,41 +3,44 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 public class WaitForHandshakeMessageState implements PeerState{
     private boolean reply;
-    private ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionsInfo;
+    private ConcurrentSkipListSet<PeerInfo> neighbourConnectionsInfo;
+    private PeerInfo.Builder peerInfoBuilder;
 
-    public WaitForHandshakeMessageState(boolean reply, ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionsInfo){
+    public WaitForHandshakeMessageState(boolean reply, ConcurrentSkipListSet<PeerInfo> neighbourConnectionsInfo, PeerInfo.Builder peerInfoBuilder){
         this.reply = reply;
+        this.peerInfoBuilder = peerInfoBuilder;
         this.neighbourConnectionsInfo = neighbourConnectionsInfo;
     }
 
     @Override
-    public void handleMessage(Peer.Handler context, PeerInfo myPeerInfo, ObjectInputStream inputStream, ObjectOutputStream outputStream) {
+    public void handleMessage(Handler context, PeerInfo myPeerInfo, ObjectInputStream inputStream, ObjectOutputStream outputStream) {
         try {
-            System.out.println("Waiting for handshake message....with reply:" + this.reply);
+            System.out.println("[PEER:"+myPeerInfo.getPeerID()+"]Waiting for handshake message....with reply:" + this.reply + " from " + context.getHostName() + ":" + context.getPortNumber());
             HandshakeMessage message = (HandshakeMessage) inputStream.readObject();
 
-            PeerInfo.Builder builder = new PeerInfo.Builder()
-                    .withPeerID(message.getPeerID())
-                    .withHostNameAndPortNumber(context.getHostName(), context.getPortNumber())
-                    .withPeerIndex(context.getTheirPeerIndex());
+            peerInfoBuilder.withPeerID(message.getPeerID())
+                    .withHostNameAndPortNumber(context.getHostName(), context.getPortNumber());
 
-            PeerInfo theirPeerInfo = builder.build();
-            neighbourConnectionsInfo.putIfAbsent(theirPeerInfo.getPeerID(), theirPeerInfo);
-            System.out.println("Got a handshake message....And set concurrent hashmap");
+            PeerInfo theirPeerInfo = peerInfoBuilder.build();
+            neighbourConnectionsInfo.add(theirPeerInfo);
+
+            context.setTheirPeerId(message.getPeerID());
+
+            System.out.println("[PEER:"+myPeerInfo.getPeerID()+"]Got a handshake message from "+context.getHostName() + ":" + context.getPortNumber() + " and it has peer id "+ message.getPeerID() + "....");
 
             if (this.reply) {
-                System.out.println("Sending a reply message....");
+                System.out.println("[PEER"+myPeerInfo.getPeerID()+"]Sending a handshake reply message to "+message.getPeerID()+"....");
                 if (message.isValid()) {
                     HandshakeMessage reply = new HandshakeMessage(myPeerInfo.getPeerID());
                     outputStream.writeObject(reply);
                 }
-                System.out.println("Setting state, going to sleep to sync");
-                context.setState(1, new WaitForBitFieldMessageState(true, neighbourConnectionsInfo));
+                context.setState(new WaitForBitFieldMessageState(true, neighbourConnectionsInfo), true);
             } else {
-                context.setState(0, new ExpectedToSendBitFieldMessageState(neighbourConnectionsInfo));
+                context.setState(new ExpectedToSendBitFieldMessageState(neighbourConnectionsInfo), false);
             }
 
         }catch (EOFException e){

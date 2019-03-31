@@ -41,21 +41,16 @@ class ActualMessage implements Message, Serializable {
     private void writeObject(ObjectOutputStream out)
             throws IOException {
         byte[] result = serialize();
-        System.out.println("Actual message, write object:" + result.length);
         out.write(result);
     }
 
     private void readObject(ObjectInputStream in)
             throws IOException, ClassNotFoundException{
-
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         int bytesRead;
-        ArrayList<Byte> buffer = new ArrayList<Byte>();
-//        byte[] buffer = new byte[1000];
+        ArrayList<Byte> buffer = new ArrayList<>();
 
         while((bytesRead = in.read()) != -1) {
             buffer.add((byte)bytesRead);
-//            outputStream.write(buffer,0,bytesRead);
         }
 
         Byte[] msg = new Byte[buffer.size()];
@@ -68,11 +63,6 @@ class ActualMessage implements Message, Serializable {
         for(int i = 0; i <buffer.size(); i++ ) {
             message[i]= msg[i];
         }
-//        byte[] message = ArrayUtils.toPrimitive(buffer.toArray(msg));
-//        byte[] message = outputStream.toByteArray();
-//        byte[] bytes = IOUtils.toByteArray(in);
-//        byte[] message = in.readAllBytes();
-        System.out.println("Actual message, read object:" + message.length);
         deserialize(message);
     }
 
@@ -99,7 +89,6 @@ class ActualMessage implements Message, Serializable {
         byte[] messageLengthByteArr = Arrays.copyOfRange(message, 0, 4);
         ByteBuffer messageLengthBuffer = ByteBuffer.wrap(messageLengthByteArr);
         this.messageLength = messageLengthBuffer.getInt(); // 2
-        System.out.println(this.messageLength);
         if(messageLength < 0){
             this.isValid = false;
             return;

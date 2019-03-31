@@ -1,6 +1,11 @@
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Logger;
 
 public class PeerInfo {
@@ -11,9 +16,17 @@ public class PeerInfo {
     private  Boolean hasFile;
     private  BitSet bitField;
     private  List<byte[]> fileChunks;
-    private  Integer peerIndex;
+    private AtomicReference<PeerState> inputStateRef;
+    private BlockingQueue<PeerState> outputStateQueue;
+    private Socket connection;
+    private ObjectInputStream inputStream;
+    private ObjectOutputStream outputStream;
+    private Object inputMutex;
+    private Object outputMutex;
+    private Double downloadingSpeed;
     private Logger logger;
     private ArrayList<Integer> peerAddressToID;
+
     public static class Builder{
         private  String hostName;
         private  Integer portNumber;
@@ -21,7 +34,13 @@ public class PeerInfo {
         private  Boolean hasFile;
         private  BitSet bitField;
         private  List<byte[]> fileChunks;
-        private  Integer peerIndex;
+        private AtomicReference<PeerState> inputStateRef;
+        private BlockingQueue<PeerState> outputStateQueue;
+        private Socket connection;
+        private ObjectInputStream inputStream;
+        private ObjectOutputStream outputStream;
+        private Object inputMutex;
+        private Object outputMutex;
         private Logger logger;
         private ArrayList<Integer> peerAddressToID;
 
@@ -34,8 +53,22 @@ public class PeerInfo {
         }
 
 
-        public Builder withPeerIndex(Integer peerIndex){
-            this.peerIndex = peerIndex;
+        public Builder withInputHandlerVars(Object inputMutex, AtomicReference<PeerState> inputStateRef){
+            this.inputStateRef = inputStateRef;
+            this.inputMutex = inputMutex;
+            return this;
+        }
+
+        public Builder withOutputHandlerVars(Object outputMutex, BlockingQueue<PeerState> outputStateQueue){
+            this.outputMutex = outputMutex;
+            this.outputStateQueue = outputStateQueue;
+            return this;
+        }
+
+        public Builder withSocketAndItsStreams(Socket connection, ObjectInputStream inputStream, ObjectOutputStream outputStream){
+            this.connection = connection;
+            this.inputStream = inputStream;
+            this.outputStream = outputStream;
             return this;
         }
 
@@ -81,6 +114,14 @@ public class PeerInfo {
         this.hasFile = b.hasFile;
         this.bitField = b.bitField;
         this.fileChunks = b.fileChunks;
+        this.inputMutex = b.inputMutex;
+        this.inputStateRef = b.inputStateRef;
+        this.outputMutex = b.outputMutex;
+        this.outputStateQueue = b.outputStateQueue;
+        this.connection = b.connection;
+        this.inputStream = b.inputStream;
+        this.outputStream = b.outputStream;
+        this.downloadingSpeed = 0.0;
         this.logger = b.logger;
         this.peerAddressToID = b.peerAddressToID;
     }
@@ -128,14 +169,12 @@ public class PeerInfo {
     }
     public byte[] getBitFieldByteArray(int defaultPieces){
         byte[] array = this.bitField.toByteArray();
-        System.out.println("bitfield size: "+array.length);
         if(array.length == 0){
             int length = (defaultPieces + 7)/8;
             byte[] newArray = new byte[length];
             for(int i = 0; i < length; i++){
                 newArray[i] = (int)0;
             }
-            System.out.println("default bitfield size: " + newArray.length);
             return newArray;
         }
         return array;
@@ -153,8 +192,8 @@ public class PeerInfo {
         this.fileChunks = fileChunks;
     }
 
-    public void print(){
-        System.out.println("PeerInfo object" + this);
+    public Double getDownloadingSpeed() {
+        return downloadingSpeed;
     }
 
 }
