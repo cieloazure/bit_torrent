@@ -15,15 +15,13 @@ public class PeerInfo {
     private  Boolean hasFile;
     private  BitSet bitField;
     private  List<byte[]> fileChunks;
-    private Lock inputLock;
-    private Lock outputLock;
     private AtomicReference<PeerState> inputStateRef;
     private AtomicReference<PeerState> outputStateRef;
-    private Condition inputStateIsNotNull;
-    private Condition outputStateIsNotNull;
     private Socket connection;
     private ObjectInputStream inputStream;
     private ObjectOutputStream outputStream;
+    private Object inputMutex;
+    private Object outputMutex;
 
 
 
@@ -34,15 +32,13 @@ public class PeerInfo {
         private  Boolean hasFile;
         private  BitSet bitField;
         private  List<byte[]> fileChunks;
-        private Lock inputLock;
-        private Lock outputLock;
         private AtomicReference<PeerState> inputStateRef;
         private AtomicReference<PeerState> outputStateRef;
-        private Condition inputStateIsNotNull;
-        private Condition outputStateIsNotNull;
         private Socket connection;
         private ObjectInputStream inputStream;
         private ObjectOutputStream outputStream;
+        private Object inputMutex;
+        private Object outputMutex;
 
 
 
@@ -55,17 +51,15 @@ public class PeerInfo {
         }
 
 
-        public Builder withInputHandlerVars(Lock inputLock, AtomicReference<PeerState> inputStateRef, Condition inputStateIsNotNull){
-            this.inputLock = inputLock;
+        public Builder withInputHandlerVars(Object inputMutex, AtomicReference<PeerState> inputStateRef){
             this.inputStateRef = inputStateRef;
-            this.inputStateIsNotNull = inputStateIsNotNull;
+            this.inputMutex = inputMutex;
             return this;
         }
 
-        public Builder withOutputHandlerVars(Lock outputLock, AtomicReference<PeerState> outputStateRef, Condition outputStateIsNotNull){
-            this.outputLock = outputLock;
+        public Builder withOutputHandlerVars(Object outputMutex, AtomicReference<PeerState> outputStateRef){
             this.outputStateRef = outputStateRef;
-            this.outputStateIsNotNull = outputStateIsNotNull;
+            this.outputMutex = outputMutex;
             return this;
         }
 

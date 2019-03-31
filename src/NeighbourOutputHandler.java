@@ -6,26 +6,26 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 
 class NeighbourOutputHandler extends Handler implements Runnable{
-    public NeighbourOutputHandler(Socket connection, Lock peerInputLock, Lock peerOutputLock, PeerInfo myPeerInfo, AtomicReference<PeerState> inputStateRef, Condition inputStateIsNotNull, AtomicReference<PeerState> outputStateRef, Condition outputStateIsNotNull, ObjectInputStream inputStream, ObjectOutputStream outputStream) {
-        super(connection, peerInputLock, peerOutputLock, myPeerInfo, inputStateRef, inputStateIsNotNull, outputStateRef, outputStateIsNotNull, inputStream, outputStream);
+    public NeighbourOutputHandler(Socket connection, PeerInfo myPeerInfo, AtomicReference<PeerState> inputStateRef, AtomicReference<PeerState> outputStateRef, ObjectInputStream inputStream, ObjectOutputStream outputStream, Object inputMutex, Object outputMutex) {
+        super(connection, myPeerInfo, inputStateRef, outputStateRef, inputStream, outputStream, inputMutex, outputMutex);
     }
 
     @Override
     public void run(){
+
         while(true){
-            peerOutputLock.lock();
             try{
-                System.out.println("Waiting on output...");
-                while(outputStateRef.get() == null){
-                    outputStateIsNotNull.await();
+                synchronized (this.outputMutex){
+                    while(this.outputStateRef.get() == null){
+                        System.out.println("Waiting on output");
+                        this.outputMutex.wait();
+                    }
+                    System.out.println("Waiting on output...done!");
+                    PeerState outputState = this.outputStateRef.get();
+                    outputState.handleMessage(this, this.myPeerInfo, this.inputStream, this.outputStream);
                 }
-                System.out.println("Waiting done.....");
-                PeerState outputState = outputStateRef.get();
-                outputState.handleMessage(this, this.myPeerInfo, this.inputStream, this.outputStream);
             } catch (InterruptedException e) {
                 e.printStackTrace();
-            } finally {
-                peerOutputLock.unlock();
             }
         }
     }

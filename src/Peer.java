@@ -214,11 +214,10 @@ public class Peer {
     }
 
     private static void handleNewConnection(Socket connection, boolean sendHandshake){
-        // Get locks and its condition variables
-        Lock peerInputLock = new ReentrantLock();
-        Condition inputStateIsNotNull = peerInputLock.newCondition();
-        Lock peerOutputLock = new ReentrantLock();
-        Condition outputStateIsNotNull = peerOutputLock.newCondition();
+        // Set up objects as condition vars
+        Object inputMutex = new Object();
+        Object outputMutex = new Object();
+
 
         // Set initial states
         AtomicReference<PeerState> inputStateRef = new AtomicReference<>(null);
@@ -226,8 +225,8 @@ public class Peer {
 
         // Get output and input streams of the socket
         PeerInfo.Builder hisPeerInfoBuilder = new PeerInfo.Builder();
-        hisPeerInfoBuilder.withInputHandlerVars(peerInputLock, inputStateRef, inputStateIsNotNull);
-        hisPeerInfoBuilder.withOutputHandlerVars(peerOutputLock, outputStateRef, outputStateIsNotNull);
+        hisPeerInfoBuilder.withInputHandlerVars(inputMutex, inputStateRef);
+        hisPeerInfoBuilder.withOutputHandlerVars(outputMutex, outputStateRef);
         try{
             // Output stream needs to be created before input stream
             // Output stream needs to flushed to write the headers over the wire
@@ -237,7 +236,7 @@ public class Peer {
             hisPeerInfoBuilder.withSocketAndItsStreams(connection, inputStream, outputStream);
 
             // Initialize handlers
-            Handler handler = new Handler(connection, peerInputLock, peerOutputLock, myPeerInfo, inputStateRef, inputStateIsNotNull, outputStateRef, outputStateIsNotNull, inputStream, outputStream);
+            Handler handler = new Handler(connection, myPeerInfo, inputStateRef,  outputStateRef,  inputStream, outputStream, inputMutex, outputMutex);
 
             NeighbourInputHandler inputHandler = handler.getInputHandler();
             NeighbourOutputHandler outputHandler = handler.getOutputHandler();
@@ -247,31 +246,22 @@ public class Peer {
             new Thread(inputHandler).start();
             new Thread(outputHandler).start();
 
-
             try{
-                System.out.println("Sleeping for 3 secs before activating input or output....");
+                System.out.println("Sleeping for 3 secs...");
                 Thread.sleep(3000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
 
             if(sendHandshake){
-                peerOutputLock.lock();
-                try{
+                synchronized (outputMutex){
                     outputStateRef.set(new ExpectedToSendHandshakeMessageState(neighbourConnectionsMap, hisPeerInfoBuilder));
-                    System.out.println("Signalling now...");
-                    outputStateIsNotNull.signalAll();
-                }finally {
-                    peerOutputLock.unlock();
+                    outputMutex.notifyAll();
                 }
             }else{
-                peerInputLock.lock();
-                try{
+                synchronized (inputMutex){
                     inputStateRef.set(new WaitForHandshakeMessageState(true, neighbourConnectionsMap, hisPeerInfoBuilder));
-                    System.out.println("Signalling now...");
-                    inputStateIsNotNull.signalAll();
-                }finally {
-                    peerInputLock.unlock();
+                    inputMutex.notifyAll();
                 }
             }
         } catch (IOException e) {

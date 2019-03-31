@@ -8,26 +8,25 @@ import java.util.concurrent.locks.Lock;
 
 class NeighbourInputHandler extends Handler implements Runnable{
 
-    public NeighbourInputHandler(Socket connection, Lock peerInputLock, Lock peerOutputLock, PeerInfo myPeerInfo, AtomicReference<PeerState> inputStateRef, Condition inputStateIsNotNull, AtomicReference<PeerState> outputStateRef, Condition outputStateIsNotNull, ObjectInputStream inputStream, ObjectOutputStream outputStream) {
-        super(connection, peerInputLock, peerOutputLock, myPeerInfo, inputStateRef, inputStateIsNotNull, outputStateRef, outputStateIsNotNull, inputStream, outputStream);
+    public NeighbourInputHandler(Socket connection, PeerInfo myPeerInfo, AtomicReference<PeerState> inputStateRef, AtomicReference<PeerState> outputStateRef, ObjectInputStream inputStream, ObjectOutputStream outputStream, Object inputMutex, Object outputMutex) {
+        super(connection, myPeerInfo, inputStateRef, outputStateRef, inputStream, outputStream, inputMutex, outputMutex);
     }
 
     @Override
     public void run(){
         while(true){
-            peerInputLock.lock();
             try{
-                System.out.println("Waiting on input...");
-                while(inputStateRef.get() == null){
-                    inputStateIsNotNull.await();
+                synchronized (this.inputMutex){
+                    while(this.inputStateRef.get() == null){
+                        System.out.println("Waiting on input");
+                        this.inputMutex.wait();
+                    }
+                    System.out.println("Waiting on input...done!");
+                    PeerState inputState = inputStateRef.get();
+                    inputState.handleMessage(this, this.myPeerInfo, this.inputStream, this.outputStream);
                 }
-                System.out.println("Waiting done.....");
-                PeerState inputState = inputStateRef.get();
-                inputState.handleMessage(this, this.myPeerInfo, this.inputStream, this.outputStream);
             } catch (InterruptedException e) {
                 e.printStackTrace();
-            } finally {
-                peerInputLock.unlock();
             }
         }
     }

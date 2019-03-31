@@ -9,46 +9,36 @@ class Handler{
     protected Socket connection;
     protected ObjectInputStream inputStream;
     protected ObjectOutputStream outputStream;
-    protected Lock peerInputLock;
-    protected Lock peerOutputLock;
     protected PeerInfo myPeerInfo;
     protected AtomicReference<PeerState> inputStateRef;
-    protected Condition inputStateIsNotNull;
     protected AtomicReference<PeerState> outputStateRef;
-    protected Condition outputStateIsNotNull;
+    protected Object inputMutex;
+    protected Object outputMutex;
     protected int whichHandler;
 
-    public Handler(Socket connection, Lock peerInputLock, Lock peerOutputLock, PeerInfo myPeerInfo, AtomicReference<PeerState> inputStateRef, Condition inputStateIsNotNull, AtomicReference<PeerState> outputStateRef, Condition outputStateIsNotNull, ObjectInputStream inputStream, ObjectOutputStream outputStream){
+    public Handler(Socket connection, PeerInfo myPeerInfo, AtomicReference<PeerState> inputStateRef, AtomicReference<PeerState> outputStateRef, ObjectInputStream inputStream, ObjectOutputStream outputStream, Object inputMutex, Object outputMutex){
         this.connection = connection;
-        this.peerInputLock = peerInputLock;
-        this.peerOutputLock = peerOutputLock;
         this.myPeerInfo = myPeerInfo;
         this.inputStateRef = inputStateRef;
-        this.inputStateIsNotNull = inputStateIsNotNull;
         this.outputStateRef = outputStateRef;
-        this.outputStateIsNotNull = outputStateIsNotNull;
         this.inputStream = inputStream;
         this.outputStream = outputStream;
+        this.inputMutex = inputMutex;
+        this.outputMutex = outputMutex;
     }
 
     public void setState(PeerState whichState, boolean isForInputState){
         if(isForInputState){
-            this.peerInputLock.lock();
-            try{
-                inputStateRef.set(whichState);
-                outputStateRef.set(null);
-                this.inputStateIsNotNull.signalAll();
-            }finally {
-                this.peerInputLock.unlock();
+            inputStateRef.set(whichState);
+            outputStateRef.set(null);
+            synchronized (inputMutex){
+                inputMutex.notifyAll();
             }
         }else{
-            this.peerOutputLock.lock();
-            try{
-                outputStateRef.set(whichState);
-                inputStateRef.set(null);
-                this.outputStateIsNotNull.signalAll();
-            }finally {
-                this.peerOutputLock.unlock();
+            outputStateRef.set(whichState);
+            inputStateRef.set(null);
+            synchronized (outputMutex){
+                outputMutex.notifyAll();
             }
         }
     }
@@ -66,13 +56,13 @@ class Handler{
     }
 
     public NeighbourInputHandler getInputHandler(){
-        NeighbourInputHandler nih = new NeighbourInputHandler(this.connection, this.peerInputLock,this.peerOutputLock, this.myPeerInfo, this.inputStateRef, this.inputStateIsNotNull, this.outputStateRef, this.outputStateIsNotNull, this.inputStream, this.outputStream);
+        NeighbourInputHandler nih = new NeighbourInputHandler(this.connection, this.myPeerInfo, this.inputStateRef, this.outputStateRef, this.inputStream, this.outputStream, this.inputMutex, this.outputMutex);
         nih.setWhichHandler(1);
         return nih;
     }
 
     public NeighbourOutputHandler getOutputHandler(){
-        NeighbourOutputHandler noh = new NeighbourOutputHandler(this.connection, this.peerOutputLock,this.peerOutputLock, this.myPeerInfo, this.inputStateRef, this.inputStateIsNotNull, this.outputStateRef, this.outputStateIsNotNull, this.inputStream, this.outputStream);
+        NeighbourOutputHandler noh = new NeighbourOutputHandler(this.connection, this.myPeerInfo, this.inputStateRef, this.outputStateRef, this.inputStream, this.outputStream, this.inputMutex, this.outputMutex);
         noh.setWhichHandler(0);
         return noh;
     }
