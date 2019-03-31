@@ -5,18 +5,20 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ExpectedToSendHandshakeMessageState implements PeerState{
     private ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionInfo;
+    private PeerInfo.Builder peerInfoBuilder;
 
-    public ExpectedToSendHandshakeMessageState(ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionsInfo){
+    public ExpectedToSendHandshakeMessageState(ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionsInfo, PeerInfo.Builder peerInfoBuilder){
         this.neighbourConnectionInfo = neighbourConnectionsInfo;
+        this.peerInfoBuilder = peerInfoBuilder;
     }
 
     @Override
-    public void handleMessage(Peer.Handler context, PeerInfo myPeerInfo, ObjectInputStream inputStream, ObjectOutputStream outputStream) {
+    public void handleMessage(Handler context, PeerInfo myPeerInfo, ObjectInputStream inputStream, ObjectOutputStream outputStream) {
         try{
             HandshakeMessage message = new HandshakeMessage(myPeerInfo.getPeerID());
             System.out.println("Sent handshake message....");
             outputStream.writeObject(message);
-            context.setState(1, new WaitForHandshakeMessageState(false, neighbourConnectionInfo));
+            context.setState(new WaitForHandshakeMessageState(false, neighbourConnectionInfo, peerInfoBuilder), true);
         } catch (IOException e) {
             e.printStackTrace();
         }

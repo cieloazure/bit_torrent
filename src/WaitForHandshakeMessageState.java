@@ -7,24 +7,24 @@ import java.util.concurrent.ConcurrentHashMap;
 public class WaitForHandshakeMessageState implements PeerState{
     private boolean reply;
     private ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionsInfo;
+    private PeerInfo.Builder peerInfoBuilder;
 
-    public WaitForHandshakeMessageState(boolean reply, ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionsInfo){
+    public WaitForHandshakeMessageState(boolean reply, ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionsInfo, PeerInfo.Builder peerInfoBuilder){
         this.reply = reply;
         this.neighbourConnectionsInfo = neighbourConnectionsInfo;
+        this.peerInfoBuilder = peerInfoBuilder;
     }
 
     @Override
-    public void handleMessage(Peer.Handler context, PeerInfo myPeerInfo, ObjectInputStream inputStream, ObjectOutputStream outputStream) {
+    public void handleMessage(Handler context, PeerInfo myPeerInfo, ObjectInputStream inputStream, ObjectOutputStream outputStream) {
         try {
             System.out.println("Waiting for handshake message....with reply:" + this.reply);
             HandshakeMessage message = (HandshakeMessage) inputStream.readObject();
 
-            PeerInfo.Builder builder = new PeerInfo.Builder()
-                    .withPeerID(message.getPeerID())
-                    .withHostNameAndPortNumber(context.getHostName(), context.getPortNumber())
-                    .withPeerIndex(context.getTheirPeerIndex());
+            peerInfoBuilder.withPeerID(message.getPeerID())
+                    .withHostNameAndPortNumber(context.getHostName(), context.getPortNumber());
 
-            PeerInfo theirPeerInfo = builder.build();
+            PeerInfo theirPeerInfo = peerInfoBuilder.build();
             neighbourConnectionsInfo.putIfAbsent(theirPeerInfo.getPeerID(), theirPeerInfo);
 
             System.out.println("Got a handshake message....And set concurrent hashmap");
@@ -36,9 +36,9 @@ public class WaitForHandshakeMessageState implements PeerState{
                     outputStream.writeObject(reply);
                 }
                 System.out.println("Setting state, going to sleep to sync");
-                context.setState(1, new WaitForBitFieldMessageState(true, neighbourConnectionsInfo));
+//                context.setState(1, new WaitForBitFieldMessageState(true, neighbourConnectionsInfo));
             } else {
-                context.setState(0, new ExpectedToSendBitFieldMessageState(neighbourConnectionsInfo));
+//                context.setState(0, new ExpectedToSendBitFieldMessageState(neighbourConnectionsInfo));
             }
 
         }catch (EOFException e){

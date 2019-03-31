@@ -1,5 +1,11 @@
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
 import java.util.BitSet;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
 
 public class PeerInfo {
 
@@ -9,7 +15,16 @@ public class PeerInfo {
     private  Boolean hasFile;
     private  BitSet bitField;
     private  List<byte[]> fileChunks;
-    private  Integer peerIndex;
+    private Lock inputLock;
+    private Lock outputLock;
+    private AtomicReference<PeerState> inputStateRef;
+    private AtomicReference<PeerState> outputStateRef;
+    private Condition inputStateIsNotNull;
+    private Condition outputStateIsNotNull;
+    private Socket connection;
+    private ObjectInputStream inputStream;
+    private ObjectOutputStream outputStream;
+
 
 
     public static class Builder{
@@ -19,7 +34,16 @@ public class PeerInfo {
         private  Boolean hasFile;
         private  BitSet bitField;
         private  List<byte[]> fileChunks;
-        private  Integer peerIndex;
+        private Lock inputLock;
+        private Lock outputLock;
+        private AtomicReference<PeerState> inputStateRef;
+        private AtomicReference<PeerState> outputStateRef;
+        private Condition inputStateIsNotNull;
+        private Condition outputStateIsNotNull;
+        private Socket connection;
+        private ObjectInputStream inputStream;
+        private ObjectOutputStream outputStream;
+
 
 
         public Builder(){
@@ -31,8 +55,24 @@ public class PeerInfo {
         }
 
 
-        public Builder withPeerIndex(Integer peerIndex){
-            this.peerIndex = peerIndex;
+        public Builder withInputHandlerVars(Lock inputLock, AtomicReference<PeerState> inputStateRef, Condition inputStateIsNotNull){
+            this.inputLock = inputLock;
+            this.inputStateRef = inputStateRef;
+            this.inputStateIsNotNull = inputStateIsNotNull;
+            return this;
+        }
+
+        public Builder withOutputHandlerVars(Lock outputLock, AtomicReference<PeerState> outputStateRef, Condition outputStateIsNotNull){
+            this.outputLock = outputLock;
+            this.outputStateRef = outputStateRef;
+            this.outputStateIsNotNull = outputStateIsNotNull;
+            return this;
+        }
+
+        public Builder withSocketAndItsStreams(Socket connection, ObjectInputStream inputStream, ObjectOutputStream outputStream){
+            this.connection = connection;
+            this.inputStream = inputStream;
+            this.outputStream = outputStream;
             return this;
         }
 
