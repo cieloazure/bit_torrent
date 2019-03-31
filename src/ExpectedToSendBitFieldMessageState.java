@@ -6,9 +6,9 @@ import java.util.concurrent.ConcurrentSkipListSet;
 
 public class ExpectedToSendBitFieldMessageState implements PeerState{
 
-    private ConcurrentSkipListSet<PeerInfo> neighbourConnectionInfo;
+    private ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionInfo;
 
-    public ExpectedToSendBitFieldMessageState(ConcurrentSkipListSet<PeerInfo> neighbourConnectionsInfo){
+    public ExpectedToSendBitFieldMessageState(ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionsInfo){
         this.neighbourConnectionInfo = neighbourConnectionsInfo;
     }
 

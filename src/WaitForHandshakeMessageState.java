@@ -7,10 +7,10 @@ import java.util.concurrent.ConcurrentSkipListSet;
 
 public class WaitForHandshakeMessageState implements PeerState{
     private boolean reply;
-    private ConcurrentSkipListSet<PeerInfo> neighbourConnectionsInfo;
+    private ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionsInfo;
     private PeerInfo.Builder peerInfoBuilder;
 
-    public WaitForHandshakeMessageState(boolean reply, ConcurrentSkipListSet<PeerInfo> neighbourConnectionsInfo, PeerInfo.Builder peerInfoBuilder){
+    public WaitForHandshakeMessageState(boolean reply, ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionsInfo, PeerInfo.Builder peerInfoBuilder){
         this.reply = reply;
         this.peerInfoBuilder = peerInfoBuilder;
         this.neighbourConnectionsInfo = neighbourConnectionsInfo;
@@ -26,7 +26,7 @@ public class WaitForHandshakeMessageState implements PeerState{
                     .withHostNameAndPortNumber(context.getHostName(), context.getPortNumber());
 
             PeerInfo theirPeerInfo = peerInfoBuilder.build();
-            neighbourConnectionsInfo.add(theirPeerInfo);
+            neighbourConnectionsInfo.putIfAbsent(theirPeerInfo.getPeerID(), theirPeerInfo);
 
             context.setTheirPeerId(message.getPeerID());
 

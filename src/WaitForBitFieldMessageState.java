@@ -7,10 +7,10 @@ import java.util.concurrent.ConcurrentSkipListSet;
 
 public class WaitForBitFieldMessageState implements PeerState {
     boolean reply;
-    private ConcurrentSkipListSet<PeerInfo> neighbourConnectionsInfo;
+    private ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionsInfo;
 
 
-    public WaitForBitFieldMessageState(boolean reply, ConcurrentSkipListSet<PeerInfo> neighbourConnectionsInfo){
+    public WaitForBitFieldMessageState(boolean reply, ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionsInfo){
         this.reply = reply;
         this.neighbourConnectionsInfo = neighbourConnectionsInfo;
     }

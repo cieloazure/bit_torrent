@@ -12,8 +12,8 @@ public class PeerConnection {
     private PeerInfo myPeerInfo;
 
     /* This peer's neighbours */
-//    private ConcurrentSkipListSet<PeerInfo> neighbourConnectionsInfo;
-    private ConcurrentSkipListSet<PeerInfo> neighbourConnectionsInfo;
+//    private ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionsInfo;
+    private ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionsInfo;
 
     PeerConnection(PeerInfo myPeerInfo){
         this.myPeerInfo = myPeerInfo;
@@ -25,7 +25,7 @@ public class PeerConnection {
                 return o1.getDownloadingSpeed().compareTo(o2.getDownloadingSpeed());
             }
         };
-        this.neighbourConnectionsInfo = new ConcurrentSkipListSet<>(comparator);
+        this.neighbourConnectionsInfo = new ConcurrentHashMap<>();
     }
 
     public void startListenerThread() {
@@ -38,7 +38,7 @@ public class PeerConnection {
     private class ConnectionListener implements Runnable{
         PeerConnection peerConnection;
         PeerInfo peer;
-        ConcurrentSkipListSet<PeerInfo> neighbourConnectionMap;
+        ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionMap;
 
         public ConnectionListener(PeerConnection peerConnection){
             this.peerConnection = peerConnection;
@@ -123,7 +123,7 @@ public class PeerConnection {
         return myPeerInfo;
     }
 
-    public ConcurrentSkipListSet<PeerInfo> getNeighbourConnectionsInfo() {
+    public ConcurrentHashMap<Integer, PeerInfo> getNeighbourConnectionsInfo() {
         return neighbourConnectionsInfo;
     }
 
