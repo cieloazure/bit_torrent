@@ -1,6 +1,6 @@
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -16,24 +16,14 @@ class HandshakeMessage implements Message, Serializable {
         this.peerID = peerID;
     }
 
+    public HandshakeMessage(byte[] messageBytes){
+        deserialize(messageBytes);
+    }
+
     public int getPeerID() {
         return peerID;
     }
 
-    private void writeObject(ObjectOutputStream out)
-            throws IOException {
-        byte[] result = serialize();
-        out.write(result);
-    }
-
-    private void readObject(ObjectInputStream in)
-            throws IOException, ClassNotFoundException{
-        byte[] message = new byte[32];
-        in.read(message, 0, 32);
-        deserialize(message);
-    }
-
-    @Override
     public byte[] serialize() {
         int handshakeMessageSize = header.length() + 10 + 4;
         byte[] result = new byte[handshakeMessageSize];
@@ -60,7 +50,6 @@ class HandshakeMessage implements Message, Serializable {
     }
 
 
-    @Override
     public void deserialize(byte[] message) {
         StringBuilder s = new StringBuilder();
         for(int i = 0; i < header.length(); i++){
@@ -90,10 +79,5 @@ class HandshakeMessage implements Message, Serializable {
 
     public boolean isValid(){
         return isValid;
-    }
-
-    @Override
-    public Object getReplyObject(PeerInfo p) {
-        return new HandshakeMessage(p.getPeerID());
     }
 }

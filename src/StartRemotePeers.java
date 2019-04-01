@@ -7,8 +7,9 @@
  * It is your responsibility to adapt this program to your running environment.
  */
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.util.Vector;
 
 /*
  * The StartRemotePeers class begins remote peer processes. 

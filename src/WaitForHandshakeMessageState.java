@@ -1,9 +1,8 @@
 import java.io.EOFException;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
 
 public class WaitForHandshakeMessageState implements PeerState{
     private boolean reply;
@@ -17,10 +16,13 @@ public class WaitForHandshakeMessageState implements PeerState{
     }
 
     @Override
-    public void handleMessage(Handler context, PeerInfo myPeerInfo, ObjectInputStream inputStream, ObjectOutputStream outputStream) {
+    public void handleMessage(Handler context, PeerInfo myPeerInfo, DataInputStream inputStream, DataOutputStream outputStream) {
         try {
             System.out.println("[PEER:"+myPeerInfo.getPeerID()+"]Waiting for handshake message....with reply:" + this.reply + " from " + context.getHostName() + ":" + context.getPortNumber());
-            HandshakeMessage message = (HandshakeMessage) inputStream.readObject();
+
+            byte[] messageBytes = new byte[32];
+            inputStream.readFully(messageBytes);
+            HandshakeMessage message = new HandshakeMessage(messageBytes);
 
             peerInfoBuilder.withPeerID(message.getPeerID())
                     .withHostNameAndPortNumber(context.getHostName(), context.getPortNumber());
@@ -36,7 +38,8 @@ public class WaitForHandshakeMessageState implements PeerState{
                 System.out.println("[PEER"+myPeerInfo.getPeerID()+"]Sending a handshake reply message to "+message.getPeerID()+"....");
                 if (message.isValid()) {
                     HandshakeMessage reply = new HandshakeMessage(myPeerInfo.getPeerID());
-                    outputStream.writeObject(reply);
+                    outputStream.write(reply.serialize());
+                    outputStream.flush();
                 }
                 context.setState(new WaitForBitFieldMessageState(true, neighbourConnectionsInfo), true);
             } else {
@@ -46,8 +49,6 @@ public class WaitForHandshakeMessageState implements PeerState{
         }catch (EOFException e){
             e.printStackTrace();
         } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
     }

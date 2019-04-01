@@ -1,8 +1,7 @@
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
 
 public class ExpectedToSendHandshakeMessageState implements PeerState{
     private ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionInfo;
@@ -14,10 +13,13 @@ public class ExpectedToSendHandshakeMessageState implements PeerState{
     }
 
     @Override
-    public void handleMessage(Handler context, PeerInfo myPeerInfo, ObjectInputStream inputStream, ObjectOutputStream outputStream) {
+    public void handleMessage(Handler context, PeerInfo myPeerInfo, DataInputStream inputStream, DataOutputStream outputStream) {
         try{
             HandshakeMessage message = new HandshakeMessage(myPeerInfo.getPeerID());
-            outputStream.writeObject(message);
+
+            outputStream.write(message.serialize());
+            outputStream.flush();
+
             System.out.println("[PEER:"+myPeerInfo.getPeerID()+"] Sent handshake message to "+ context.getHostName() + ":" + context.getPortNumber() +"...");
             context.setState(new WaitForHandshakeMessageState(false, this.neighbourConnectionInfo, this.peerInfoBuilder), true);
         } catch (IOException e) {

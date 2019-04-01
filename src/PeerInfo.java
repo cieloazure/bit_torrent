@@ -1,10 +1,9 @@
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Logger;
 
@@ -17,10 +16,10 @@ public class PeerInfo {
     private  BitSet bitField;
     private  List<byte[]> fileChunks;
     private AtomicReference<PeerState> inputStateRef;
-    private BlockingQueue<PeerState> outputStateQueue;
+    private AtomicReference<PeerState> outputStateRef;
     private Socket connection;
-    private ObjectInputStream inputStream;
-    private ObjectOutputStream outputStream;
+    private DataInputStream inputStream;
+    private DataOutputStream outputStream;
     private Object inputMutex;
     private Object outputMutex;
     private Double downloadingSpeed;
@@ -35,10 +34,10 @@ public class PeerInfo {
         private  BitSet bitField;
         private  List<byte[]> fileChunks;
         private AtomicReference<PeerState> inputStateRef;
-        private BlockingQueue<PeerState> outputStateQueue;
+        private AtomicReference<PeerState> outputStateRef;
         private Socket connection;
-        private ObjectInputStream inputStream;
-        private ObjectOutputStream outputStream;
+        private DataInputStream inputStream;
+        private DataOutputStream outputStream;
         private Object inputMutex;
         private Object outputMutex;
         private Logger logger;
@@ -59,13 +58,13 @@ public class PeerInfo {
             return this;
         }
 
-        public Builder withOutputHandlerVars(Object outputMutex, BlockingQueue<PeerState> outputStateQueue){
+        public Builder withOutputHandlerVars(Object outputMutex, AtomicReference<PeerState> outputStateRef){
             this.outputMutex = outputMutex;
-            this.outputStateQueue = outputStateQueue;
+            this.outputStateRef = outputStateRef;
             return this;
         }
 
-        public Builder withSocketAndItsStreams(Socket connection, ObjectInputStream inputStream, ObjectOutputStream outputStream){
+        public Builder withSocketAndItsStreams(Socket connection, DataInputStream inputStream, DataOutputStream outputStream){
             this.connection = connection;
             this.inputStream = inputStream;
             this.outputStream = outputStream;
@@ -117,7 +116,7 @@ public class PeerInfo {
         this.inputMutex = b.inputMutex;
         this.inputStateRef = b.inputStateRef;
         this.outputMutex = b.outputMutex;
-        this.outputStateQueue = b.outputStateQueue;
+        this.outputStateRef = b.outputStateRef;
         this.connection = b.connection;
         this.inputStream = b.inputStream;
         this.outputStream = b.outputStream;

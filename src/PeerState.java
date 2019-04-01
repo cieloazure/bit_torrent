@@ -1,7 +1,6 @@
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.Socket;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 
 public interface PeerState {
-    void handleMessage(Handler context, PeerInfo peer, ObjectInputStream in, ObjectOutputStream out);
+    void handleMessage(Handler context, PeerInfo peer, DataInputStream in, DataOutputStream out);
 }

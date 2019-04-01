@@ -1,12 +1,12 @@
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.DataInputStream;
+import java.io.outputStateRefputStream;
 import java.net.Socket;
 
 public class Connection {
-    ObjectInputStream in;
-    ObjectOutputStream out;    //stream write to the socket
+    DataInputStream in;
+    DataOutputStream out;    //stream write to the socket
 
-    public Connection(ObjectInputStream in, ObjectOutputStream out){
+    public Connection(DataInputStream in, DataOutputStream out){
         this.in = in;
         this.out = out;
     }

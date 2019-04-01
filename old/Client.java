@@ -6,8 +6,8 @@ import java.util.*;
 
 public class Client {
 	Socket requestSocket;           //socket connect to the server
-	ObjectOutputStream out;         //stream write to the socket
- 	ObjectInputStream in;          //stream read from the socket
+	DataOutputStream out;         //stream write to the socket
+ 	DataInputStream in;          //stream read from the socket
 	String message;                //message send to the server
 	String MESSAGE;                //capitalized message read from the server
 
@@ -20,9 +20,9 @@ public class Client {
 			requestSocket = new Socket("localhost", 1001);
 			System.out.println("Connected to localhost in port 1001");
 			//initialize inputStream and outputStream
-			out = new ObjectOutputStream(requestSocket.getOutputStream());
+			out = new DataOutputStream(requestSocket.getOutputStream());
 			out.flush();
-			in = new ObjectInputStream(requestSocket.getInputStream());
+			in = new DataInputStream(requestSocket.getInputStream());
 			
 			//get Input from standard input
 			BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));

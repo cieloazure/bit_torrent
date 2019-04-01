@@ -1,10 +1,10 @@
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Comparator;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class PeerConnection {
@@ -75,23 +75,23 @@ public class PeerConnection {
 
         // Set initial states
         AtomicReference<PeerState> inputStateRef = new AtomicReference<>(null);
-        BlockingQueue<PeerState> outputStateQueue = new LinkedBlockingDeque<>();
+        AtomicReference<PeerState> outputStateRef = new AtomicReference<>(null);
 
         // Get output and input streams of the socket
         PeerInfo.Builder hisPeerInfoBuilder = new PeerInfo.Builder();
         hisPeerInfoBuilder.withInputHandlerVars(inputMutex, inputStateRef);
-        hisPeerInfoBuilder.withOutputHandlerVars(outputMutex, outputStateQueue);
+        hisPeerInfoBuilder.withOutputHandlerVars(outputMutex, outputStateRef);
         try{
             // !IMPORTANT NOTE!
             // Output stream needs to be created before input stream
             // Output stream needs to flushed to write the headers over the wire
-            ObjectOutputStream outputStream = new ObjectOutputStream(connection.getOutputStream());
+            DataOutputStream outputStream = new DataOutputStream(connection.getOutputStream());
             outputStream.flush();
-            ObjectInputStream inputStream = new ObjectInputStream(connection.getInputStream());
+            DataInputStream inputStream = new DataInputStream(connection.getInputStream());
             hisPeerInfoBuilder.withSocketAndItsStreams(connection, inputStream, outputStream);
 
             // Initialize handlers
-            Handler handler = new Handler(connection, myPeerInfo, inputStateRef,  outputStateQueue,  inputStream, outputStream, inputMutex, outputMutex);
+            Handler handler = new Handler(connection, myPeerInfo, inputStateRef,  outputStateRef,  inputStream, outputStream, inputMutex, outputMutex);
 
             NeighbourInputHandler inputHandler = handler.getInputHandler();
             NeighbourOutputHandler outputHandler = handler.getOutputHandler();
@@ -104,7 +104,7 @@ public class PeerConnection {
 
             if(sendHandshake){
                 synchronized (outputMutex){
-                    outputStateQueue.offer(new ExpectedToSendHandshakeMessageState(neighbourConnectionsInfo, hisPeerInfoBuilder));
+                    outputStateRef.set(new ExpectedToSendHandshakeMessageState(neighbourConnectionsInfo, hisPeerInfoBuilder));
                     outputMutex.notifyAll();
                 }
             }else{

@@ -1,13 +1,9 @@
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.ArrayList;
-
-import java.io.ByteArrayOutputStream;
-//import org.apache.commons.io.IOUtils;
 
 class ActualMessage implements Message, Serializable {
     private static final long serialVersionUID = 42L;
@@ -33,37 +29,13 @@ class ActualMessage implements Message, Serializable {
         setPayload(payload);
     }
 
+    public ActualMessage(byte[] messageBytes){
+        deserialize(messageBytes);
+    }
+
     public void setPayload(byte[] payload) {
         this.payload = payload;
         this.messageLength += payload.length;
-    }
-
-    private void writeObject(ObjectOutputStream out)
-            throws IOException {
-        byte[] result = serialize();
-        out.write(result);
-    }
-
-    private void readObject(ObjectInputStream in)
-            throws IOException, ClassNotFoundException{
-        int bytesRead;
-        ArrayList<Byte> buffer = new ArrayList<>();
-
-        while((bytesRead = in.read()) != -1) {
-            buffer.add((byte)bytesRead);
-        }
-
-        Byte[] msg = new Byte[buffer.size()];
-        byte[] message = new byte[buffer.size()];
-
-        //Convert arrayList to array
-        buffer.toArray(msg);
-
-        //Convert Byte[] to byte[]
-        for(int i = 0; i <buffer.size(); i++ ) {
-            message[i]= msg[i];
-        }
-        deserialize(message);
     }
 
     @Override
@@ -76,6 +48,7 @@ class ActualMessage implements Message, Serializable {
             i++;
         }
         result[i] = (byte)(char)this.messageType.ordinal();
+        i++;
 
         for(int j = 0; j < this.payload.length; j++){
             result[i] = this.payload[j];
@@ -108,13 +81,5 @@ class ActualMessage implements Message, Serializable {
     @Override
     public boolean isValid() {
         return isValid;
-    }
-
-    @Override
-    public Object getReplyObject(PeerInfo p) {
-        if(this.messageType == MessageType.BITFIELD){
-            return new ActualMessage(MessageType.BITFIELD, p.getBitField().toByteArray());
-        }
-        return null;
     }
 }
