@@ -65,6 +65,7 @@ public class WaitForAnyMessageState implements PeerState{
     }
 
     private void handleIncomingUnchokeMessage() {
+        // 0. Update the state of the peer in concurrent hash map to unchoke
         // 1. xor the bitfield the neighbour with myPeerInfo.getBitField()
         // 2. From the set bits choose any random index
         // 3. Send a request message with that index
@@ -72,6 +73,7 @@ public class WaitForAnyMessageState implements PeerState{
     }
 
     private void handleIncomingChokeMessage() {
+        // 0. Update the state of the peer in concurrent hash map to choked
         // 1. Do nothing!
         System.out.println("RECEIVED CHOKE MESSAGE! NOT IMPLEMENTED!");
     }

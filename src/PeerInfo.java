@@ -23,6 +23,7 @@ public class PeerInfo {
     private Object inputMutex;
     private Object outputMutex;
     private Double downloadingSpeed;
+    private NeighbourState neighbourState;
     private Logger logger;
     private ArrayList<Integer> peerAddressToID;
 
