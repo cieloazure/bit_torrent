@@ -31,22 +31,67 @@ public class WaitForAnyMessageState implements PeerState{
 
             switch(message.getMessageType()){
                 case HAVE:
+                    handleIncomingHaveMessage();
                 case PIECE:
+                    handleIncomingPieceMessage();
                 case REQUEST:
+                    handleIncomingRequestMessage();
                 case CHOKE:
+                    handleIncomingChokeMessage();
                 case UNCHOKE:
-                    System.out.println("NOT IMPLEMENTED " + message.getMessageType() + "!");
+                    handleIncomingUnchokeMessage();
                     break;
                 case INTERESTED:
-                    System.out.println("Received INTERESTED message! NOT IMPLEMENTED action");
+                    handleIncomingInterestedMessage();
                     break;
                 case NOT_INTERESTED:
-                    System.out.println("Received NOT INTERESTED message! NOT IMPLEMENTED action");
+                    handleIncomingNotInterestedMessage();
                     break;
             }
             context.setState(new WaitForAnyMessageState(neighbourConnectionsInfo), true);
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void handleIncomingNotInterestedMessage() {
+        // 1. Update the state of the peer in concurrent hash map, this will be used when decided the peers to upload to, not interested peers won't be considered at all
+        System.out.println("RECEIVED NOT INTERESTED MESSAGE! NOT IMPLEMENTED!");
+    }
+
+    private void handleIncomingInterestedMessage() {
+        // 1. Update the state of the peer in the concurrent hash map, this will be used when unchoking interval elapses in timertask1 or when optimistic unchoking interval elapses in timertask2
+        System.out.println("RECEIVED INTERESTED MESSAGE! NOT IMPLEMENTED!");
+    }
+
+    private void handleIncomingUnchokeMessage() {
+        // 1. xor the bitfield the neighbour with myPeerInfo.getBitField()
+        // 2. From the set bits choose any random index
+        // 3. Send a request message with that index
+        System.out.println("RECEIVED UNCHOKE MESSAGE! NOT IMPLEMETNED");
+    }
+
+    private void handleIncomingChokeMessage() {
+        // 1. Do nothing!
+        System.out.println("RECEIVED CHOKE MESSAGE! NOT IMPLEMENTED!");
+    }
+
+    private void handleIncomingRequestMessage() {
+        // 1. Get the piece index from the fileChunks
+        // 2. Send a piece with that index through a piece message payload
+        System.out.println("RECEIVED REQUEST MESSAGE! NOT IMPLEMENTED!");
+    }
+
+    private void handleIncomingPieceMessage() {
+        // 1. Track the download speed of the message by putting start time and end time around read bytes
+        // 2. Update the download speed of the peer in the concurrent hashmap
+        // 3. Send a have message to all the neighbouring peers
+        System.out.println("RECEIVED PIECE MESSAGE! NOT IMPLEMENTED");
+    }
+
+    private void handleIncomingHaveMessage() {
+        // 1. Update the bitfield `theirPeer` in concurrent hashmap
+        // 2. Take xor of the bitfield with myPeerInfo.getBitField() and decide whether an interested or not interested message is to be sent
+        System.out.println("RECEIVED HAVE!NOT IMPLEMENTED!");
     }
 }
