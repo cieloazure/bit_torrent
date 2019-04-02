@@ -27,6 +27,8 @@ class Handler{
     }
 
     public void setState(PeerState whichState, boolean isForInputState){
+//        System.out.println("pid:"+this.getTheirPeerId());
+//        System.out.println("state:"+whichState.toString());
         if(isForInputState){
             synchronized (inputMutex){
                 inputStateRef.set(whichState);

@@ -24,6 +24,7 @@ class HandshakeMessage implements Message, Serializable {
         return peerID;
     }
 
+    public String getHeader() {return header;}
     @Override
     public byte[] serialize() {
         int handshakeMessageSize = header.length() + 10 + 4;
