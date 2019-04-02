@@ -69,7 +69,8 @@ public class WaitForAnyMessageState implements PeerState{
         // 1. xor the bitfield the neighbour with myPeerInfo.getBitField()
         // 2. From the set bits choose any random index
         // 3. Send a request message with that index
-        System.out.println("RECEIVED UNCHOKE MESSAGE! NOT IMPLEMETNED");
+        // 4. Track to which peer we have sent a request message with that index, next time an unchoke message arrives, do not use the same index again, :
+        System.out.println("RECEIVED UNCHOKE MESSAGE! NOT IMPLEMENTED");
     }
 
     private void handleIncomingChokeMessage() {

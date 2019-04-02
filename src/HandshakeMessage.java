@@ -24,6 +24,7 @@ class HandshakeMessage implements Message, Serializable {
         return peerID;
     }
 
+    @Override
     public byte[] serialize() {
         int handshakeMessageSize = header.length() + 10 + 4;
         byte[] result = new byte[handshakeMessageSize];
@@ -49,7 +50,7 @@ class HandshakeMessage implements Message, Serializable {
         return result;
     }
 
-
+    @Override
     public void deserialize(byte[] message) {
         StringBuilder s = new StringBuilder();
         for(int i = 0; i < header.length(); i++){
@@ -77,6 +78,7 @@ class HandshakeMessage implements Message, Serializable {
         }
     }
 
+    @Override
     public boolean isValid(){
         return isValid;
     }
