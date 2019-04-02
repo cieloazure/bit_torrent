@@ -43,7 +43,7 @@ public class WaitForBitFieldMessageState implements PeerState {
             // Get their bitfield
             // TODO: check payload and transition to next state
 
-            BitSet theirPayload = BitSet.valueOf(message.payload);
+            BitSet theirBitfield = BitSet.valueOf(message.payload);
 
             if(this.reply){
                 System.out.println("[PEER:"+myPeerInfo.getPeerID()+"]Sending a bitfield reply message to " + context.getTheirPeerId());
@@ -56,8 +56,8 @@ public class WaitForBitFieldMessageState implements PeerState {
 
                 context.setState(new WaitForAnyMessageState(neighbourConnectionsInfo), true);
             }else{
-                context.setState(null, false);
-                context.setState(new WaitForAnyMessageState(neighbourConnectionsInfo), true);
+
+                context.setState(new ExpectedToSendInterestedOrNotInterestedMessageState(this.neighbourConnectionsInfo, theirBitfield), false);
             }
         }catch(EOFException e){
             e.printStackTrace();

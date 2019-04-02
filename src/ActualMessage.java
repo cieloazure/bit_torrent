@@ -50,9 +50,11 @@ class ActualMessage implements Message, Serializable {
         result[i] = (byte)(char)this.messageType.ordinal();
         i++;
 
-        for(int j = 0; j < this.payload.length; j++){
-            result[i] = this.payload[j];
-            i++;
+        if(this.payload != null){
+            for(int j = 0; j < this.payload.length; j++){
+                result[i] = this.payload[j];
+                i++;
+            }
         }
         return result;
     }
