@@ -18,17 +18,26 @@ public class WaitForHandshakeMessageState implements PeerState{
     @Override
     public void handleMessage(Handler context, PeerInfo myPeerInfo, DataInputStream inputStream, DataOutputStream outputStream) {
         try {
-            System.out.println("[PEER:"+myPeerInfo.getPeerID()+"]Waiting for handshake message....with reply:" + this.reply + " from " + context.getHostName() + ":" + context.getPortNumber());
+            System.out.println("[PEER:"+myPeerInfo.getPeerID()+"]Waiting for handshake message....with reply:" + this.reply + " from " + context.getHostName() + ":" + context.getPortNumber() + " peer id:"+context.getTheirPeerId());
 
             byte[] messageBytes = new byte[32];
             inputStream.readFully(messageBytes);
             HandshakeMessage message = new HandshakeMessage(messageBytes);
 
+            if(message.getHeader().equals("P2PFILESHARINGPROJ")) {
+                System.out.println("[PEER:"+myPeerInfo.getPeerID()+"]Verified Handshake header.");
+            }
+            else {
+                System.out.println("[PEER:"+myPeerInfo.getPeerID()+"]ERROR: Invalid Handshake header.");
+            }
             peerInfoBuilder.withPeerID(message.getPeerID())
                     .withHostNameAndPortNumber(context.getHostName(), context.getPortNumber());
 
             PeerInfo theirPeerInfo = peerInfoBuilder.build();
             neighbourConnectionsInfo.putIfAbsent(theirPeerInfo.getPeerID(), theirPeerInfo);
+
+            System.out.println("**Sender PID:" + message.getPeerID());
+            System.out.println("Receiver PID:" + myPeerInfo.getPeerID());
 
             context.setTheirPeerId(message.getPeerID());
 
