@@ -4,18 +4,18 @@ import java.net.Socket;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicReference;
 
-class NeighbourInputHandler extends Handler implements Runnable{
+class NeighbourInputHandler extends Handler implements Runnable {
 
     public NeighbourInputHandler(Socket connection, SelfPeerInfo myPeerInfo, AtomicReference<PeerState> inputStateRef, BlockingQueue<PeerState> outputStateRef, DataInputStream inputStream, DataOutputStream outputStream, Object inputMutex, Object outputMutex) {
         super(connection, myPeerInfo, inputStateRef, outputStateRef, inputStream, outputStream, inputMutex, outputMutex);
     }
 
     @Override
-    public void run(){
-        while(true){
-            try{
-                synchronized (this.inputMutex){
-                    while(this.inputStateRef.get() == null){
+    public void run() {
+        while (true) {
+            try {
+                synchronized (this.inputMutex) {
+                    while (this.inputStateRef.get() == null) {
                         this.inputMutex.wait();
                     }
                     PeerState inputState = inputStateRef.get();

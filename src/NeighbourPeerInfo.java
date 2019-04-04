@@ -1,4 +1,4 @@
-public class NeighbourPeerInfo extends PeerInfo{
+public class NeighbourPeerInfo extends PeerInfo {
     // In context of when Peer is a neighbour
     private Double downloadSpeed;
     private NeighbourState neighbourState;
@@ -37,7 +37,7 @@ public class NeighbourPeerInfo extends PeerInfo{
         this.context = context;
     }
 
-    public void setContextState(PeerState newState, boolean isForInputState, boolean setOtherStateAsNull){
+    public void setContextState(PeerState newState, boolean isForInputState, boolean setOtherStateAsNull) {
         this.context.setState(newState, isForInputState, setOtherStateAsNull);
     }
 }

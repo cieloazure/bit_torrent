@@ -4,7 +4,7 @@ import java.net.Socket;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicReference;
 
-class Handler{
+class Handler {
     protected Socket connection;
     protected DataInputStream inputStream;
     protected DataOutputStream outputStream;
@@ -18,7 +18,7 @@ class Handler{
     // TODO: Find appropriate visiblity
     protected volatile int theirPeerId;
 
-    public Handler(Socket connection, SelfPeerInfo myPeerInfo, AtomicReference<PeerState> inputStateRef, BlockingQueue<PeerState> outputMessageQueue, DataInputStream inputStream, DataOutputStream outputStream, Object inputMutex, Object outputMutex){
+    public Handler(Socket connection, SelfPeerInfo myPeerInfo, AtomicReference<PeerState> inputStateRef, BlockingQueue<PeerState> outputMessageQueue, DataInputStream inputStream, DataOutputStream outputStream, Object inputMutex, Object outputMutex) {
         this.connection = connection;
         this.myPeerInfo = myPeerInfo;
         this.inputStateRef = inputStateRef;
@@ -29,23 +29,23 @@ class Handler{
         this.outputMutex = outputMutex;
     }
 
-    public void setState(PeerState whichState, boolean isForInputState, boolean setOtherStateAsNull){
-        if(isForInputState){
-            synchronized (inputMutex){
+    public void setState(PeerState whichState, boolean isForInputState, boolean setOtherStateAsNull) {
+        if (isForInputState) {
+            synchronized (inputMutex) {
                 inputStateRef.set(whichState);
-                if(setOtherStateAsNull){
+                if (setOtherStateAsNull) {
                     outputStateRef.clear();
                 }
                 inputMutex.notifyAll();
             }
-        }else{
-            synchronized (outputMutex){
-                if(whichState != null){
+        } else {
+            synchronized (outputMutex) {
+                if (whichState != null) {
                     outputStateRef.offer(whichState);
-                }else{
+                } else {
                     outputStateRef.clear();
                 }
-                if(setOtherStateAsNull){
+                if (setOtherStateAsNull) {
                     inputStateRef.set(null);
                 }
                 outputMutex.notifyAll();
@@ -57,25 +57,29 @@ class Handler{
         return this.connection.getInetAddress().getHostName();
     }
 
-    public int getPortNumber(){
+    public int getPortNumber() {
         return this.connection.getPort();
     }
 
-    public int getTheirPeerId(){ return this.theirPeerId; }
+    public int getTheirPeerId() {
+        return this.theirPeerId;
+    }
 
-    public void setTheirPeerId(int theirPeerId){ this.theirPeerId = theirPeerId; }
+    public void setTheirPeerId(int theirPeerId) {
+        this.theirPeerId = theirPeerId;
+    }
 
     public void setWhichHandler(int whichHandler) {
         this.whichHandler = whichHandler;
     }
 
-    public NeighbourInputHandler getInputHandler(){
+    public NeighbourInputHandler getInputHandler() {
         NeighbourInputHandler nih = new NeighbourInputHandler(this.connection, this.myPeerInfo, this.inputStateRef, this.outputStateRef, this.inputStream, this.outputStream, this.inputMutex, this.outputMutex);
         nih.setWhichHandler(1);
         return nih;
     }
 
-    public NeighbourOutputHandler getOutputHandler(){
+    public NeighbourOutputHandler getOutputHandler() {
         NeighbourOutputHandler noh = new NeighbourOutputHandler(this.connection, this.myPeerInfo, this.inputStateRef, this.outputStateRef, this.inputStream, this.outputStream, this.inputMutex, this.outputMutex);
         noh.setWhichHandler(0);
         return noh;

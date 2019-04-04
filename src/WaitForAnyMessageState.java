@@ -1,31 +1,29 @@
-import javax.swing.*;
-import java.io.IOException;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class WaitForAnyMessageState implements PeerState{
+public class WaitForAnyMessageState implements PeerState {
     private ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo;
 
 
-    public WaitForAnyMessageState(ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo){
+    public WaitForAnyMessageState(ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo) {
         this.neighbourConnectionsInfo = neighbourConnectionsInfo;
     }
 
     @Override
     public void handleMessage(Handler context, SelfPeerInfo myPeerInfo, DataInputStream inputStream, DataOutputStream outputStream) {
-        try{
-            System.out.println("[PEER:"+myPeerInfo.getPeerID()+"]Waiting for any message....from peer id " + context.getTheirPeerId() + " whose current state is " + this.neighbourConnectionsInfo.get(context.getTheirPeerId()).getNeighbourState());
+        try {
+            System.out.println("[PEER:" + myPeerInfo.getPeerID() + "]Waiting for any message....from peer id " + context.getTheirPeerId() + " whose current state is " + this.neighbourConnectionsInfo.get(context.getTheirPeerId()).getNeighbourState());
 
             byte[] length = new byte[4];
             inputStream.read(length, 0, 4);
             int len = ByteBuffer.allocate(4).wrap(length).getInt();
 
-            byte[] messageBytes = new byte[len+4];
+            byte[] messageBytes = new byte[len + 4];
             int i = 0;
-            for(; i < 4; i++){
+            for (; i < 4; i++) {
                 messageBytes[i] = length[i];
             }
             Long start = System.nanoTime();
@@ -37,7 +35,7 @@ public class WaitForAnyMessageState implements PeerState{
 
             ActualMessage message = new ActualMessage(messageBytes);
 
-            switch(message.getMessageType()){
+            switch (message.getMessageType()) {
                 case HAVE:
                     handleIncomingHaveMessage(context, message, neighbourConnectionsInfo, myPeerInfo);
                     break;
@@ -68,13 +66,13 @@ public class WaitForAnyMessageState implements PeerState{
 
     private void handleIncomingNotInterestedMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
         // 1. Update the state of the peer in concurrent hash map, this will be used when decided the peers to upload to, not interested peers won't be considered at all
-        System.out.println("[PEER:"+myPeerInfo.getPeerID()+"]Got NOT INTERESTED message from peer "+context.getTheirPeerId()+"! Updating the state in hashmap to be used in next interval");
+        System.out.println("[PEER:" + myPeerInfo.getPeerID() + "]Got NOT INTERESTED message from peer " + context.getTheirPeerId() + "! Updating the state in hashmap to be used in next interval");
         neighbourConnectionsInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.NOT_INTERESTED);
     }
 
     private void handleIncomingInterestedMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
         // 1. Update the state of the peer in the concurrent hash map, this will be used when unchoking interval elapses in timertask1 or when optimistic unchoking interval elapses in timertask2
-        System.out.println("[PEER:"+myPeerInfo.getPeerID()+"]Got INTERESTED message from peer "+context.getTheirPeerId()+"! Updating the state in hashmap to be used in next interval");
+        System.out.println("[PEER:" + myPeerInfo.getPeerID() + "]Got INTERESTED message from peer " + context.getTheirPeerId() + "! Updating the state in hashmap to be used in next interval");
         neighbourConnectionsInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.INTERESTED);
     }
 
@@ -104,7 +102,7 @@ public class WaitForAnyMessageState implements PeerState{
         ByteBuffer buffer = ByteBuffer.allocate(payload.length).wrap(payload);
         int pieceIndex = buffer.getInt();
         // Check if the state is unchoked
-        if(neighbourConnectionsInfo.get(context.getTheirPeerId()).getNeighbourState() == NeighbourState.UNCHOKED){
+        if (neighbourConnectionsInfo.get(context.getTheirPeerId()).getNeighbourState() == NeighbourState.UNCHOKED) {
             context.setState(new ExpectedToSendPieceMessageState(neighbourConnectionsInfo, pieceIndex), false, false);
         }
     }
@@ -117,7 +115,7 @@ public class WaitForAnyMessageState implements PeerState{
         int gotPieceIndex = neighbourConnectionsInfo.get(context.getTheirPeerId()).getRequestedPieceIndex();
         neighbourConnectionsInfo.get(context.getTheirPeerId()).setDownloadSpeed(downloadSpeed);
         myPeerInfo.setBitFieldIndex(gotPieceIndex);
-        for(Integer peerId: neighbourConnectionsInfo.keySet()){
+        for (Integer peerId : neighbourConnectionsInfo.keySet()) {
             NeighbourPeerInfo peerInfo = neighbourConnectionsInfo.get(peerId);
             peerInfo.setContextState(new ExpectedToSendHaveMessageState(neighbourConnectionsInfo, gotPieceIndex), false, false);
         }
@@ -130,7 +128,7 @@ public class WaitForAnyMessageState implements PeerState{
         byte[] payload = message.getPayload();
         int haveIndex = ByteBuffer.allocate(payload.length).wrap(payload).getInt();
         neighbourConnectionsInfo.get(context.getTheirPeerId()).setBitFieldIndex(haveIndex);
-        if(!myPeerInfo.getBitField().get(haveIndex)){
+        if (!myPeerInfo.getBitField().get(haveIndex)) {
             context.setState(new ExpectedToSendInterestedOrNotInterestedMessageState(neighbourConnectionsInfo, neighbourConnectionsInfo.get(context.getTheirPeerId()).getBitField(), false), false, false);
         }
         System.out.println("RECEIVED HAVE!NOT IMPLEMENTED!");

@@ -3,7 +3,7 @@ import java.util.BitSet;
 import java.util.List;
 import java.util.logging.Logger;
 
-public class SelfPeerInfo extends PeerInfo{
+public class SelfPeerInfo extends PeerInfo {
     private Boolean hasFile;
     private List<byte[]> fileChunks;
     private BitSet requestedbitField;
@@ -18,7 +18,9 @@ public class SelfPeerInfo extends PeerInfo{
         this.peerAddressToID = peerAddressToID;
     }
 
-    public Logger getLogger(){return logger;}
+    public Logger getLogger() {
+        return logger;
+    }
 
     public byte[] getFileChunk(int index) {
         return fileChunks.get(index);

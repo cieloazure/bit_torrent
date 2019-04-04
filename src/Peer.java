@@ -18,7 +18,7 @@ public class Peer {
     /* Self peer info variables */
     private static SelfPeerInfo myPeerInfo;
 
-    public static void main(String[] args){
+    public static void main(String[] args) {
         Logger logger = null;
         // Parse common config file
         CommonConfig.Builder configBuilder = new CommonConfig.Builder();
@@ -50,8 +50,8 @@ public class Peer {
         parsePeerInfoConfigToMakeConnections(connection);
     }
 
-    private static void parsePeerInfoConfigToMakeConnections(PeerConnection connection){
-        try{
+    private static void parsePeerInfoConfigToMakeConnections(PeerConnection connection) {
+        try {
 
             BufferedReader in = new BufferedReader(new FileReader(CONFIG_DIR + "/" + PEER_INFO_CONFIGURATION_FILE));
             // read line
@@ -65,12 +65,12 @@ public class Peer {
             String neighbourHostName = splitLine[1];
             int neighbourPortNumber = Integer.parseInt(splitLine[2]);
 
-            while(linePeerId != myPeerInfo.getPeerID()){
+            while (linePeerId != myPeerInfo.getPeerID()) {
                 System.out.println("adding log entry");
-                myPeerInfo.getLogger().info("Peer [peerID "+myPeerInfo.getPeerID()+"] makes a connection to Peer[peer_ID "+linePeerId+"]");
+                myPeerInfo.getLogger().info("Peer [peerID " + myPeerInfo.getPeerID() + "] makes a connection to Peer[peer_ID " + linePeerId + "]");
                 // Make a connection with the peer
                 Socket newConnection = new Socket(neighbourHostName, neighbourPortNumber);
-                System.out.println("[PEER:"+ myPeerInfo.getPeerID() +"]Connecting to a peer "+ linePeerId + "....");
+                System.out.println("[PEER:" + myPeerInfo.getPeerID() + "]Connecting to a peer " + linePeerId + "....");
                 // Spawn handlers for the new connection
                 connection.handleNewConnection(newConnection, true);
 
@@ -92,7 +92,7 @@ public class Peer {
 
     private static void parseCommonConfigFile(CommonConfig.Builder configBuilder) {
         try {
-            BufferedReader in = new BufferedReader(new FileReader(CONFIG_DIR + "/" +COMMON_CONFIGURATION_FILE));
+            BufferedReader in = new BufferedReader(new FileReader(CONFIG_DIR + "/" + COMMON_CONFIGURATION_FILE));
             int numOfPreferredNeighbours = Integer.parseInt(in.readLine().split(" ")[1]);
             int unchokingInterval = Integer.parseInt(in.readLine().split(" ")[1]);
             int optimisticUnchokingInterval = Integer.parseInt(in.readLine().split(" ")[1]);
@@ -102,9 +102,9 @@ public class Peer {
             long pieceSize = Long.parseLong(in.readLine().split(" ")[1]);
 
             configBuilder.withNumOfPreferredNeighboursAs(numOfPreferredNeighbours)
-                         .withOptimisticUnchokingIntervalAs(optimisticUnchokingInterval)
-                         .withUnchokingIntervalAs(unchokingInterval)
-                         .withFileParametersAs(fileName, fileSize, pieceSize);
+                    .withOptimisticUnchokingIntervalAs(optimisticUnchokingInterval)
+                    .withUnchokingIntervalAs(unchokingInterval)
+                    .withFileParametersAs(fileName, fileSize, pieceSize);
 
         } catch (FileNotFoundException e) {
             System.err.println("[ERROR]: Common configuration file not found");
@@ -116,11 +116,11 @@ public class Peer {
     }
 
     private static void parsePeerInfoConfigFile(int peerID, CommonConfig commonConfig, PeerInfo.Builder builder) {
-        try{
+        try {
             BufferedReader in = new BufferedReader(new FileReader(CONFIG_DIR + "/" + PEER_INFO_CONFIGURATION_FILE));
             String peerInfoFileLine = in.readLine();
             int linePeerId = Integer.parseInt(peerInfoFileLine.split(" ")[0]);
-            while(linePeerId != peerID){
+            while (linePeerId != peerID) {
                 peerInfoFileLine = in.readLine();
                 linePeerId = Integer.parseInt(peerInfoFileLine.split(" ")[0]);
             }
@@ -129,26 +129,26 @@ public class Peer {
             String hostName = splitLine[1];
             int portNumber = Integer.parseInt(splitLine[2]);
             builder.withHostName(hostName)
-                   .withPortNumber(portNumber);
+                    .withPortNumber(portNumber);
 
             boolean hasFile = Integer.parseInt(splitLine[3]) == 1;
             builder.withHasFile(hasFile);
 
 
-            int pieces = (int)Math.ceil(commonConfig.getFileSize()/commonConfig.getPieceSize());
+            int pieces = (int) Math.ceil(commonConfig.getFileSize() / commonConfig.getPieceSize());
             BitSet bitField = new BitSet(pieces);
-            if(hasFile){
-                for(int i = 0; i < pieces; i++){
+            if (hasFile) {
+                for (int i = 0; i < pieces; i++) {
                     bitField.set(i);
                 }
                 System.out.println("Tushar debug");
                 System.out.println(commonConfig.getFileName());
                 List<byte[]> fileChunks = splitFileIntoChunks(commonConfig.getFileName(), commonConfig.getFileSize(), commonConfig.getPieceSize());
                 builder.withBitField(bitField)
-                       .withFileChunks(fileChunks);
-            }else{
+                        .withFileChunks(fileChunks);
+            } else {
                 builder.withBitField(bitField)
-                       .withFileChunks(null);
+                        .withFileChunks(null);
             }
         } catch (FileNotFoundException e) {
             System.err.println("[ERROR]: Peer Info configuration file not found");
@@ -159,15 +159,15 @@ public class Peer {
         }
     }
 
-    private static List<byte[]> splitFileIntoChunks(String fileName,long fileSize, long pieceSize){
+    private static List<byte[]> splitFileIntoChunks(String fileName, long fileSize, long pieceSize) {
         List<byte[]> chunks = new ArrayList<>();
         try {
             File f = new File(fileName);
             FileInputStream fis = new FileInputStream(f);
-            int pieces = (int)Math.ceil(fileSize / pieceSize);
-            for(int i = 0; i < pieces; i++){
-                byte[] buffer = new byte[(int)pieceSize];
-                while(fis.read(buffer) > 0){
+            int pieces = (int) Math.ceil(fileSize / pieceSize);
+            for (int i = 0; i < pieces; i++) {
+                byte[] buffer = new byte[(int) pieceSize];
+                while (fis.read(buffer) > 0) {
                     chunks.add(buffer);
                 }
             }
@@ -181,47 +181,47 @@ public class Peer {
 
     /**
      * Function to setup the peer specific logger
+     *
      * @param peerID
      * @return
      */
-    private static Logger setUpLogger(int peerID, Logger logger){
-        try{
-                FileHandler fh;
-                System.setProperty("java.util.logging.SimpleFormatter.format",
-                  "[%1$tF %1$tT] %5$s %n");
-                SimpleFormatter formatter = new SimpleFormatter();
-                logger = Logger.getLogger("log_peer_"+peerID);
-                logger.setUseParentHandlers(false);
-                fh = new FileHandler("logs/log_peer_"+peerID+".log");
-                logger.addHandler(fh);
-                fh.setFormatter(formatter);
-                System.out.println("Setup log");
+    private static Logger setUpLogger(int peerID, Logger logger) {
+        try {
+            FileHandler fh;
+            System.setProperty("java.util.logging.SimpleFormatter.format",
+                    "[%1$tF %1$tT] %5$s %n");
+            SimpleFormatter formatter = new SimpleFormatter();
+            logger = Logger.getLogger("log_peer_" + peerID);
+            logger.setUseParentHandlers(false);
+            fh = new FileHandler("logs/log_peer_" + peerID + ".log");
+            logger.addHandler(fh);
+            fh.setFormatter(formatter);
+            System.out.println("Setup log");
 
         } catch (Exception e) {
-          e.printStackTrace();
+            e.printStackTrace();
         }
         return logger;
     }
 
-    private static void buildAddressToPeerIDHash(int ownerPeerID, PeerInfo.Builder builder){
-        try{
+    private static void buildAddressToPeerIDHash(int ownerPeerID, PeerInfo.Builder builder) {
+        try {
             BufferedReader in = new BufferedReader(new FileReader(CONFIG_DIR + "/" + PEER_INFO_CONFIGURATION_FILE));
             ArrayList<Integer> addressToID = new ArrayList<>();
             String line = in.readLine();
-            int linePeerID =  Integer.parseInt(line.split(" ")[0]);
+            int linePeerID = Integer.parseInt(line.split(" ")[0]);
             while (true) {
-                if(linePeerID!=ownerPeerID){
+                if (linePeerID != ownerPeerID) {
                     String[] splitLine = line.split(" ");
                     addressToID.add(Integer.parseInt(splitLine[0]));
                     // read next line
 
                 }
                 line = in.readLine();
-                if (line == null){
+                if (line == null) {
                     break;
-                }
-                else{
-                    linePeerID =  Integer.parseInt(line.split(" ")[0]);
+                } else {
+                    linePeerID = Integer.parseInt(line.split(" ")[0]);
                 }
 
             }
