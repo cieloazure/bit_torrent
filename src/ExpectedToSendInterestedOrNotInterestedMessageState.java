@@ -24,7 +24,7 @@ public class ExpectedToSendInterestedOrNotInterestedMessageState implements Peer
                 outputStream.write(actualMessage.serialize());
                 outputStream.flush();
 
-                context.setState(new WaitForAnyMessageState(neighbourConnectionInfo), true);
+                context.setState(new WaitForAnyMessageState(neighbourConnectionInfo), true, true);
             }else{
                 ActualMessage actualMessage = new ActualMessage(MessageType.INTERESTED);
                 System.out.println("[PEER:"+myPeerInfo.getPeerID()+"]Sent INTERESTED message to "+context.getTheirPeerId());
@@ -32,7 +32,7 @@ public class ExpectedToSendInterestedOrNotInterestedMessageState implements Peer
                 outputStream.write(actualMessage.serialize());
                 outputStream.flush();
 
-                context.setState(new WaitForAnyMessageState(neighbourConnectionInfo), true);
+                context.setState(new WaitForAnyMessageState(neighbourConnectionInfo), true, true);
             }
         } catch (IOException e) {
             e.printStackTrace();

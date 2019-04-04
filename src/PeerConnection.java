@@ -4,7 +4,10 @@ import java.io.DataOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Comparator;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class PeerConnection {
@@ -77,7 +80,7 @@ public class PeerConnection {
 
         // Set initial states
         AtomicReference<PeerState> inputStateRef = new AtomicReference<>(null);
-        AtomicReference<PeerState> outputStateRef = new AtomicReference<>(null);
+        BlockingQueue<PeerState> outputStateRef = new LinkedBlockingDeque<>();
 
         // Get output and input streams of the socket
         PeerInfo.Builder hisPeerInfoBuilder = new PeerInfo.Builder();
@@ -106,7 +109,7 @@ public class PeerConnection {
 
             if(sendHandshake){
                 synchronized (outputMutex){
-                    outputStateRef.set(new ExpectedToSendHandshakeMessageState(neighbourConnectionsInfo, hisPeerInfoBuilder));
+                    outputStateRef.offer(new ExpectedToSendHandshakeMessageState(neighbourConnectionsInfo, hisPeerInfoBuilder));
                     outputMutex.notifyAll();
                 }
             }else{

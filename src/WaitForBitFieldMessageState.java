@@ -54,10 +54,10 @@ public class WaitForBitFieldMessageState implements PeerState {
                 outputStream.write(reply.serialize());
                 outputStream.flush();
 
-                context.setState(new WaitForAnyMessageState(neighbourConnectionsInfo), true);
+                context.setState(new WaitForAnyMessageState(neighbourConnectionsInfo), true, true);
             }else{
 
-                context.setState(new ExpectedToSendInterestedOrNotInterestedMessageState(this.neighbourConnectionsInfo, theirBitfield), false);
+                context.setState(new ExpectedToSendInterestedOrNotInterestedMessageState(this.neighbourConnectionsInfo, theirBitfield), false, true);
             }
         }catch(EOFException e){
             e.printStackTrace();

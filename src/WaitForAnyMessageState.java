@@ -48,7 +48,7 @@ public class WaitForAnyMessageState implements PeerState{
                     handleIncomingNotInterestedMessage();
                     break;
             }
-            context.setState(new WaitForAnyMessageState(neighbourConnectionsInfo), true);
+            context.setState(new WaitForAnyMessageState(neighbourConnectionsInfo), true, false);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -67,7 +67,7 @@ public class WaitForAnyMessageState implements PeerState{
     private void handleIncomingUnchokeMessage() {
         // 0. Update the state of the peer in concurrent hash map to unchoke
         // 1. xor the bitfield the neighbour with myPeerInfo.getBitField()
-        // 2. From the set bits choose any random index
+        // 2. From the set bits choose any random index (which has not been requessted before)
         // 3. Send a request message with that index
         // 4. Track to which peer we have sent a request message with that index, next time an unchoke message arrives, do not use the same index again, :
         System.out.println("RECEIVED UNCHOKE MESSAGE! NOT IMPLEMENTED");
@@ -82,6 +82,8 @@ public class WaitForAnyMessageState implements PeerState{
     private void handleIncomingRequestMessage() {
         // 1. Get the piece index from the fileChunks
         // 2. Send a piece with that index through a piece message payload
+
+        // context.setState(new ExpectedToSendPieceMessageState(pieceIndex), false, false);
         System.out.println("RECEIVED REQUEST MESSAGE! NOT IMPLEMENTED!");
     }
 

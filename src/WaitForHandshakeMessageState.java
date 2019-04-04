@@ -41,9 +41,9 @@ public class WaitForHandshakeMessageState implements PeerState{
                     outputStream.write(reply.serialize());
                     outputStream.flush();
                 }
-                context.setState(new WaitForBitFieldMessageState(true, neighbourConnectionsInfo), true);
+                context.setState(new WaitForBitFieldMessageState(true, neighbourConnectionsInfo), true, true);
             } else {
-                context.setState(new ExpectedToSendBitFieldMessageState(neighbourConnectionsInfo), false);
+                context.setState(new ExpectedToSendBitFieldMessageState(neighbourConnectionsInfo), false, true);
             }
 
         }catch (EOFException e){

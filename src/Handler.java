@@ -1,6 +1,7 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicReference;
 
 class Handler{
@@ -9,13 +10,13 @@ class Handler{
     protected DataOutputStream outputStream;
     protected PeerInfo myPeerInfo;
     protected AtomicReference<PeerState> inputStateRef;
-    protected AtomicReference<PeerState> outputStateRef;
+    protected BlockingQueue<PeerState> outputStateRef;
     protected Object inputMutex;
     protected Object outputMutex;
     protected int whichHandler;
     protected volatile int theirPeerId;
 
-    public Handler(Socket connection, PeerInfo myPeerInfo, AtomicReference<PeerState> inputStateRef, AtomicReference<PeerState> outputMessageQueue, DataInputStream inputStream, DataOutputStream outputStream, Object inputMutex, Object outputMutex){
+    public Handler(Socket connection, PeerInfo myPeerInfo, AtomicReference<PeerState> inputStateRef, BlockingQueue<PeerState> outputMessageQueue, DataInputStream inputStream, DataOutputStream outputStream, Object inputMutex, Object outputMutex){
         this.connection = connection;
         this.myPeerInfo = myPeerInfo;
         this.inputStateRef = inputStateRef;
@@ -26,17 +27,21 @@ class Handler{
         this.outputMutex = outputMutex;
     }
 
-    public void setState(PeerState whichState, boolean isForInputState){
+    public void setState(PeerState whichState, boolean isForInputState, boolean setOtherStateAsNull){
         if(isForInputState){
             synchronized (inputMutex){
                 inputStateRef.set(whichState);
-                outputStateRef.set(null);
+                if(setOtherStateAsNull){
+                    outputStateRef.clear();
+                }
                 inputMutex.notifyAll();
             }
         }else{
             synchronized (outputMutex){
-                outputStateRef.set(whichState);
-                inputStateRef.set(null);
+                outputStateRef.offer(whichState);
+                if(setOtherStateAsNull){
+                    inputStateRef.set(null);
+                }
                 outputMutex.notifyAll();
             }
         }

@@ -1,10 +1,11 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicReference;
 
 class NeighbourOutputHandler extends Handler implements Runnable{
-    public NeighbourOutputHandler(Socket connection, PeerInfo myPeerInfo, AtomicReference<PeerState> inputStateRef, AtomicReference<PeerState> outputStateRef, DataInputStream inputStream, DataOutputStream outputStream, Object inputMutex, Object outputMutex) {
+    public NeighbourOutputHandler(Socket connection, PeerInfo myPeerInfo, AtomicReference<PeerState> inputStateRef, BlockingQueue<PeerState> outputStateRef, DataInputStream inputStream, DataOutputStream outputStream, Object inputMutex, Object outputMutex) {
         super(connection, myPeerInfo, inputStateRef, outputStateRef, inputStream, outputStream, inputMutex, outputMutex);
     }
 
@@ -13,11 +14,13 @@ class NeighbourOutputHandler extends Handler implements Runnable{
         while(true){
             try{
                 synchronized (this.outputMutex){
-                    while(this.outputStateRef.get() == null){
+                    while(this.outputStateRef.isEmpty()){
                         this.outputMutex.wait();
                     }
-                    PeerState outputState = this.outputStateRef.get();
-                    outputState.handleMessage(this, this.myPeerInfo, this.inputStream, this.outputStream);
+                    while(!this.outputStateRef.isEmpty()){
+                        PeerState outputState = this.outputStateRef.poll();
+                        outputState.handleMessage(this, this.myPeerInfo, this.inputStream, this.outputStream);
+                    }
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
