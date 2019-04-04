@@ -17,7 +17,7 @@ public class WaitForAnyMessageState implements PeerState{
     @Override
     public void handleMessage(Handler context, SelfPeerInfo myPeerInfo, DataInputStream inputStream, DataOutputStream outputStream) {
         try{
-            System.out.println("[PEER:"+myPeerInfo.getPeerID()+"]Waiting for any message....from peer id " + context.getTheirPeerId());
+            System.out.println("[PEER:"+myPeerInfo.getPeerID()+"]Waiting for any message....from peer id " + context.getTheirPeerId() + " whose current state is " + this.neighbourConnectionsInfo.get(context.getTheirPeerId()).getNeighbourState());
 
             byte[] length = new byte[4];
             inputStream.read(length, 0, 4);

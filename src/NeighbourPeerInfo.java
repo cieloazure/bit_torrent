@@ -21,6 +21,10 @@ public class NeighbourPeerInfo extends PeerInfo{
         this.requestedPieceIndex = requestedPieceIndex;
     }
 
+    public NeighbourState getNeighbourState() {
+        return neighbourState;
+    }
+
     public void setNeighbourState(NeighbourState neighbourState) {
         this.neighbourState = neighbourState;
     }
