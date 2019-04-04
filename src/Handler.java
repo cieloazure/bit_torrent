@@ -38,7 +38,11 @@ class Handler{
             }
         }else{
             synchronized (outputMutex){
-                outputStateRef.offer(whichState);
+                if(whichState != null){
+                    outputStateRef.offer(whichState);
+                }else{
+                    outputStateRef.clear();
+                }
                 if(setOtherStateAsNull){
                     inputStateRef.set(null);
                 }

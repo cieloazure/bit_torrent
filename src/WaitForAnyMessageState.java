@@ -26,7 +26,13 @@ public class WaitForAnyMessageState implements PeerState{
             for(; i < 4; i++){
                 messageBytes[i] = length[i];
             }
+            Long start = System.nanoTime();
             inputStream.read(messageBytes, 4, len);
+            Long end = System.nanoTime();
+
+            Long timediff = end - start;
+            Long downloadSpeed = len / timediff;
+
             ActualMessage message = new ActualMessage(messageBytes);
 
             switch(message.getMessageType()){
