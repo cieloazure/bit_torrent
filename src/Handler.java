@@ -8,15 +8,17 @@ class Handler{
     protected Socket connection;
     protected DataInputStream inputStream;
     protected DataOutputStream outputStream;
-    protected PeerInfo myPeerInfo;
+    protected SelfPeerInfo myPeerInfo;
     protected AtomicReference<PeerState> inputStateRef;
     protected BlockingQueue<PeerState> outputStateRef;
     protected Object inputMutex;
     protected Object outputMutex;
     protected int whichHandler;
+
+    // TODO: Find appropriate visiblity
     protected volatile int theirPeerId;
 
-    public Handler(Socket connection, PeerInfo myPeerInfo, AtomicReference<PeerState> inputStateRef, BlockingQueue<PeerState> outputMessageQueue, DataInputStream inputStream, DataOutputStream outputStream, Object inputMutex, Object outputMutex){
+    public Handler(Socket connection, SelfPeerInfo myPeerInfo, AtomicReference<PeerState> inputStateRef, BlockingQueue<PeerState> outputMessageQueue, DataInputStream inputStream, DataOutputStream outputStream, Object inputMutex, Object outputMutex){
         this.connection = connection;
         this.myPeerInfo = myPeerInfo;
         this.inputStateRef = inputStateRef;

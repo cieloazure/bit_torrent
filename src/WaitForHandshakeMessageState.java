@@ -6,17 +6,17 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class WaitForHandshakeMessageState implements PeerState{
     private boolean reply;
-    private ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionsInfo;
+    private ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo;
     private PeerInfo.Builder peerInfoBuilder;
 
-    public WaitForHandshakeMessageState(boolean reply, ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionsInfo, PeerInfo.Builder peerInfoBuilder){
+    public WaitForHandshakeMessageState(boolean reply, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, PeerInfo.Builder peerInfoBuilder){
         this.reply = reply;
         this.peerInfoBuilder = peerInfoBuilder;
         this.neighbourConnectionsInfo = neighbourConnectionsInfo;
     }
 
     @Override
-    public void handleMessage(Handler context, PeerInfo myPeerInfo, DataInputStream inputStream, DataOutputStream outputStream) {
+    public void handleMessage(Handler context, SelfPeerInfo myPeerInfo, DataInputStream inputStream, DataOutputStream outputStream) {
         try {
             System.out.println("[PEER:"+myPeerInfo.getPeerID()+"]Waiting for handshake message....with reply:" + this.reply + " from " + context.getHostName() + ":" + context.getPortNumber() + " peer id:"+context.getTheirPeerId());
 
@@ -30,10 +30,14 @@ public class WaitForHandshakeMessageState implements PeerState{
             else {
                 System.out.println("[PEER:"+myPeerInfo.getPeerID()+"]ERROR: Invalid Handshake header.");
             }
-            peerInfoBuilder.withPeerID(message.getPeerID())
-                    .withHostNameAndPortNumber(context.getHostName(), context.getPortNumber());
 
-            PeerInfo theirPeerInfo = peerInfoBuilder.build();
+            peerInfoBuilder
+                    .withPeerID(message.getPeerID())
+                    .withHostName(context.getHostName())
+                    .withPortNumber(context.getPortNumber())
+                    .withHandlerContext(context);
+
+            NeighbourPeerInfo theirPeerInfo = peerInfoBuilder.buildNeighbourPeerInfo();
             neighbourConnectionsInfo.putIfAbsent(theirPeerInfo.getPeerID(), theirPeerInfo);
 
             System.out.println("**Sender PID:" + message.getPeerID());

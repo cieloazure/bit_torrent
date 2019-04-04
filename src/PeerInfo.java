@@ -1,80 +1,51 @@
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Logger;
 
 public class PeerInfo {
 
-    private  String hostName;
-    private  Integer portNumber;
-    private  Integer peerID;
-    private  Boolean hasFile;
-    private  BitSet bitField;
-    private  List<byte[]> fileChunks;
-    private AtomicReference<PeerState> inputStateRef;
-    private BlockingQueue<PeerState> outputStateRef;
-    private Socket connection;
-    private DataInputStream inputStream;
-    private DataOutputStream outputStream;
-    private Object inputMutex;
-    private Object outputMutex;
-    private Double downloadingSpeed;
-    private NeighbourState neighbourState;
-    private Logger logger;
-    private ArrayList<Integer> peerAddressToID;
+    protected  String hostName;
+    protected  Integer portNumber;
+    protected  Integer peerID;
+    protected  BitSet bitField;
 
     public static class Builder{
         private  String hostName;
         private  Integer portNumber;
         private  Integer peerID;
-        private  Boolean hasFile;
         private  BitSet bitField;
+        private  Boolean hasFile;
         private  List<byte[]> fileChunks;
-        private AtomicReference<PeerState> inputStateRef;
-        private BlockingQueue<PeerState> outputStateRef;
-        private Socket connection;
-        private DataInputStream inputStream;
-        private DataOutputStream outputStream;
-        private Object inputMutex;
-        private Object outputMutex;
-        private Logger logger;
+        private  Logger logger;
         private ArrayList<Integer> peerAddressToID;
+        private Handler context;
 
         public Builder(){
+
         }
 
-        public Builder(String hostName, Integer portNumber){
+        public Builder withHandlerContext(Handler context){
+            this.context = context;
+            return this;
+        }
+
+        public Builder withAddressToIDList(ArrayList<Integer> peerAddressToID){
+            this.peerAddressToID = peerAddressToID;
+            return this;
+        }
+
+        public Builder withLogger(Logger logger){
+            this.logger = logger;
+            return this;
+        }
+
+        public Builder withHostName(String hostName){
             this.hostName = hostName;
-            this.portNumber = portNumber;
-        }
-
-
-        public Builder withInputHandlerVars(Object inputMutex, AtomicReference<PeerState> inputStateRef){
-            this.inputStateRef = inputStateRef;
-            this.inputMutex = inputMutex;
             return this;
         }
 
-        public Builder withOutputHandlerVars(Object outputMutex, BlockingQueue<PeerState> outputStateRef){
-            this.outputMutex = outputMutex;
-            this.outputStateRef = outputStateRef;
-            return this;
-        }
-
-        public Builder withSocketAndItsStreams(Socket connection, DataInputStream inputStream, DataOutputStream outputStream){
-            this.connection = connection;
-            this.inputStream = inputStream;
-            this.outputStream = outputStream;
-            return this;
-        }
-
-        public Builder withHostNameAndPortNumber(String hostName, Integer portNumber){
-            this.hostName = hostName;
+        public Builder withPortNumber(Integer portNumber){
             this.portNumber = portNumber;
             return this;
         }
@@ -84,90 +55,60 @@ public class PeerInfo {
             return this;
         }
 
+        public Builder withBitField(BitSet bitField){
+            this.bitField = bitField;
+            return this;
+        }
+
         public Builder withHasFile(Boolean hasFile){
             this.hasFile = hasFile;
             return this;
         }
 
-        public Builder withBitFieldAndFileChunks(BitSet bitField, List<byte[]> fileChunks){
-            this.bitField = bitField;
+        public Builder withFileChunks(List<byte[]> fileChunks){
             this.fileChunks = fileChunks;
             return this;
         }
-        public Builder withLogger(Logger logger){
-            this.logger = logger;
-            return this;
-        }
-        public Builder withAddressToIDList(ArrayList<Integer> peerAddressToID){
-            this.peerAddressToID = peerAddressToID;
-            return this;
+
+        public SelfPeerInfo buildSelfPeerInfo(){
+            return new SelfPeerInfo(this, this.hasFile, this.fileChunks, this.logger, this.peerAddressToID);
         }
 
-        public PeerInfo build(){
-           return new PeerInfo(this);
+        public NeighbourPeerInfo buildNeighbourPeerInfo(){
+            return new NeighbourPeerInfo(this, this.context);
         }
     }
 
-    private PeerInfo(Builder b){
+    public PeerInfo(String hostName, Integer portNumber, Integer peerID, BitSet bitField){
+        this.hostName = hostName;
+        this.portNumber = portNumber;
+        this.peerID = peerID;
+        this.bitField = bitField;
+    }
+
+    public PeerInfo(Builder b){
         this.hostName = b.hostName;
         this.portNumber = b.portNumber;
         this.peerID = b.peerID;
-        this.hasFile = b.hasFile;
         this.bitField = b.bitField;
-        this.fileChunks = b.fileChunks;
-        this.inputMutex = b.inputMutex;
-        this.inputStateRef = b.inputStateRef;
-        this.outputMutex = b.outputMutex;
-        this.outputStateRef = b.outputStateRef;
-        this.connection = b.connection;
-        this.inputStream = b.inputStream;
-        this.outputStream = b.outputStream;
-        this.downloadingSpeed = 0.0;
-        this.logger = b.logger;
-        this.peerAddressToID = b.peerAddressToID;
     }
 
     public Integer getPeerID() {
         return peerID;
     }
 
-    public void setPeerID(Integer peerID) {
-        this.peerID = peerID;
-    }
-
-
     public String getHostName() {
         return hostName;
-    }
-
-    public void setHostName(String hostName) {
-        this.hostName = hostName;
     }
 
     public Integer getPortNumber() {
         return portNumber;
     }
 
-    public void setPortNumber(Integer portNumber) {
-        this.portNumber = portNumber;
-    }
-
-    public Boolean hasFile() {
-        return hasFile;
-    }
-
-    public void setHasFile(Boolean hasFile) {
-        this.hasFile = hasFile;
-    }
-
     public BitSet getBitField() {
         return bitField;
     }
 
-    public Logger getLogger(){return logger;}
-    public ArrayList<Integer> getAddressToIDHash(){
-        return peerAddressToID;
-    }
     public byte[] getBitFieldByteArray(int defaultPieces){
         byte[] array = this.bitField.toByteArray();
         if(array.length == 0){
@@ -185,16 +126,7 @@ public class PeerInfo {
         this.bitField = bitField;
     }
 
-    public List<byte[]> getFileChunks() {
-        return fileChunks;
+    public void setBitFieldIndex(int index){
+        this.bitField.set(index);
     }
-
-    public void setFileChunks(List<byte[]> fileChunks) {
-        this.fileChunks = fileChunks;
-    }
-
-    public Double getDownloadingSpeed() {
-        return downloadingSpeed;
-    }
-
 }

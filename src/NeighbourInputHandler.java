@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 class NeighbourInputHandler extends Handler implements Runnable{
 
-    public NeighbourInputHandler(Socket connection, PeerInfo myPeerInfo, AtomicReference<PeerState> inputStateRef, BlockingQueue<PeerState> outputStateRef, DataInputStream inputStream, DataOutputStream outputStream, Object inputMutex, Object outputMutex) {
+    public NeighbourInputHandler(Socket connection, SelfPeerInfo myPeerInfo, AtomicReference<PeerState> inputStateRef, BlockingQueue<PeerState> outputStateRef, DataInputStream inputStream, DataOutputStream outputStream, Object inputMutex, Object outputMutex) {
         super(connection, myPeerInfo, inputStateRef, outputStateRef, inputStream, outputStream, inputMutex, outputMutex);
     }
 

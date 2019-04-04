@@ -16,7 +16,7 @@ public class Peer {
     private static CommonConfig commonConfig;
 
     /* Self peer info variables */
-    private static PeerInfo myPeerInfo;
+    private static SelfPeerInfo myPeerInfo;
 
     public static void main(String[] args){
         Logger logger = null;
@@ -38,7 +38,7 @@ public class Peer {
         parsePeerInfoConfigFile(peerID, commonConfig, peerInfoBuilder);
         buildAddressToPeerIDHash(peerID, peerInfoBuilder);
         // Build myPeerInfo object
-        myPeerInfo = peerInfoBuilder.build();
+        myPeerInfo = peerInfoBuilder.buildSelfPeerInfo();
 
         // Peer connection object to start listening for new connections, send a message to any connection or create a connection to any peer
         PeerConnection connection = new PeerConnection(myPeerInfo);
@@ -128,7 +128,8 @@ public class Peer {
 
             String hostName = splitLine[1];
             int portNumber = Integer.parseInt(splitLine[2]);
-            builder.withHostNameAndPortNumber(hostName, portNumber);
+            builder.withHostName(hostName)
+                   .withPortNumber(portNumber);
 
             boolean hasFile = Integer.parseInt(splitLine[3]) == 1;
             builder.withHasFile(hasFile);
@@ -143,9 +144,11 @@ public class Peer {
                 System.out.println("Tushar debug");
                 System.out.println(commonConfig.getFileName());
                 List<byte[]> fileChunks = splitFileIntoChunks(commonConfig.getFileName(), commonConfig.getFileSize(), commonConfig.getPieceSize());
-                builder.withBitFieldAndFileChunks(bitField, fileChunks);
+                builder.withBitField(bitField)
+                       .withFileChunks(fileChunks);
             }else{
-                builder.withBitFieldAndFileChunks(bitField, null);
+                builder.withBitField(bitField)
+                       .withFileChunks(null);
             }
         } catch (FileNotFoundException e) {
             System.err.println("[ERROR]: Peer Info configuration file not found");

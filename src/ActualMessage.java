@@ -11,6 +11,8 @@ class ActualMessage implements Message, Serializable {
     public static final MessageType[] messageValues = MessageType.values();
     public int messageLength;
     public MessageType messageType;
+
+
     public byte[] payload;
     public boolean isValid;
 
@@ -31,6 +33,10 @@ class ActualMessage implements Message, Serializable {
 
     public ActualMessage(byte[] messageBytes){
         deserialize(messageBytes);
+    }
+
+    public byte[] getPayload() {
+        return payload;
     }
 
     public void setPayload(byte[] payload) {

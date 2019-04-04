@@ -12,22 +12,16 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class PeerConnection {
 
-    private PeerInfo myPeerInfo;
+    private final SelfPeerInfo myPeerInfo;
 
     /* This peer's neighbours */
-//    private ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionsInfo;
-    private ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionsInfo;
+//    private ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo;
+    private ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo;
 
-    PeerConnection(PeerInfo myPeerInfo){
+    public PeerConnection(SelfPeerInfo myPeerInfo){
         this.myPeerInfo = myPeerInfo;
         // Set a comparator on download speed so that it will always track top k
         // Will have to check whether it updates dynamically or we need to remove the element in order to update it
-        Comparator<PeerInfo> comparator = new Comparator<PeerInfo>() {
-            @Override
-            public int compare(PeerInfo o1, PeerInfo o2) {
-                return o1.getDownloadingSpeed().compareTo(o2.getDownloadingSpeed());
-            }
-        };
         this.neighbourConnectionsInfo = new ConcurrentHashMap<>();
     }
 
@@ -40,26 +34,26 @@ public class PeerConnection {
 
     private class ConnectionListener implements Runnable{
         PeerConnection peerConnection;
-        PeerInfo peer;
-        ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionMap;
+        SelfPeerInfo myPeerInfo;
+        ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionMap;
 
         public ConnectionListener(PeerConnection peerConnection){
             this.peerConnection = peerConnection;
-            this.peer = this.peerConnection.getMyPeerInfo();
+            this.myPeerInfo = this.peerConnection.getMyPeerInfo();
             this.neighbourConnectionMap = this.peerConnection.getNeighbourConnectionsInfo();
         }
 
         @Override
         public void run() {
             try{
-                System.out.println("[PEER:" + this.peer.getPeerID() + "]Listening for connections....at "+ this.peer.getHostName() + ":" + this.peer.getPortNumber());
-                ServerSocket listener = new ServerSocket(this.peer.getPortNumber());
+                System.out.println("[PEER:" + this.myPeerInfo.getPeerID() + "]Listening for connections....at "+ this.myPeerInfo.getHostName() + ":" + this.myPeerInfo.getPortNumber());
+                ServerSocket listener = new ServerSocket(this.myPeerInfo.getPortNumber());
                 while(true){
                     Socket newConnection = listener.accept();
 
                     //Todo: Need to find a way to add this log
                     //peer.getLogger().info("Peer [peer_ID "+peer.getPeerID()+"] is connected from Peer[peer_ID "+myPeerInfo.getAddressToIDHash().get(peerIndex)+"]");
-                    System.out.println("[PEER:"+ this.peer.getPeerID() +"]Got a peer connection! Spawning Handlers for a peer...");
+                    System.out.println("[PEER:"+ this.myPeerInfo.getPeerID() +"]Got a peer connection! Spawning Handlers for a peer...");
 
                     // Spawn handlers for the new connection
                     handleNewConnection(newConnection, false);
@@ -84,8 +78,6 @@ public class PeerConnection {
 
         // Get output and input streams of the socket
         PeerInfo.Builder hisPeerInfoBuilder = new PeerInfo.Builder();
-        hisPeerInfoBuilder.withInputHandlerVars(inputMutex, inputStateRef);
-        hisPeerInfoBuilder.withOutputHandlerVars(outputMutex, outputStateRef);
         try{
             // !IMPORTANT NOTE!
             // Output stream needs to be created before input stream
@@ -93,10 +85,9 @@ public class PeerConnection {
             DataOutputStream outputStream = new DataOutputStream(connection.getOutputStream());
             outputStream.flush();
             DataInputStream inputStream = new DataInputStream(connection.getInputStream());
-            hisPeerInfoBuilder.withSocketAndItsStreams(connection, inputStream, outputStream);
 
             // Initialize handlers
-            Handler handler = new Handler(connection, myPeerInfo, inputStateRef,  outputStateRef,  inputStream, outputStream, inputMutex, outputMutex);
+            Handler handler = new Handler(connection, this.myPeerInfo, inputStateRef,  outputStateRef,  inputStream, outputStream, inputMutex, outputMutex);
 
             NeighbourInputHandler inputHandler = handler.getInputHandler();
             NeighbourOutputHandler outputHandler = handler.getOutputHandler();
@@ -124,11 +115,11 @@ public class PeerConnection {
 
     }
 
-    public PeerInfo getMyPeerInfo() {
+    public SelfPeerInfo getMyPeerInfo() {
         return myPeerInfo;
     }
 
-    public ConcurrentHashMap<Integer, PeerInfo> getNeighbourConnectionsInfo() {
+    public ConcurrentHashMap<Integer, NeighbourPeerInfo> getNeighbourConnectionsInfo() {
         return neighbourConnectionsInfo;
     }
 

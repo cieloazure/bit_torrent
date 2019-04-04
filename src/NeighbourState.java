@@ -2,5 +2,6 @@ public enum NeighbourState {
     CHOKED,
     UNCHOKED,
     INTERESTED,
-    NOT_INTERESTED
+    NOT_INTERESTED,
+    UNKNOWN
 }

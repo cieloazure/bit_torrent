@@ -18,13 +18,13 @@ import java.util.*;
  */
 public class StartRemotePeers {
 
-	public Vector<RemotePeerInfo> peerInfoVector;
+	public Vector<RemoteRemovePeerInfo peerInfoVector;
 	
 	public void getConfiguration()
 	{
 		String st;
 		int i1;
-		peerInfoVector = new Vector<RemotePeerInfo>();
+		peerInfoVector = new Vector<RemoteRemovePeerInfo>();
 		try {
 			BufferedReader in = new BufferedReader(new FileReader("config/PeerInfo.cfg"));
 			while((st = in.readLine()) != null) {

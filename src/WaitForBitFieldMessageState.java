@@ -10,16 +10,16 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class WaitForBitFieldMessageState implements PeerState {
     boolean reply;
-    private ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionsInfo;
+    private ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo;
 
 
-    public WaitForBitFieldMessageState(boolean reply, ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionsInfo){
+    public WaitForBitFieldMessageState(boolean reply, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo){
         this.reply = reply;
         this.neighbourConnectionsInfo = neighbourConnectionsInfo;
     }
 
     @Override
-    public void handleMessage(Handler context, PeerInfo myPeerInfo, DataInputStream inputStream, DataOutputStream outputStream) {
+    public void handleMessage(Handler context, SelfPeerInfo myPeerInfo, DataInputStream inputStream, DataOutputStream outputStream) {
         try {
             System.out.println("[PEER:"+myPeerInfo.getPeerID()+"]Waiting for bitfield message....with reply:" + this.reply + " from peer id " + context.getTheirPeerId());
 
@@ -45,12 +45,13 @@ public class WaitForBitFieldMessageState implements PeerState {
             // TODO: check payload and transition to next state
 
             BitSet theirBitfield = BitSet.valueOf(message.payload);
+            this.neighbourConnectionsInfo.get(context.getTheirPeerId()).setBitField(theirBitfield);
 
             if(this.reply){
                 System.out.println("[PEER:"+myPeerInfo.getPeerID()+"]Sending a bitfield reply message to " + context.getTheirPeerId());
 
                 // send our bitfield
-                ActualMessage reply = new ActualMessage(MessageType.BITFIELD, myPeerInfo.getBitField().toByteArray());
+                ActualMessage reply = new ActualMessage(MessageType.BITFIELD, myPeerInfo.getBitFieldByteArray(1));
 
                 outputStream.write(reply.serialize());
                 outputStream.flush();
@@ -58,7 +59,7 @@ public class WaitForBitFieldMessageState implements PeerState {
                 context.setState(new WaitForAnyMessageState(neighbourConnectionsInfo), true, true);
             }else{
 
-                context.setState(new ExpectedToSendInterestedOrNotInterestedMessageState(this.neighbourConnectionsInfo, theirBitfield), false, true);
+                context.setState(new ExpectedToSendInterestedOrNotInterestedMessageState(this.neighbourConnectionsInfo, theirBitfield, true), false, true);
             }
         }catch(EOFException e){
             e.printStackTrace();

@@ -5,16 +5,18 @@ import java.util.BitSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ExpectedToSendInterestedOrNotInterestedMessageState implements PeerState{
-    ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionInfo;
+    ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionInfo;
     BitSet theirBitfield;
+    boolean setState;
 
-    public ExpectedToSendInterestedOrNotInterestedMessageState(ConcurrentHashMap<Integer, PeerInfo> neighbourConnectionInfo, BitSet theirBitfield){
+    public ExpectedToSendInterestedOrNotInterestedMessageState(ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionInfo, BitSet theirBitfield, boolean setState){
         this.neighbourConnectionInfo = neighbourConnectionInfo;
         this.theirBitfield = theirBitfield;
+        this.setState = setState;
     }
 
     @Override
-    public void handleMessage(Handler context, PeerInfo myPeerInfo, DataInputStream inputStream, DataOutputStream outputStream) {
+    public void handleMessage(Handler context, SelfPeerInfo myPeerInfo, DataInputStream inputStream, DataOutputStream outputStream) {
         try{
             this.theirBitfield.xor(myPeerInfo.getBitField());
             if(this.theirBitfield.isEmpty()){
@@ -23,15 +25,15 @@ public class ExpectedToSendInterestedOrNotInterestedMessageState implements Peer
 
                 outputStream.write(actualMessage.serialize());
                 outputStream.flush();
-
-                context.setState(new WaitForAnyMessageState(neighbourConnectionInfo), true, true);
             }else{
                 ActualMessage actualMessage = new ActualMessage(MessageType.INTERESTED);
                 System.out.println("[PEER:"+myPeerInfo.getPeerID()+"]Sent INTERESTED message to "+context.getTheirPeerId());
 
                 outputStream.write(actualMessage.serialize());
                 outputStream.flush();
+            }
 
+            if(this.setState){
                 context.setState(new WaitForAnyMessageState(neighbourConnectionInfo), true, true);
             }
         } catch (IOException e) {
