@@ -3,6 +3,9 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
@@ -24,6 +27,7 @@ public class Peer {
         CommonConfig.Builder configBuilder = new CommonConfig.Builder();
         parseCommonConfigFile(configBuilder);
         commonConfig = configBuilder.build();
+
 
         PeerInfo.Builder peerInfoBuilder = new PeerInfo.Builder();
 
@@ -48,6 +52,29 @@ public class Peer {
 
         // Connect to peers in PeerInfo.cfg which appear above the current line by parsing the peer info config file again
         parsePeerInfoConfigToMakeConnections(connection);
+
+        // ScheduledExecutorService object which spawns the threads to execute periodic tasks like
+        // selectKtopNeighbors and selectOptUnchNeighbor
+        // TODO: Should there be a thread for the termination check as well?
+        // TODO: (which periodically checks if everyone has the file and then triggers a graceful shutdown)
+        PeriodicTasks pt = new PeriodicTasks(myPeerInfo);
+        ScheduledExecutorService schExec = Executors.newScheduledThreadPool(2);
+        Runnable selectTopk = ()->{
+            pt.selectTopK();
+        };
+        Runnable selectOptUnchoked = ()->{
+            pt.selectOptimisticallyUnchocked();
+        };
+
+        schExec.scheduleAtFixedRate(selectTopk,
+                commonConfig.getUnchokingInterval(),
+                commonConfig.getUnchokingInterval(),
+                TimeUnit.SECONDS);
+
+        schExec.scheduleAtFixedRate(selectOptUnchoked,
+                commonConfig.getOptimisticUnchokingInterval(),
+                commonConfig.getOptimisticUnchokingInterval(),
+                TimeUnit.SECONDS);
     }
 
     private static void parsePeerInfoConfigToMakeConnections(PeerConnection connection) {
@@ -141,7 +168,7 @@ public class Peer {
                 for (int i = 0; i < pieces; i++) {
                     bitField.set(i);
                 }
-                System.out.println("Tushar debug");
+//                System.out.println("Tushar debug");
                 System.out.println(commonConfig.getFileName());
                 List<byte[]> fileChunks = splitFileIntoChunks(commonConfig.getFileName(), commonConfig.getFileSize(), commonConfig.getPieceSize());
                 builder.withBitField(bitField)
@@ -182,8 +209,9 @@ public class Peer {
     /**
      * Function to setup the peer specific logger
      *
-     * @param peerID
-     * @return
+     * @param peerID Peer ID of the peer whose logger we are setting up
+     * @param logger Logger object to set up
+     * @return logger
      */
     private static Logger setUpLogger(int peerID, Logger logger) {
         try {
@@ -196,7 +224,6 @@ public class Peer {
             fh = new FileHandler("logs/log_peer_" + peerID + ".log");
             logger.addHandler(fh);
             fh.setFormatter(formatter);
-            System.out.println("Setup log");
 
         } catch (Exception e) {
             e.printStackTrace();
