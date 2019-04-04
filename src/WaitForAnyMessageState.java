@@ -103,7 +103,10 @@ public class WaitForAnyMessageState implements PeerState{
         byte[] payload = message.getPayload();
         ByteBuffer buffer = ByteBuffer.allocate(payload.length).wrap(payload);
         int pieceIndex = buffer.getInt();
-        context.setState(new ExpectedToSendPieceMessageState(neighbourConnectionsInfo, pieceIndex), false, false);
+        // Check if the state is unchoked
+        if(neighbourConnectionsInfo.get(context.getTheirPeerId()).getNeighbourState() == NeighbourState.UNCHOKED){
+            context.setState(new ExpectedToSendPieceMessageState(neighbourConnectionsInfo, pieceIndex), false, false);
+        }
     }
 
     private void handleIncomingPieceMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, Double downloadSpeed, SelfPeerInfo myPeerInfo) {
