@@ -19,7 +19,7 @@ public class WaitForBitFieldMessageState implements PeerState {
     @Override
     public void handleMessage(Handler context, SelfPeerInfo myPeerInfo, DataInputStream inputStream, DataOutputStream outputStream) {
         try {
-            System.out.println("[PEER:" + myPeerInfo.getPeerID() + "]Waiting for bitfield message....with reply:" + this.reply + " from peer id " + context.getTheirPeerId());
+            myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Waiting for bitfield message....with reply:" + this.reply + " from peer id " + context.getTheirPeerId());
 
             byte[] length = new byte[4];
             inputStream.read(length, 0, 4);
@@ -33,7 +33,7 @@ public class WaitForBitFieldMessageState implements PeerState {
             inputStream.read(messageBytes, 4, len);
             ActualMessage message = new ActualMessage(messageBytes);
 
-            System.out.println("[PEER:" + myPeerInfo.getPeerID() + "]Got a bitfield message from " + context.getTheirPeerId());
+            myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Got a bitfield message from " + context.getTheirPeerId());
 
             // TODO: Check if message is a bitfield
 
@@ -46,7 +46,7 @@ public class WaitForBitFieldMessageState implements PeerState {
             this.neighbourConnectionsInfo.get(context.getTheirPeerId()).setBitField(theirBitfield);
 
             if (this.reply) {
-                System.out.println("[PEER:" + myPeerInfo.getPeerID() + "]Sending a bitfield reply message to " + context.getTheirPeerId());
+                myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Sending a bitfield reply message to " + context.getTheirPeerId());
 
                 // send our bitfield
                 ActualMessage reply = new ActualMessage(MessageType.BITFIELD, myPeerInfo.getBitFieldByteArray(1));

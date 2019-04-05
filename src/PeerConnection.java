@@ -1,9 +1,10 @@
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class PeerConnection {
@@ -26,10 +27,9 @@ public class PeerConnection {
         ConnectionListener listener = new ConnectionListener(this);
         Thread listenerThread = new Thread(listener);
         listenerThread.start();
-
     }
 
-    public void handleNewConnection(Socket connection, boolean sendHandshake) {
+    public void handleNewConnection(Socket connection, boolean sendHandshake, DataInputStream inputStream, DataOutputStream outputStream, int theirPeerId) {
 
         // Set up objects as condition vars
         Object inputMutex = new Object();
@@ -40,41 +40,29 @@ public class PeerConnection {
         AtomicReference<PeerState> inputStateRef = new AtomicReference<>(null);
         BlockingQueue<PeerState> outputStateRef = new LinkedBlockingDeque<>();
 
-        // Get output and input streams of the socket
-        PeerInfo.Builder hisPeerInfoBuilder = new PeerInfo.Builder();
-        try {
-            // !IMPORTANT NOTE!
-            // Output stream needs to be created before input stream
-            // Output stream needs to flushed to write the headers over the wire
-            DataOutputStream outputStream = new DataOutputStream(connection.getOutputStream());
-            outputStream.flush();
-            DataInputStream inputStream = new DataInputStream(connection.getInputStream());
-
-            // Initialize handlers
-            Handler handler = new Handler(connection, this.myPeerInfo, inputStateRef, outputStateRef, inputStream, outputStream, inputMutex, outputMutex);
-
-            NeighbourInputHandler inputHandler = handler.getInputHandler();
-            NeighbourOutputHandler outputHandler = handler.getOutputHandler();
+        // Initialize handlers
+        Handler handler = new Handler(connection, this.myPeerInfo, inputStateRef, outputStateRef, inputStream, outputStream, inputMutex, outputMutex, theirPeerId);
 
 
-            //  Start threads for input and output
-            new Thread(inputHandler).start();
-            new Thread(outputHandler).start();
+        NeighbourInputHandler inputHandler = handler.getInputHandler();
+        NeighbourOutputHandler outputHandler = handler.getOutputHandler();
 
 
-            if (sendHandshake) {
-                synchronized (outputMutex) {
-                    outputStateRef.offer(new ExpectedToSendHandshakeMessageState(neighbourConnectionsInfo, hisPeerInfoBuilder));
-                    outputMutex.notifyAll();
-                }
-            } else {
-                synchronized (inputMutex) {
-                    inputStateRef.set(new WaitForHandshakeMessageState(true, neighbourConnectionsInfo, hisPeerInfoBuilder));
-                    inputMutex.notifyAll();
-                }
+        //  Start threads for input and output
+        new Thread(inputHandler).start();
+        new Thread(outputHandler).start();
+
+
+        if (sendHandshake) {
+            synchronized (outputMutex) {
+                outputStateRef.offer(new ExpectedToSendHandshakeMessageState(neighbourConnectionsInfo));
+                outputMutex.notifyAll();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+        } else {
+            synchronized (inputMutex) {
+                inputStateRef.set(new WaitForHandshakeMessageState(true, neighbourConnectionsInfo));
+                inputMutex.notifyAll();
+            }
         }
 
     }
@@ -110,22 +98,57 @@ public class PeerConnection {
         @Override
         public void run() {
             try {
-                System.out.println("[PEER:" + this.myPeerInfo.getPeerID() + "]Listening for connections....at " + this.myPeerInfo.getHostName() + ":" + this.myPeerInfo.getPortNumber());
+                myPeerInfo.log( "[PEER:" + this.myPeerInfo.getPeerID() + "]Listening for connections....at " + this.myPeerInfo.getHostName() + ":" + this.myPeerInfo.getPortNumber());
                 ServerSocket listener = new ServerSocket(this.myPeerInfo.getPortNumber());
                 while (true) {
                     Socket newConnection = listener.accept();
 
-                    //Todo: Need to find a way to add this log
-                    //peer.getLogger().info("Peer [peer_ID "+peer.getPeerID()+"] is connected from Peer[peer_ID "+myPeerInfo.getAddressToIDHash().get(peerIndex)+"]");
-                    System.out.println("[PEER:" + this.myPeerInfo.getPeerID() + "]Got a peer connection! Spawning Handlers for a peer...");
+                    // Get input and output streams of the socket
+                    // !IMPORTANT NOTE!
+                    // Output stream needs to be created before input stream
+                    // Output stream needs to flushed to write the headers over the wire
+                    DataOutputStream outputStream = new DataOutputStream(newConnection.getOutputStream());
+                    outputStream.flush();
+                    DataInputStream inputStream = new DataInputStream(newConnection.getInputStream());
+
+                    // Read the peer id for connection
+                    int theirPeerId = inputStream.readInt();
+
+                    myPeerInfo.log("Peer [peer_ID "+myPeerInfo.getPeerID()+"] is connected from Peer[peer_ID "+theirPeerId+"]");
 
                     // Spawn handlers for the new connection
-                    handleNewConnection(newConnection, false);
+                    handleNewConnection(newConnection, false, inputStream, outputStream, theirPeerId);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
-                System.out.println(e.getMessage());
+                myPeerInfo.log( e.getMessage());
             }
+        }
+    }
+
+    public void initializeNeighbourConnectionsInfo(String peerInfoConfigFile){
+        try {
+            BufferedReader in = new BufferedReader(new FileReader(peerInfoConfigFile));
+            String peerInfoFileLine = in.readLine();
+            while(peerInfoFileLine != null){
+                String[] splitLine = peerInfoFileLine.split(" ");
+                int peerId = Integer.parseInt(splitLine[0]);
+                if(peerId != this.myPeerInfo.getPeerID()){
+                    PeerInfo.Builder builder = new PeerInfo.Builder();
+                    builder.withPeerID(peerId)
+                           .withHostName(splitLine[1])
+                           .withPortNumber(Integer.parseInt(splitLine[2]))
+                           .withHasFile(Boolean.parseBoolean(splitLine[3]));
+
+                    NeighbourPeerInfo neighbourPeerInfo = builder.buildNeighbourPeerInfo();
+                    this.neighbourConnectionsInfo.putIfAbsent(peerId, neighbourPeerInfo);
+                }
+                peerInfoFileLine = in.readLine();
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
