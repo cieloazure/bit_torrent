@@ -1,14 +1,19 @@
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
+import java.util.logging.StreamHandler;
 
 public class SelfPeerInfo extends PeerInfo {
     private Boolean hasFile;
     private List<byte[]> fileChunks;
     private BitSet requestedbitField;
     private Logger logger;
+    private Logger stdOutputLogger;
     private ArrayList<Integer> peerAddressToID;
+    private boolean toStdOutput;
 
     public SelfPeerInfo(PeerInfo.Builder b, Boolean hasFile, List<byte[]> fileChunks, Logger logger, ArrayList<Integer> peerAddressToID) {
         super(b);
@@ -16,6 +21,9 @@ public class SelfPeerInfo extends PeerInfo {
         this.fileChunks = fileChunks;
         this.logger = logger;
         this.peerAddressToID = peerAddressToID;
+        this.stdOutputLogger = Logger.getAnonymousLogger();
+        this.stdOutputLogger.addHandler(new StreamHandler(System.out, new SimpleFormatter()));
+        this.toStdOutput = false;
     }
 
     public Logger getLogger() {
@@ -24,5 +32,16 @@ public class SelfPeerInfo extends PeerInfo {
 
     public byte[] getFileChunk(int index) {
         return fileChunks.get(index);
+    }
+
+    public void enableStdOutputLogging(){
+        this.toStdOutput = true;
+    }
+
+    public void log(String message){
+        this.logger.info(message);
+        if(this.toStdOutput){
+            this.stdOutputLogger.info(message);
+        }
     }
 }
