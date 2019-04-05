@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.List;
 import java.util.logging.Logger;
@@ -9,6 +10,7 @@ public class PeerInfo {
     protected Integer portNumber;
     protected Integer peerID;
     protected BitSet bitField;
+    protected BitSet requestedPieces; //to track the requested pieces
 
     public PeerInfo(String hostName, Integer portNumber, Integer peerID, BitSet bitField) {
         this.hostName = hostName;
@@ -22,6 +24,7 @@ public class PeerInfo {
         this.portNumber = b.portNumber;
         this.peerID = b.peerID;
         this.bitField = b.bitField;
+        this.requestedPieces = b.requestedPieces;
     }
 
     public Integer getPeerID() {
@@ -44,6 +47,14 @@ public class PeerInfo {
         this.bitField = bitField;
     }
 
+    public void setRequestedPieces(BitSet requestedPieces) {
+        this.requestedPieces = requestedPieces;
+    }
+
+    public BitSet getRequestedPieces() {
+        return this.requestedPieces;
+    }
+
     public byte[] getBitFieldByteArray(int defaultPieces) {
         byte[] array = this.bitField.toByteArray();
         if (array.length == 0) {
@@ -61,11 +72,16 @@ public class PeerInfo {
         this.bitField.set(index);
     }
 
+    public void setRequestPiecesIndex(int index) {
+        this.requestedPieces.set(index);
+    }
+
     public static class Builder {
         private String hostName;
         private Integer portNumber;
         private Integer peerID;
         private BitSet bitField;
+        protected BitSet requestedPieces;
         private Boolean hasFile;
         private List<byte[]> fileChunks;
         private Logger logger;
@@ -106,8 +122,10 @@ public class PeerInfo {
             return this;
         }
 
-        public Builder withBitField(BitSet bitField) {
+        public Builder withBitField(BitSet bitField, BitSet requestedPieces) {
             this.bitField = bitField;
+            //set the indexes corresponding of existing pieces in requestedPiece to true
+            this.requestedPieces = (BitSet)this.bitField.clone();
             return this;
         }
 
