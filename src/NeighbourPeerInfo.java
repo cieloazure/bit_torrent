@@ -33,6 +33,10 @@ public class NeighbourPeerInfo extends PeerInfo {
         this.downloadSpeed = downloadSpeed;
     }
 
+    public Double getDownloadSpeed() {
+        return this.downloadSpeed;
+    }
+
     public void setContext(Handler context) {
         this.context = context;
     }

@@ -51,7 +51,8 @@ public class Peer {
         parsePeerInfoConfigToMakeConnections(connection);
 
         connection.startScheduledExecution(commonConfig.getUnchokingInterval(),
-                commonConfig.getOptimisticUnchokingInterval());
+                commonConfig.getOptimisticUnchokingInterval(),
+                commonConfig.getNumOfPreferredNeighbours());
 
     }
 
