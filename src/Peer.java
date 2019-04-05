@@ -41,7 +41,6 @@ public class Peer {
 
         // Parse peer info file
         parsePeerInfoConfigFile(peerID, commonConfig, peerInfoBuilder);
-        buildAddressToPeerIDHash(peerID, peerInfoBuilder);
 
         // Build myPeerInfo object
         myPeerInfo = peerInfoBuilder.buildSelfPeerInfo();
@@ -232,36 +231,4 @@ public class Peer {
         return logger;
     }
 
-    private static void buildAddressToPeerIDHash(int ownerPeerID, PeerInfo.Builder builder) {
-        try {
-            BufferedReader in = new BufferedReader(new FileReader(CONFIG_DIR + "/" + PEER_INFO_CONFIGURATION_FILE));
-            ArrayList<Integer> addressToID = new ArrayList<>();
-            String line = in.readLine();
-            int linePeerID = Integer.parseInt(line.split(" ")[0]);
-            while (true) {
-                if (linePeerID != ownerPeerID) {
-                    String[] splitLine = line.split(" ");
-                    addressToID.add(Integer.parseInt(splitLine[0]));
-                    // read next line
-
-                }
-                line = in.readLine();
-                if (line == null) {
-                    break;
-                } else {
-                    linePeerID = Integer.parseInt(line.split(" ")[0]);
-                }
-
-            }
-            builder.withAddressToIDList(addressToID);
-
-            in.close();
-        } catch (FileNotFoundException e) {
-            System.err.println("[ERROR]: Peer Info configuration file not found");
-            e.printStackTrace();
-        } catch (IOException e) {
-            System.err.println("[ERROR]: Error parsing Peer Info configuration file");
-            e.printStackTrace();
-        }
-    }
 }

@@ -81,11 +81,6 @@ public class PeerInfo {
             return this;
         }
 
-        public Builder withAddressToIDList(ArrayList<Integer> peerAddressToID) {
-            this.peerAddressToID = peerAddressToID;
-            return this;
-        }
-
         public Builder withLogger(Logger logger) {
             this.logger = logger;
             return this;
@@ -122,7 +117,7 @@ public class PeerInfo {
         }
 
         public SelfPeerInfo buildSelfPeerInfo() {
-            return new SelfPeerInfo(this, this.hasFile, this.fileChunks, this.logger, this.peerAddressToID);
+            return new SelfPeerInfo(this, this.hasFile, this.fileChunks, this.logger);
         }
 
         public NeighbourPeerInfo buildNeighbourPeerInfo() {

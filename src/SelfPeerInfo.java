@@ -12,15 +12,13 @@ public class SelfPeerInfo extends PeerInfo {
     private BitSet requestedbitField;
     private Logger logger;
     private Logger stdOutputLogger;
-    private ArrayList<Integer> peerAddressToID;
     private boolean toStdOutput;
 
-    public SelfPeerInfo(PeerInfo.Builder b, Boolean hasFile, List<byte[]> fileChunks, Logger logger, ArrayList<Integer> peerAddressToID) {
+    public SelfPeerInfo(PeerInfo.Builder b, Boolean hasFile, List<byte[]> fileChunks, Logger logger) {
         super(b);
         this.hasFile = hasFile;
         this.fileChunks = fileChunks;
         this.logger = logger;
-        this.peerAddressToID = peerAddressToID;
         this.stdOutputLogger = Logger.getAnonymousLogger();
         this.stdOutputLogger.addHandler(new StreamHandler(System.out, new SimpleFormatter()));
         this.toStdOutput = false;
