@@ -3,9 +3,6 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
@@ -53,28 +50,9 @@ public class Peer {
         // Connect to peers in PeerInfo.cfg which appear above the current line by parsing the peer info config file again
         parsePeerInfoConfigToMakeConnections(connection);
 
-        // ScheduledExecutorService object which spawns the threads to execute periodic tasks like
-        // selectKtopNeighbors and selectOptUnchNeighbor
-        // TODO: Should there be a thread for the termination check as well?
-        // TODO: (which periodically checks if everyone has the file and then triggers a graceful shutdown)
-        PeriodicTasks pt = new PeriodicTasks(myPeerInfo);
-        ScheduledExecutorService schExec = Executors.newScheduledThreadPool(2);
-        Runnable selectTopk = ()->{
-            pt.selectTopK();
-        };
-        Runnable selectOptUnchoked = ()->{
-            pt.selectOptimisticallyUnchocked();
-        };
+        connection.startScheduledExecution(commonConfig.getUnchokingInterval(),
+                commonConfig.getOptimisticUnchokingInterval());
 
-        schExec.scheduleAtFixedRate(selectTopk,
-                commonConfig.getUnchokingInterval(),
-                commonConfig.getUnchokingInterval(),
-                TimeUnit.SECONDS);
-
-        schExec.scheduleAtFixedRate(selectOptUnchoked,
-                commonConfig.getOptimisticUnchokingInterval(),
-                commonConfig.getOptimisticUnchokingInterval(),
-                TimeUnit.SECONDS);
     }
 
     private static void parsePeerInfoConfigToMakeConnections(PeerConnection connection) {

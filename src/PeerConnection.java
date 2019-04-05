@@ -3,9 +3,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class PeerConnection {
@@ -28,6 +26,7 @@ public class PeerConnection {
         ConnectionListener listener = new ConnectionListener(this);
         Thread listenerThread = new Thread(listener);
         listenerThread.start();
+
     }
 
     public void handleNewConnection(Socket connection, boolean sendHandshake) {
@@ -88,6 +87,15 @@ public class PeerConnection {
         return neighbourConnectionsInfo;
     }
 
+    public void startScheduledExecution(int topKinterval, int optUnchokedInt) {
+        // ScheduledExecutorService object which spawns the threads to execute periodic tasks like
+        // selectKtopNeighbors and selectOptUnchNeighbor
+        // TODO: Should there be a thread for the termination check as well?
+        // TODO: (which periodically checks if everyone has the file and then triggers a graceful shutdown)
+        PeriodicTasks pt = new PeriodicTasks(myPeerInfo, neighbourConnectionsInfo);
+        pt.startScheduledExecution(topKinterval, optUnchokedInt);
+    }
+
     private class ConnectionListener implements Runnable {
         PeerConnection peerConnection;
         SelfPeerInfo myPeerInfo;
@@ -120,6 +128,5 @@ public class PeerConnection {
             }
         }
     }
-
 
 }
