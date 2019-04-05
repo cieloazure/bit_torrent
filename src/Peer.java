@@ -1,9 +1,12 @@
+import com.oracle.tools.packager.Log;
+
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 import java.util.logging.FileHandler;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
@@ -31,17 +34,25 @@ public class Peer {
         // TODO: Check for NAN exception, terminate program in that case
         int peerID = Integer.parseInt(args[0]);
         peerInfoBuilder.withPeerID(peerID);
+
         //Setting up the logger
         logger = setUpLogger(peerID, logger);
         peerInfoBuilder.withLogger(logger);
+
         // Parse peer info file
         parsePeerInfoConfigFile(peerID, commonConfig, peerInfoBuilder);
-        buildAddressToPeerIDHash(peerID, peerInfoBuilder);
+
         // Build myPeerInfo object
         myPeerInfo = peerInfoBuilder.buildSelfPeerInfo();
 
+        // Enable std output logging
+        myPeerInfo.enableStdOutputLogging();
+
         // Peer connection object to start listening for new connections, send a message to any connection or create a connection to any peer
         PeerConnection connection = new PeerConnection(myPeerInfo);
+
+        // Initialize the concurrent hash map from file
+        connection.initializeNeighbourConnectionsInfo(CONFIG_DIR + '/' + PEER_INFO_CONFIGURATION_FILE);
 
         // Start listening for any new connections
         connection.startListenerThread();
@@ -66,13 +77,28 @@ public class Peer {
             int neighbourPortNumber = Integer.parseInt(splitLine[2]);
 
             while (linePeerId != myPeerInfo.getPeerID()) {
-                System.out.println("adding log entry");
-                myPeerInfo.getLogger().info("Peer [peerID " + myPeerInfo.getPeerID() + "] makes a connection to Peer[peer_ID " + linePeerId + "]");
+                // Log previous state
+                myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Connecting to a peer " + linePeerId + "....");
+
                 // Make a connection with the peer
                 Socket newConnection = new Socket(neighbourHostName, neighbourPortNumber);
-                System.out.println("[PEER:" + myPeerInfo.getPeerID() + "]Connecting to a peer " + linePeerId + "....");
+
+                // Log connection
+                myPeerInfo.log("Peer [peerID " + myPeerInfo.getPeerID() + "] makes a connection to Peer[peer_ID " + linePeerId + "]");
+
+                // Get input and output streams of the socket
+                // !IMPORTANT NOTE!
+                // Output stream needs to be created before input stream
+                // Output stream needs to flushed to write the headers over the wire
+                DataOutputStream outputStream = new DataOutputStream(newConnection.getOutputStream());
+                outputStream.flush();
+                DataInputStream inputStream = new DataInputStream(newConnection.getInputStream());
+
+                // Write the peer id for connection
+                outputStream.writeInt(myPeerInfo.getPeerID());
+
                 // Spawn handlers for the new connection
-                connection.handleNewConnection(newConnection, true);
+                connection.handleNewConnection(newConnection, true, inputStream, outputStream, linePeerId);
 
                 // read next line
                 peerInfoFileLine = in.readLine();
@@ -101,7 +127,8 @@ public class Peer {
             long fileSize = Long.parseLong(in.readLine().split(" ")[1]);
             long pieceSize = Long.parseLong(in.readLine().split(" ")[1]);
 
-            configBuilder.withNumOfPreferredNeighboursAs(numOfPreferredNeighbours)
+            configBuilder
+                    .withNumOfPreferredNeighboursAs(numOfPreferredNeighbours)
                     .withOptimisticUnchokingIntervalAs(optimisticUnchokingInterval)
                     .withUnchokingIntervalAs(unchokingInterval)
                     .withFileParametersAs(fileName, fileSize, pieceSize);
@@ -193,7 +220,7 @@ public class Peer {
             SimpleFormatter formatter = new SimpleFormatter();
             logger = Logger.getLogger("log_peer_" + peerID);
             logger.setUseParentHandlers(false);
-            fh = new FileHandler("logs/log_peer_" + peerID + ".log");
+            fh = new FileHandler("logs/log_peer_" + peerID + ".log", true);
             logger.addHandler(fh);
             fh.setFormatter(formatter);
             System.out.println("Setup log");
@@ -204,36 +231,4 @@ public class Peer {
         return logger;
     }
 
-    private static void buildAddressToPeerIDHash(int ownerPeerID, PeerInfo.Builder builder) {
-        try {
-            BufferedReader in = new BufferedReader(new FileReader(CONFIG_DIR + "/" + PEER_INFO_CONFIGURATION_FILE));
-            ArrayList<Integer> addressToID = new ArrayList<>();
-            String line = in.readLine();
-            int linePeerID = Integer.parseInt(line.split(" ")[0]);
-            while (true) {
-                if (linePeerID != ownerPeerID) {
-                    String[] splitLine = line.split(" ");
-                    addressToID.add(Integer.parseInt(splitLine[0]));
-                    // read next line
-
-                }
-                line = in.readLine();
-                if (line == null) {
-                    break;
-                } else {
-                    linePeerID = Integer.parseInt(line.split(" ")[0]);
-                }
-
-            }
-            builder.withAddressToIDList(addressToID);
-
-            in.close();
-        } catch (FileNotFoundException e) {
-            System.err.println("[ERROR]: Peer Info configuration file not found");
-            e.printStackTrace();
-        } catch (IOException e) {
-            System.err.println("[ERROR]: Error parsing Peer Info configuration file");
-            e.printStackTrace();
-        }
-    }
 }

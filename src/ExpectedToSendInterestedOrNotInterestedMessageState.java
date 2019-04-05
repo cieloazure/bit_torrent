@@ -21,13 +21,13 @@ public class ExpectedToSendInterestedOrNotInterestedMessageState implements Peer
             this.theirBitfield.xor(myPeerInfo.getBitField());
             if (this.theirBitfield.isEmpty()) {
                 ActualMessage actualMessage = new ActualMessage(MessageType.NOT_INTERESTED);
-                System.out.println("[PEER:" + myPeerInfo.getPeerID() + "]Sent NOT INTERESTED message to " + context.getTheirPeerId());
+                myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Sent NOT INTERESTED message to " + context.getTheirPeerId());
 
                 outputStream.write(actualMessage.serialize());
                 outputStream.flush();
             } else {
                 ActualMessage actualMessage = new ActualMessage(MessageType.INTERESTED);
-                System.out.println("[PEER:" + myPeerInfo.getPeerID() + "]Sent INTERESTED message to " + context.getTheirPeerId());
+                myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Sent INTERESTED message to " + context.getTheirPeerId());
 
                 outputStream.write(actualMessage.serialize());
                 outputStream.flush();
