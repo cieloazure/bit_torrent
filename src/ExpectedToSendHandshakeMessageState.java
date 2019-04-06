@@ -13,7 +13,7 @@ public class ExpectedToSendHandshakeMessageState implements PeerState {
     @Override
     public void handleMessage(Handler context, SelfPeerInfo myPeerInfo, DataInputStream inputStream, DataOutputStream outputStream) {
         try {
-            HandshakeMessage message = new HandshakeMessage(myPeerInfo.getPeerID());
+            HandshakeMessage message = new HandshakeMessage(myPeerInfo.getPeerID()+1);
 
             outputStream.write(message.serialize());
             outputStream.flush();
