@@ -24,6 +24,32 @@ public class NeighbourPeerInfo extends PeerInfo {
     public NeighbourState getNeighbourState() {
         return neighbourState;
     }
+    public boolean isInterested(){
+        if(neighbourState==NeighbourState.INTERESTED || neighbourState == NeighbourState.CHOKED_AND_INTERESTED ||
+                neighbourState == NeighbourState.UNCHOKED_AND_INTERESTED){
+            return true;
+        }
+        return false;
+    }
+    public boolean isChokedAndInterested(){
+        if(neighbourState == NeighbourState.CHOKED_AND_INTERESTED){
+            return true;
+        }
+        return false;
+    }
+    public boolean isChoked(){
+        if(neighbourState == NeighbourState.CHOKED_AND_INTERESTED ||
+                neighbourState == NeighbourState.CHOKED_AND_NOT_INTERESTED){
+            return true;
+        }
+        return false;
+    }
+    public boolean isUnChoked(){
+        if(neighbourState == NeighbourState.UNCHOKED_AND_INTERESTED){
+            return true;
+        }
+        return false;
+    }
 
     public void setNeighbourState(NeighbourState neighbourState) {
         this.neighbourState = neighbourState;
