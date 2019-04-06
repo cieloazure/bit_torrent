@@ -140,6 +140,7 @@ public class WaitForAnyMessageState implements PeerState {
 
         // 1. xor & and the of the bitfield the neighbour with myPeerInfo.getBitField() to find pieces that can be requested from neighbour.
         BitSet missing = new BitSet();
+        BitSet toRequest = new BitSet();
         BitSet theirBitSet = new BitSet();
 
         theirBitSet = (BitSet)(neighbourConnectionsInfo.get(context.getTheirPeerId())).getBitField().clone();
@@ -153,14 +154,15 @@ public class WaitForAnyMessageState implements PeerState {
         //pieces that are missing from client and present in server
         missing.and(theirBitSet);
 
+        toRequest = (BitSet)missing.clone();
         //pieces that are not yet requested.
-        missing.andNot(myPeerInfo.getRequestedPieces());
+        toRequest.andNot(myPeerInfo.getRequestedPieces());
 
-        System.out.printf("Missing bitset"+missing);
+        System.out.printf("Bitset to be requested"+toRequest);
 
         // 2. From the set bits choose any random index (which has not been requesssted before)
-        int randomIndex = ThreadLocalRandom.current().nextInt(0,missing.cardinality());
-        int pieceToRequest = missing.nextSetBit(randomIndex);
+        int randomIndex = ThreadLocalRandom.current().nextInt(0,toRequest.cardinality());
+        int pieceToRequest = toRequest.nextSetBit(randomIndex);
 
         // 3. Send a request message with that index
         context.setState(new ExpectedToSendRequestMessageState(this.neighbourConnectionsInfo,pieceToRequest), false, false);
