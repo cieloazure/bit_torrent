@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
@@ -13,6 +14,7 @@ public class SelfPeerInfo extends PeerInfo {
     private Logger logger;
     private Logger stdOutputLogger;
     private boolean toStdOutput;
+    protected ScheduledExecutorService schExec;
 
     public SelfPeerInfo(PeerInfo.Builder b, Boolean hasFile, List<byte[]> fileChunks, Logger logger) {
         super(b);
@@ -26,6 +28,12 @@ public class SelfPeerInfo extends PeerInfo {
 
     public Logger getLogger() {
         return logger;
+    }
+    public void setSchExec(ScheduledExecutorService schExec){
+        this.schExec = schExec;
+    }
+    public void killAllPeriodicTasks(){
+        schExec.shutdown();
     }
 
     public byte[] getFileChunk(int index) {

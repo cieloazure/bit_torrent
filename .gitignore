@@ -1,2 +1,5 @@
 out/
 bittorrent-clone.iws
+.DS_Store
+bittorrent-clone.iml
+bittorrent-clone.ipr
