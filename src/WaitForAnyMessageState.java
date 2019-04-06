@@ -112,11 +112,14 @@ public class WaitForAnyMessageState implements PeerState {
         int randomIndex = ThreadLocalRandom.current().nextInt(0,missing.cardinality());
         int pieceToRequest = missing.nextSetBit(randomIndex);
 
+
         // 3. Send a request message with that index
         context.setState(new ExpectedToSendRequestMessageState(this.neighbourConnectionsInfo,pieceToRequest), false, false);
 
         //4.Set the piece index in requestedPieces bitset
-        neighbourConnectionsInfo.get(context.getTheirPeerId()).setRequestedPieceIndex(pieceToRequest);
+        myPeerInfo.setRequestPiecesIndex(pieceToRequest);
+
+        //neighbourConnectionsInfo.get(context.getTheirPeerId()).setRequestedPieceIndex(pieceToRequest);
 
         //5. Track to which peer we have sent a request message with that index, next time an unchoke message arrives, do not use the same index again, :
 
