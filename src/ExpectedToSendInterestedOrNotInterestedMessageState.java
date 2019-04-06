@@ -26,34 +26,6 @@ public class ExpectedToSendInterestedOrNotInterestedMessageState implements Peer
                 outputStream.write(actualMessage.serialize());
                 outputStream.flush();
 
-                switch (neighbourConnectionInfo.get(context.getTheirPeerId()).getNeighbourState()) {
-
-                    case UNKNOWN:
-                        neighbourConnectionInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.NOT_INTERESTED);
-                        break;
-                    case CHOKED:
-                        neighbourConnectionInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.CHOKED_AND_NOT_INTERESTED);
-                        break;
-                    case INTERESTED:
-                        neighbourConnectionInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.NOT_INTERESTED);
-                        break;
-                    case UNCHOKED:
-                        //stays choked
-                        neighbourConnectionInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.CHOKED_AND_NOT_INTERESTED);
-                        break;
-                    case UNCHOKED_AND_INTERESTED:
-                        neighbourConnectionInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.CHOKED_AND_NOT_INTERESTED);
-                        break;
-                    case CHOKED_AND_INTERESTED:
-                        neighbourConnectionInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.CHOKED_AND_NOT_INTERESTED);
-                        break;
-                    case CHOKED_AND_NOT_INTERESTED:
-                        break;
-                    case NOT_INTERESTED:
-                        break;
-
-                }
-
 
             } else {
                 ActualMessage actualMessage = new ActualMessage(MessageType.INTERESTED);
@@ -61,32 +33,7 @@ public class ExpectedToSendInterestedOrNotInterestedMessageState implements Peer
 
                 outputStream.write(actualMessage.serialize());
                 outputStream.flush();
-                switch (neighbourConnectionInfo.get(context.getTheirPeerId()).getNeighbourState()) {
 
-                    case UNKNOWN:
-                        neighbourConnectionInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.INTERESTED);
-                        break;
-                    case CHOKED:
-                        neighbourConnectionInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.CHOKED_AND_INTERESTED);
-                        break;
-                    case NOT_INTERESTED:
-                        neighbourConnectionInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.INTERESTED);
-                        break;
-                    case UNCHOKED:
-                        //stays choked
-                        neighbourConnectionInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.UNCHOKED_AND_INTERESTED);
-                        break;
-                    case CHOKED_AND_NOT_INTERESTED:
-                        neighbourConnectionInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.CHOKED_AND_INTERESTED);
-                        break;
-                    case UNCHOKED_AND_INTERESTED:
-                        break;
-                    case CHOKED_AND_INTERESTED:
-                        break;
-                    case INTERESTED:
-                        break;
-
-                }
             }
 
             if (this.setState) {

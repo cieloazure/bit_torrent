@@ -69,15 +69,67 @@ public class WaitForAnyMessageState implements PeerState {
     private void handleIncomingNotInterestedMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
         // 1. Update the state of the peer in concurrent hash map, this will be used when decided the peers to upload to, not interested peers won't be considered at all
         myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Got NOT INTERESTED message from peer " + context.getTheirPeerId() + "! Updating the state in hashmap to be used in next interval");
-        neighbourConnectionsInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.NOT_INTERESTED);
+        switch (neighbourConnectionsInfo.get(context.getTheirPeerId()).getNeighbourState()) {
+
+            case UNKNOWN:
+                neighbourConnectionsInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.NOT_INTERESTED);
+                break;
+            case CHOKED:
+                neighbourConnectionsInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.CHOKED_AND_NOT_INTERESTED);
+                break;
+            case INTERESTED:
+                neighbourConnectionsInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.NOT_INTERESTED);
+                break;
+            case UNCHOKED:
+                //stays choked
+                neighbourConnectionsInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.CHOKED_AND_NOT_INTERESTED);
+                break;
+            case UNCHOKED_AND_INTERESTED:
+                neighbourConnectionsInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.CHOKED_AND_NOT_INTERESTED);
+                break;
+            case CHOKED_AND_INTERESTED:
+                neighbourConnectionsInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.CHOKED_AND_NOT_INTERESTED);
+                break;
+            case CHOKED_AND_NOT_INTERESTED:
+                break;
+            case NOT_INTERESTED:
+                break;
+
+        }
+//        neighbourConnectionsInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.NOT_INTERESTED);
     }
 
     private void handleIncomingInterestedMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
         // 1. Update the state of the peer in the concurrent hash map, this will be used when unchoking interval elapses in timertask1 or when optimistic unchoking interval elapses in timertask2
 
         myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Got INTERESTED message from peer " + context.getTheirPeerId() + "! Updating the state in hashmap to be used in next interval");
+        switch (neighbourConnectionsInfo.get(context.getTheirPeerId()).getNeighbourState()) {
 
-        neighbourConnectionsInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.INTERESTED);
+            case UNKNOWN:
+                neighbourConnectionsInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.INTERESTED);
+                break;
+            case CHOKED:
+                neighbourConnectionsInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.CHOKED_AND_INTERESTED);
+                break;
+            case NOT_INTERESTED:
+                neighbourConnectionsInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.INTERESTED);
+                break;
+            case UNCHOKED:
+                //stays choked
+                neighbourConnectionsInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.UNCHOKED_AND_INTERESTED);
+                break;
+            case CHOKED_AND_NOT_INTERESTED:
+                neighbourConnectionsInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.CHOKED_AND_INTERESTED);
+                break;
+            case UNCHOKED_AND_INTERESTED:
+                break;
+            case CHOKED_AND_INTERESTED:
+                break;
+            case INTERESTED:
+                break;
+
+        }
+//        neighbourConnectionsInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.INTERESTED);
     }
 
     private void handleIncomingUnchokeMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
