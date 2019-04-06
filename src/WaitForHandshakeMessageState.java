@@ -22,17 +22,13 @@ public class WaitForHandshakeMessageState implements PeerState {
             inputStream.readFully(messageBytes);
             HandshakeMessage message = new HandshakeMessage(messageBytes);
 
-            if (message.getHeader().equals("P2PFILESHARINGPROJ")) {
-                myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Verified Handshake header.");
+            if (message.getHeader().equals("P2PFILESHARINGPROJ") && message.getPeerID() == context.getTheirPeerId()) {
+                myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Verified Handshake header and PeerID.");
             } else {
-                myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]ERROR: Invalid Handshake header.");
+                myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]ERROR: Invalid Handshake header or PeerID. Resend HandShake");
+                context.setState(new ExpectedToSendHandshakeMessageState(neighbourConnectionsInfo), false, false);
             }
 
-            if(message.getPeerID() == context.getTheirPeerId()) {
-                myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Verified Handshake PeerID.");
-            } else {
-            myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]ERROR: Invalid Handshake PeerID.");
-            }
 
             neighbourConnectionsInfo.get(message.getPeerID()).setContext(context);
 
