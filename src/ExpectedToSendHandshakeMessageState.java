@@ -5,11 +5,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ExpectedToSendHandshakeMessageState implements PeerState {
     private ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionInfo;
-    private PeerInfo.Builder peerInfoBuilder;
 
-    public ExpectedToSendHandshakeMessageState(ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, PeerInfo.Builder peerInfoBuilder) {
+    public ExpectedToSendHandshakeMessageState(ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo) {
         this.neighbourConnectionInfo = neighbourConnectionsInfo;
-        this.peerInfoBuilder = peerInfoBuilder;
     }
 
     @Override
@@ -20,8 +18,8 @@ public class ExpectedToSendHandshakeMessageState implements PeerState {
             outputStream.write(message.serialize());
             outputStream.flush();
 
-            System.out.println("[PEER:" + myPeerInfo.getPeerID() + "] Sent handshake message to " + context.getHostName() + ":" + context.getPortNumber() + "...");
-            context.setState(new WaitForHandshakeMessageState(false, this.neighbourConnectionInfo, this.peerInfoBuilder), true, true);
+            myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "] Sent handshake message to " + context.getHostName() + ":" + context.getPortNumber() + "...");
+            context.setState(new WaitForHandshakeMessageState(false, this.neighbourConnectionInfo), true, true);
         } catch (IOException e) {
             e.printStackTrace();
         }

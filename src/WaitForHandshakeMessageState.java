@@ -7,47 +7,39 @@ import java.util.concurrent.ConcurrentHashMap;
 public class WaitForHandshakeMessageState implements PeerState {
     private boolean reply;
     private ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo;
-    private PeerInfo.Builder peerInfoBuilder;
 
-    public WaitForHandshakeMessageState(boolean reply, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, PeerInfo.Builder peerInfoBuilder) {
+    public WaitForHandshakeMessageState(boolean reply, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo) {
         this.reply = reply;
-        this.peerInfoBuilder = peerInfoBuilder;
         this.neighbourConnectionsInfo = neighbourConnectionsInfo;
     }
 
     @Override
     public void handleMessage(Handler context, SelfPeerInfo myPeerInfo, DataInputStream inputStream, DataOutputStream outputStream) {
         try {
-            System.out.println("[PEER:" + myPeerInfo.getPeerID() + "]Waiting for handshake message....with reply:" + this.reply + " from " + context.getHostName() + ":" + context.getPortNumber() + " peer id:" + context.getTheirPeerId());
+            myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Waiting for handshake message....with reply:" + this.reply + " from " + context.getHostName() + ":" + context.getPortNumber() + " peer id:" + context.getTheirPeerId());
 
             byte[] messageBytes = new byte[32];
             inputStream.readFully(messageBytes);
             HandshakeMessage message = new HandshakeMessage(messageBytes);
 
             if (message.getHeader().equals("P2PFILESHARINGPROJ")) {
-                System.out.println("[PEER:" + myPeerInfo.getPeerID() + "]Verified Handshake header.");
+                myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Verified Handshake header.");
             } else {
-                System.out.println("[PEER:" + myPeerInfo.getPeerID() + "]ERROR: Invalid Handshake header.");
+                myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]ERROR: Invalid Handshake header.");
             }
 
-            peerInfoBuilder
-                    .withPeerID(message.getPeerID())
-                    .withHostName(context.getHostName())
-                    .withPortNumber(context.getPortNumber())
-                    .withHandlerContext(context);
+            if(message.getPeerID() == context.getTheirPeerId()) {
+                myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Verified Handshake PeerID.");
+            } else {
+            myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]ERROR: Invalid Handshake PeerID.");
+            }
 
-            NeighbourPeerInfo theirPeerInfo = peerInfoBuilder.buildNeighbourPeerInfo();
-            neighbourConnectionsInfo.putIfAbsent(theirPeerInfo.getPeerID(), theirPeerInfo);
+            neighbourConnectionsInfo.get(message.getPeerID()).setContext(context);
 
-            System.out.println("**Sender PID:" + message.getPeerID());
-            System.out.println("Receiver PID:" + myPeerInfo.getPeerID());
-
-            context.setTheirPeerId(message.getPeerID());
-
-            System.out.println("[PEER:" + myPeerInfo.getPeerID() + "]Got a handshake message from " + context.getHostName() + ":" + context.getPortNumber() + " and it has peer id " + message.getPeerID() + "....");
+            myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Got a handshake message from " + context.getHostName() + ":" + context.getPortNumber() + " and it has peer id " + message.getPeerID() + "....");
 
             if (this.reply) {
-                System.out.println("[PEER" + myPeerInfo.getPeerID() + "]Sending a handshake reply message to " + message.getPeerID() + "....");
+                myPeerInfo.log( "[PEER" + myPeerInfo.getPeerID() + "]Sending a handshake reply message to " + message.getPeerID() + "....");
                 if (message.isValid()) {
                     HandshakeMessage reply = new HandshakeMessage(myPeerInfo.getPeerID());
                     outputStream.write(reply.serialize());

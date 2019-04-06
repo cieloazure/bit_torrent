@@ -14,11 +14,9 @@ class Handler {
     protected Object inputMutex;
     protected Object outputMutex;
     protected int whichHandler;
+    protected int theirPeerId;
 
-    // TODO: Find appropriate visiblity
-    protected volatile int theirPeerId;
-
-    public Handler(Socket connection, SelfPeerInfo myPeerInfo, AtomicReference<PeerState> inputStateRef, BlockingQueue<PeerState> outputMessageQueue, DataInputStream inputStream, DataOutputStream outputStream, Object inputMutex, Object outputMutex) {
+    public Handler(Socket connection, SelfPeerInfo myPeerInfo, AtomicReference<PeerState> inputStateRef, BlockingQueue<PeerState> outputMessageQueue, DataInputStream inputStream, DataOutputStream outputStream, Object inputMutex, Object outputMutex, int theirPeerId) {
         this.connection = connection;
         this.myPeerInfo = myPeerInfo;
         this.inputStateRef = inputStateRef;
@@ -27,6 +25,7 @@ class Handler {
         this.outputStream = outputStream;
         this.inputMutex = inputMutex;
         this.outputMutex = outputMutex;
+        this.theirPeerId = theirPeerId;
     }
 
     public void setState(PeerState whichState, boolean isForInputState, boolean setOtherStateAsNull) {
@@ -65,22 +64,18 @@ class Handler {
         return this.theirPeerId;
     }
 
-    public void setTheirPeerId(int theirPeerId) {
-        this.theirPeerId = theirPeerId;
-    }
-
     public void setWhichHandler(int whichHandler) {
         this.whichHandler = whichHandler;
     }
 
     public NeighbourInputHandler getInputHandler() {
-        NeighbourInputHandler nih = new NeighbourInputHandler(this.connection, this.myPeerInfo, this.inputStateRef, this.outputStateRef, this.inputStream, this.outputStream, this.inputMutex, this.outputMutex);
+        NeighbourInputHandler nih = new NeighbourInputHandler(this.connection, this.myPeerInfo, this.inputStateRef, this.outputStateRef, this.inputStream, this.outputStream, this.inputMutex, this.outputMutex, this.theirPeerId);
         nih.setWhichHandler(1);
         return nih;
     }
 
     public NeighbourOutputHandler getOutputHandler() {
-        NeighbourOutputHandler noh = new NeighbourOutputHandler(this.connection, this.myPeerInfo, this.inputStateRef, this.outputStateRef, this.inputStream, this.outputStream, this.inputMutex, this.outputMutex);
+        NeighbourOutputHandler noh = new NeighbourOutputHandler(this.connection, this.myPeerInfo, this.inputStateRef, this.outputStateRef, this.inputStream, this.outputStream, this.inputMutex, this.outputMutex, this.theirPeerId);
         noh.setWhichHandler(0);
         return noh;
     }
