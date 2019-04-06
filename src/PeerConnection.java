@@ -74,6 +74,15 @@ public class PeerConnection {
         return neighbourConnectionsInfo;
     }
 
+    public void startScheduledExecution(int topKinterval, int optUnchokedInt, int peerCount) {
+        // ScheduledExecutorService object which spawns the threads to execute periodic tasks like
+        // selectKtopNeighbors and selectOptUnchNeighbor
+        // TODO: Should there be a thread for the termination check as well?
+        // TODO: (which periodically checks if everyone has the file and then triggers a graceful shutdown)
+        PeriodicTasks pt = new PeriodicTasks(myPeerInfo, neighbourConnectionsInfo, peerCount);
+        pt.startScheduledExecution(topKinterval, optUnchokedInt);
+    }
+
     private class ConnectionListener implements Runnable {
         PeerConnection peerConnection;
         SelfPeerInfo myPeerInfo;
@@ -141,6 +150,5 @@ public class PeerConnection {
             e.printStackTrace();
         }
     }
-
 
 }

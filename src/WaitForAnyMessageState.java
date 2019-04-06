@@ -81,10 +81,10 @@ public class WaitForAnyMessageState implements PeerState {
     }
 
     private void handleIncomingUnchokeMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
-        System.out.println("[PEER:" + myPeerInfo.getPeerID() + "]Got UNCHOKE message from peer " + context.getTheirPeerId() + "! Updating the state in hashmap to be used in next interval");
+        myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Got UNCHOKE message from peer " + context.getTheirPeerId() + "! Updating the state in hashmap to be used in next interval");
 
-        // 0. Update the state of the peer in concurrent hash map to unchoke
-        neighbourConnectionsInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.UNCHOKED);
+        // 0. Update the state of the peer in concurrent hash map to unchoke **--->> done in ExpectedToSendChokeMessageState/Unchoke
+        //neighbourConnectionsInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.UNCHOKED);
 
         // 1. xor & and the of the bitfield the neighbour with myPeerInfo.getBitField() to find pieces that can be requested from neighbour.
         BitSet missing = new BitSet();
@@ -110,14 +110,11 @@ public class WaitForAnyMessageState implements PeerState {
         int randomIndex = ThreadLocalRandom.current().nextInt(0,missing.cardinality());
         int pieceToRequest = missing.nextSetBit(randomIndex);
 
-
         // 3. Send a request message with that index
         context.setState(new ExpectedToSendRequestMessageState(this.neighbourConnectionsInfo,pieceToRequest), false, false);
 
         //4.Set the piece index in requestedPieces bitset
         myPeerInfo.setRequestPiecesIndex(pieceToRequest);
-
-        //neighbourConnectionsInfo.get(context.getTheirPeerId()).setRequestedPieceIndex(pieceToRequest);
 
         //5. Track to which peer we have sent a request message with that index, next time an unchoke message arrives, do not use the same index again, :
 
@@ -125,10 +122,10 @@ public class WaitForAnyMessageState implements PeerState {
     }
 
     private void handleIncomingChokeMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
-        // 0. Update the state of the peer in concurrent hash map to choked
+        // 0. Update the state of the peer in concurrent hash map to choked **--->> done in ExpectedToSendChokeMessageState/Unchoke
         // 1. Do nothing!
-        System.out.println("[PEER:" + myPeerInfo.getPeerID() + "]Got CHOKE message from peer " + context.getTheirPeerId() + "! Updating the state in hashmap to be used in next interval");
-        neighbourConnectionsInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.CHOKED);
+        myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Got CHOKE message from peer " + context.getTheirPeerId() + "! Updating the state in hashmap to be used in next interval");
+        //neighbourConnectionsInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.CHOKED);
     }
 
     private void handleIncomingRequestMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
