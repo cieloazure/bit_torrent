@@ -10,7 +10,7 @@ public class PeerInfo {
     protected Integer portNumber;
     protected Integer peerID;
     protected BitSet bitField;
-    protected BitSet requestedPieces; //to track the requested pieces
+//    protected BitSet requestedPieces; //to track the requested pieces
 
     public PeerInfo(String hostName, Integer portNumber, Integer peerID, BitSet bitField) {
         this.hostName = hostName;
@@ -24,7 +24,7 @@ public class PeerInfo {
         this.portNumber = b.portNumber;
         this.peerID = b.peerID;
         this.bitField = b.bitField;
-        this.requestedPieces = b.requestedPieces;
+//        this.requestedPieces = b.requestedPieces;
     }
 
     public Integer getPeerID() {
@@ -47,13 +47,13 @@ public class PeerInfo {
         this.bitField = bitField;
     }
 
-    public void setRequestedPieces(BitSet requestedPieces) {
-        this.requestedPieces = requestedPieces;
-    }
+//    public void setRequestedPieces(BitSet requestedPieces) {
+//        this.requestedPieces = requestedPieces;
+//    }
 
-    public BitSet getRequestedPieces() {
-        return this.requestedPieces;
-    }
+//    public BitSet getRequestedPieces() {
+//        return this.requestedPieces;
+//    }
 
     public byte[] getBitFieldByteArray(int defaultPieces) {
         byte[] array = this.bitField.toByteArray();
@@ -72,9 +72,9 @@ public class PeerInfo {
         this.bitField.set(index);
     }
 
-    public void setRequestPiecesIndex(int index) {
-        this.requestedPieces.set(index);
-    }
+//    public void setRequestPiecesIndex(int index) {
+//        this.requestedPieces.set(index);
+//    }
 
     public static class Builder {
         private String hostName;
@@ -122,7 +122,7 @@ public class PeerInfo {
             return this;
         }
 
-        public Builder withBitField(BitSet bitField, BitSet requestedPieces) {
+        public Builder withBitField(BitSet bitField) {
             this.bitField = bitField;
             //set the indexes corresponding of existing pieces in requestedPiece to true
             this.requestedPieces = (BitSet)this.bitField.clone();
@@ -140,7 +140,7 @@ public class PeerInfo {
         }
 
         public SelfPeerInfo buildSelfPeerInfo() {
-            return new SelfPeerInfo(this, this.hasFile, this.fileChunks, this.logger, this.peerAddressToID);
+            return new SelfPeerInfo(this, this.hasFile, this.fileChunks, this.logger, this.peerAddressToID, this.requestedPieces);
         }
 
         public NeighbourPeerInfo buildNeighbourPeerInfo() {

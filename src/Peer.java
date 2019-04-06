@@ -137,7 +137,7 @@ public class Peer {
 
             int pieces = (int) Math.ceil(commonConfig.getFileSize() / commonConfig.getPieceSize());
             BitSet bitField = new BitSet(pieces);
-            BitSet requestedPieces = new BitSet(pieces);
+//            BitSet requestedPieces = new BitSet(pieces);
             if (hasFile) {
                 for (int i = 0; i < pieces; i++) {
                     bitField.set(i);
@@ -145,10 +145,10 @@ public class Peer {
                 System.out.println("Tushar debug");
                 System.out.println(commonConfig.getFileName());
                 List<byte[]> fileChunks = splitFileIntoChunks(commonConfig.getFileName(), commonConfig.getFileSize(), commonConfig.getPieceSize());
-                builder.withBitField(bitField, requestedPieces)
+                builder.withBitField(bitField)
                         .withFileChunks(fileChunks);
             } else {
-                builder.withBitField(bitField,requestedPieces)
+                builder.withBitField(bitField)
                         .withFileChunks(null);
             }
         } catch (FileNotFoundException e) {

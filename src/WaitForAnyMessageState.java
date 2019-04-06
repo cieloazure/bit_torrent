@@ -75,8 +75,6 @@ public class WaitForAnyMessageState implements PeerState {
     private void handleIncomingInterestedMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
         // 1. Update the state of the peer in the concurrent hash map, this will be used when unchoking interval elapses in timertask1 or when optimistic unchoking interval elapses in timertask2
         System.out.println("[PEER:" + myPeerInfo.getPeerID() + "]Got INTERESTED message from peer " + context.getTheirPeerId() + "! Updating the state in hashmap to be used in next interval");
-
-
         System.out.println("their bitset:"+(neighbourConnectionsInfo.get(context.getTheirPeerId())).getBitField());
 
         neighbourConnectionsInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.INTERESTED);
