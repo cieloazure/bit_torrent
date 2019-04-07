@@ -25,7 +25,7 @@ public class NeighbourPeerInfo extends PeerInfo {
         return neighbourState;
     }
     public boolean isInterested(){
-        if(neighbourState==NeighbourState.INTERESTED || neighbourState == NeighbourState.CHOKED_AND_INTERESTED ||
+        if(neighbourState == NeighbourState.CHOKED_AND_INTERESTED ||
                 neighbourState == NeighbourState.UNCHOKED_AND_INTERESTED){
             return true;
         }
@@ -37,6 +37,14 @@ public class NeighbourPeerInfo extends PeerInfo {
         }
         return false;
     }
+
+    public boolean isChokedAndNotInterested(){
+        if(neighbourState == NeighbourState.CHOKED_AND_NOT_INTERESTED){
+            return true;
+        }
+        return false;
+    }
+
     public boolean isChoked(){
         if(neighbourState == NeighbourState.CHOKED_AND_INTERESTED ||
                 neighbourState == NeighbourState.CHOKED_AND_NOT_INTERESTED){
@@ -44,8 +52,15 @@ public class NeighbourPeerInfo extends PeerInfo {
         }
         return false;
     }
+
     public boolean isUnChoked(){
         if(neighbourState == NeighbourState.UNCHOKED_AND_INTERESTED){
+            return true;
+        }
+        return false;
+    }
+    public boolean isUnknown(){
+        if(neighbourState==NeighbourState.UNKNOWN){
             return true;
         }
         return false;
