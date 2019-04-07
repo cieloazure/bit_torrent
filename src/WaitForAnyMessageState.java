@@ -67,13 +67,34 @@ public class WaitForAnyMessageState implements PeerState {
     private void handleIncomingNotInterestedMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
         // 1. Update the state of the peer in concurrent hash map, this will be used when decided the peers to upload to, not interested peers won't be considered at all
         myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Got NOT INTERESTED message from peer " + context.getTheirPeerId() + "! Updating the state in hashmap to be used in next interval");
-        neighbourConnectionsInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.NOT_INTERESTED);
+
+
+        // Get a not interested message
+        // CHOKED_AND_INTERESTED --> CHOKED_AND_NOT_INTERESTED
+        // UNCHOKED_AND_INTERESTED --> CHOKED_AND_NOT_INTERESTED (because you can't be unchoked and not interested)
+        // UNKNOWN --> CHOKED_AND_NOT_INTERESTED
+        if(neighbourConnectionsInfo.get(context.getTheirPeerId()).isChokedAndInterested() ||
+                neighbourConnectionsInfo.get(context.getTheirPeerId()).isUnChoked() ||
+                neighbourConnectionsInfo.get(context.getTheirPeerId()).isUnknown()){
+            neighbourConnectionsInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.CHOKED_AND_NOT_INTERESTED);
+        }
+
     }
 
     private void handleIncomingInterestedMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
         // 1. Update the state of the peer in the concurrent hash map, this will be used when unchoking interval elapses in timertask1 or when optimistic unchoking interval elapses in timertask2
         myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Got INTERESTED message from peer " + context.getTheirPeerId() + "! Updating the state in hashmap to be used in next interval");
-        neighbourConnectionsInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.INTERESTED);
+
+        // Get a Interested message
+        // CHOKED_AND_INTERESTED stays as is
+        // UNCHOKED_AND_INTERESTED stays as is
+        // CHOKED_AND_NOT_INTERESTED --> CHOKED_AND_INTERESTED
+        // UNKNOWN --> CHOKED_AND_INTERESTED
+        if(neighbourConnectionsInfo.get(context.getTheirPeerId()).isChokedAndNotInterested() ||
+                neighbourConnectionsInfo.get(context.getTheirPeerId()).isUnknown()){
+            neighbourConnectionsInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.CHOKED_AND_INTERESTED);
+        }
+
     }
 
     private void handleIncomingUnchokeMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
@@ -82,7 +103,7 @@ public class WaitForAnyMessageState implements PeerState {
         // 2. From the set bits choose any random index (which has not been requessted before)
         // 3. Send a request message with that index
         // 4. Track to which peer we have sent a request message with that index, next time an unchoke message arrives, do not use the same index again, :
-        neighbourConnectionsInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.UNCHOKED);
+//        neighbourConnectionsInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.UNCHOKED);
 //        neighbourConnectionsInfo.get(context.getTheirPeerId()).setRequestedPieceIndex(randomlyChosePieceIndexAmongXoredBitFields);
         myPeerInfo.log( "RECEIVED UNCHOKE MESSAGE! NOT IMPLEMENTED");
     }
@@ -90,7 +111,7 @@ public class WaitForAnyMessageState implements PeerState {
     private void handleIncomingChokeMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
         // 0. Update the state of the peer in concurrent hash map to choked
         // 1. Do nothing!
-        neighbourConnectionsInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.CHOKED);
+//        neighbourConnectionsInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.CHOKED);
         myPeerInfo.log( "RECEIVED CHOKE MESSAGE! NOT IMPLEMENTED!");
     }
 
@@ -101,8 +122,9 @@ public class WaitForAnyMessageState implements PeerState {
         byte[] payload = message.getPayload();
         ByteBuffer buffer = ByteBuffer.allocate(payload.length).wrap(payload);
         int pieceIndex = buffer.getInt();
+
         // Check if the state is unchoked
-        if (neighbourConnectionsInfo.get(context.getTheirPeerId()).getNeighbourState() == NeighbourState.UNCHOKED) {
+        if (neighbourConnectionsInfo.get(context.getTheirPeerId()).isUnChoked()) {
             context.setState(new ExpectedToSendPieceMessageState(neighbourConnectionsInfo, pieceIndex), false, false);
         }
     }
