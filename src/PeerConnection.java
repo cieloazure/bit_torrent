@@ -44,8 +44,8 @@ public class PeerConnection {
         Handler handler = new Handler(connection, this.myPeerInfo, inputStateRef, outputStateRef, inputStream, outputStream, inputMutex, outputMutex, theirPeerId);
 
 
-        NeighbourInputHandler inputHandler = handler.getInputHandler();
-        NeighbourOutputHandler outputHandler = handler.getOutputHandler();
+        NeighbourInputHandler inputHandler = handler.getInputHandler(neighbourConnectionsInfo);
+        NeighbourOutputHandler outputHandler = handler.getOutputHandler(neighbourConnectionsInfo);
 
 
         //  Start threads for input and output

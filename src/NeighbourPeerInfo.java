@@ -50,6 +50,12 @@ public class NeighbourPeerInfo extends PeerInfo {
         }
         return false;
     }
+    public boolean shutdown(){
+        if(neighbourState == NeighbourState.SHUTDOWN){
+            return true;
+        }
+        return false;
+    }
 
     public void setNeighbourState(NeighbourState neighbourState) {
         this.neighbourState = neighbourState;

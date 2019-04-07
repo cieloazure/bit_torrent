@@ -2,6 +2,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 class Handler {
@@ -68,14 +69,22 @@ class Handler {
         this.whichHandler = whichHandler;
     }
 
-    public NeighbourInputHandler getInputHandler() {
-        NeighbourInputHandler nih = new NeighbourInputHandler(this.connection, this.myPeerInfo, this.inputStateRef, this.outputStateRef, this.inputStream, this.outputStream, this.inputMutex, this.outputMutex, this.theirPeerId);
+    public NeighbourInputHandler getInputHandler(ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourInfo) {
+        NeighbourInputHandler nih = new NeighbourInputHandler(this.connection, this.myPeerInfo,
+                this.inputStateRef, this.outputStateRef,
+                this.inputStream, this.outputStream,
+                this.inputMutex, this.outputMutex,
+                this.theirPeerId, neighbourInfo);
         nih.setWhichHandler(1);
         return nih;
     }
 
-    public NeighbourOutputHandler getOutputHandler() {
-        NeighbourOutputHandler noh = new NeighbourOutputHandler(this.connection, this.myPeerInfo, this.inputStateRef, this.outputStateRef, this.inputStream, this.outputStream, this.inputMutex, this.outputMutex, this.theirPeerId);
+    public NeighbourOutputHandler getOutputHandler(ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourInfo) {
+        NeighbourOutputHandler noh = new NeighbourOutputHandler(this.connection, this.myPeerInfo,
+                this.inputStateRef, this.outputStateRef,
+                this.inputStream, this.outputStream,
+                this.inputMutex, this.outputMutex,
+                this.theirPeerId, neighbourInfo);
         noh.setWhichHandler(0);
         return noh;
     }
