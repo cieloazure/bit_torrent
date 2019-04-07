@@ -26,24 +26,23 @@ public class ExpectedToSendUnchokeMessageState implements PeerState {
             outputStream.flush();
             switch (neighbourConnectionInfo.get(context.getTheirPeerId()).getNeighbourState()) {
                 case UNKNOWN:
-                    neighbourConnectionInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.UNCHOKED);
-                    break;
-                case CHOKED:
-                    neighbourConnectionInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.UNCHOKED);
-                    break;
-                case INTERESTED:
-                    neighbourConnectionInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.UNCHOKED_AND_INTERESTED);
-                    break;
-                case NOT_INTERESTED:
                     //stays choked
                     neighbourConnectionInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.CHOKED_AND_NOT_INTERESTED);
                     break;
+//                case CHOKED:
+//                    neighbourConnectionInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.UNCHOKED);
+//                    break;
+//                case INTERESTED:
+//                    neighbourConnectionInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.UNCHOKED_AND_INTERESTED);
+//                    break;
+//                case NOT_INTERESTED:
+//                    //stays choked
+//                    neighbourConnectionInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.CHOKED_AND_NOT_INTERESTED);
+//                    break;
                 case CHOKED_AND_INTERESTED:
                     neighbourConnectionInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.UNCHOKED_AND_INTERESTED);
                     break;
                 case CHOKED_AND_NOT_INTERESTED:
-                    break;
-                case UNCHOKED:
                     break;
                 case UNCHOKED_AND_INTERESTED:
                     break;

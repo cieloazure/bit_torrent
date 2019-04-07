@@ -27,21 +27,10 @@ public class ExpectedToSendChokeMessageState implements PeerState {
 
             switch (neighbourConnectionInfo.get(context.getTheirPeerId()).getNeighbourState()) {
                 case UNKNOWN:
-                    neighbourConnectionInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.CHOKED);
-                    break;
-                case UNCHOKED:
-                    neighbourConnectionInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.CHOKED);
-                    break;
-                case INTERESTED:
-                    neighbourConnectionInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.CHOKED_AND_INTERESTED);
-                    break;
-                case NOT_INTERESTED:
                     neighbourConnectionInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.CHOKED_AND_NOT_INTERESTED);
                     break;
                 case UNCHOKED_AND_INTERESTED:
                     neighbourConnectionInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.CHOKED_AND_INTERESTED);
-                    break;
-                case CHOKED:
                     break;
                 case CHOKED_AND_INTERESTED:
                     break;
