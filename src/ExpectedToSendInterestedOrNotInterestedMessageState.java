@@ -25,12 +25,15 @@ public class ExpectedToSendInterestedOrNotInterestedMessageState implements Peer
 
                 outputStream.write(actualMessage.serialize());
                 outputStream.flush();
+
+
             } else {
                 ActualMessage actualMessage = new ActualMessage(MessageType.INTERESTED);
                 myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Sent INTERESTED message to " + context.getTheirPeerId());
 
                 outputStream.write(actualMessage.serialize());
                 outputStream.flush();
+
             }
 
             if (this.setState) {

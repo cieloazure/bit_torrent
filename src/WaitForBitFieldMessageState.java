@@ -36,7 +36,11 @@ public class WaitForBitFieldMessageState implements PeerState {
             myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Got a bitfield message from " + context.getTheirPeerId());
 
             // TODO: Check if message is a bitfield
-
+            if(message.messageType == MessageType.BITFIELD)
+                System.out.println("[PEER:" + myPeerInfo.getPeerID() +"]Verified messageType of the BITFIELD message.");
+            else {
+                System.out.println("ERROR: [PEER:" + myPeerInfo.getPeerID() +"]Expected BITFIELD, Received:"+message.messageType);
+            }
             // TODO: Handle error if the message is not a bitfield
             // TODO: Proposal: Write a error handler class in case of unexpected message types
             // Get their bitfield

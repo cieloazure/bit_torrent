@@ -86,11 +86,13 @@ public class PeriodicTasks {
                 // the handling of choked unchoked messages is done
                 if (neighbourInfo.get(temp).isChoked()){
                     myPeerInfo.log("DEBUG: Unchoking "+temp);
+                    neighbourInfo.get(temp).setContextState(new ExpectedToSendUnchokeMessageState(neighbourInfo), false, false);
                     // This is where Sharmilee's function to UNCHOKE will be called
                 }
                 else if(neighbourInfo.get(temp).isUnChoked()) {
                     if (temp!=optimisticallyUnchokedPeerID){
                             myPeerInfo.log("DEBUG: Choking "+temp);
+                            neighbourInfo.get(temp).setContextState(new ExpectedToSendChokeMessageState(neighbourInfo), false, false);
 //                          This is where Sharmilee's function to CHOKE will be called
                     }
 //

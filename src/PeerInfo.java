@@ -67,6 +67,7 @@ public class PeerInfo {
         private Integer peerID;
         private BitSet bitField;
         private Boolean hasFile;
+        protected BitSet requestedPieces;
         private List<byte[]> fileChunks;
         private Logger logger;
         private ArrayList<Integer> peerAddressToID;
@@ -103,6 +104,7 @@ public class PeerInfo {
 
         public Builder withBitField(BitSet bitField) {
             this.bitField = bitField;
+            this.requestedPieces = (BitSet)this.bitField.clone();
             return this;
         }
 
@@ -117,7 +119,7 @@ public class PeerInfo {
         }
 
         public SelfPeerInfo buildSelfPeerInfo() {
-            return new SelfPeerInfo(this, this.hasFile, this.fileChunks, this.logger);
+            return new SelfPeerInfo(this, this.hasFile, this.fileChunks, this.logger, this.requestedPieces);
         }
 
         public NeighbourPeerInfo buildNeighbourPeerInfo() {

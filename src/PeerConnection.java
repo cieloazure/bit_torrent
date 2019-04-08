@@ -35,7 +35,6 @@ public class PeerConnection {
         Object inputMutex = new Object();
         Object outputMutex = new Object();
 
-
         // Set initial states
         AtomicReference<PeerState> inputStateRef = new AtomicReference<>(null);
         BlockingQueue<PeerState> outputStateRef = new LinkedBlockingDeque<>();

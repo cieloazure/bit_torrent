@@ -170,6 +170,7 @@ public class Peer {
 
             int pieces = (int) Math.ceil(commonConfig.getFileSize() / commonConfig.getPieceSize());
             BitSet bitField = new BitSet(pieces);
+//            BitSet requestedPieces = new BitSet(pieces);
             if (hasFile) {
                 for (int i = 0; i < pieces; i++) {
                     bitField.set(i);
