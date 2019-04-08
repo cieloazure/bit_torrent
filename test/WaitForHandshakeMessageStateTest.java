@@ -1,6 +1,6 @@
 import static org.junit.jupiter.api.Assertions.*;
 
-class WaitForAnyMessageStateTest {
+class WaitForHandshakeMessageStateTest {
 
     @org.junit.jupiter.api.BeforeEach
     void setUp() {

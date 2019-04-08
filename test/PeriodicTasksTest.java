@@ -1,6 +1,6 @@
 import static org.junit.jupiter.api.Assertions.*;
 
-class WaitForAnyMessageStateTest {
+class PeriodicTasksTest {
 
     @org.junit.jupiter.api.BeforeEach
     void setUp() {
@@ -11,6 +11,14 @@ class WaitForAnyMessageStateTest {
     }
 
     @org.junit.jupiter.api.Test
-    void handleMessage() {
+    void selectTopK() {
+    }
+
+    @org.junit.jupiter.api.Test
+    void selectOptimisticallyUnchoked() {
+    }
+
+    @org.junit.jupiter.api.Test
+    void startScheduledExecution() {
     }
 }
