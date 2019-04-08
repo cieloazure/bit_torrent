@@ -229,7 +229,7 @@ public class Peer {
             SimpleFormatter formatter = new SimpleFormatter();
             logger = Logger.getLogger("log_peer_" + peerID);
             logger.setUseParentHandlers(false);
-            fh = new FileHandler("logs/log_peer_" + peerID + ".log", true);
+            fh = new FileHandler("log_peer_" + peerID + ".log", true);
             logger.addHandler(fh);
             fh.setFormatter(formatter);
 

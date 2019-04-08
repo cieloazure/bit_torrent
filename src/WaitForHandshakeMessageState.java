@@ -46,9 +46,6 @@ public class WaitForHandshakeMessageState implements PeerState {
 //                System.out.println("***Peerid: "+ context.getTheirPeerId());
                 context.setState(new ExpectedToSendHandshakeMessageState(neighbourConnectionsInfo), false, false);
             }
-
-
-
         } catch (EOFException e) {
 //            e.printStackTrace();
             System.out.println("[WaitForHandshake]" + context.getTheirPeerId() + " closed the connection");
