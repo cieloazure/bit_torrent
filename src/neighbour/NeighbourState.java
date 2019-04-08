@@ -1,0 +1,10 @@
+package neighbour;
+
+public enum NeighbourState {
+    CHOKED_AND_INTERESTED,
+    CHOKED_AND_NOT_INTERESTED,
+    UNCHOKED_AND_INTERESTED,
+    UNCHOKED_AND_NOT_INTERESTED,
+    UNKNOWN
+
+}
