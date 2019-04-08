@@ -64,9 +64,13 @@ public class WaitForBitFieldMessageState implements PeerState {
                 context.setState(new ExpectedToSendInterestedOrNotInterestedMessageState(this.neighbourConnectionsInfo, theirBitfield, true), false, true);
             }
         } catch (EOFException e) {
-            e.printStackTrace();
+            System.out.println("[WaitForBitField]" + context.getTheirPeerId() + " closed the connection");
+            context.setState(null, true, true);
+//            e.printStackTrace();
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("[WaitForBitField]" + context.getTheirPeerId() + " closed the connection");
+            context.setState(null, true, true);
+//            e.printStackTrace();
         }
     }
 }

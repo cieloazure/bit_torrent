@@ -10,7 +10,6 @@ import java.util.logging.StreamHandler;
 public class SelfPeerInfo extends PeerInfo {
     private Boolean hasFile;
     private List<byte[]> fileChunks;
-    private BitSet requestedbitField;
     private Logger logger;
     private Logger stdOutputLogger;
     private boolean toStdOutput;
@@ -25,10 +24,6 @@ public class SelfPeerInfo extends PeerInfo {
         this.stdOutputLogger = Logger.getAnonymousLogger();
         this.stdOutputLogger.addHandler(new StreamHandler(System.out, new SimpleFormatter()));
         this.toStdOutput = false;
-        this.requestedPieces = requestedPieces;
-    }
-
-    public void setRequestedPieces(BitSet requestedPieces) {
         this.requestedPieces = requestedPieces;
     }
 

@@ -40,7 +40,7 @@ public class PeerConnection {
         BlockingQueue<PeerState> outputStateRef = new LinkedBlockingDeque<>();
 
         // Initialize handlers
-        Handler handler = new Handler(connection, this.myPeerInfo, inputStateRef, outputStateRef, inputStream, outputStream, inputMutex, outputMutex, theirPeerId);
+        Handler handler = new Handler(this.myPeerInfo, inputStateRef, outputStateRef, inputStream, outputStream, inputMutex, outputMutex, theirPeerId);
 
 
         NeighbourInputHandler inputHandler = handler.getInputHandler();

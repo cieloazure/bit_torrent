@@ -16,7 +16,7 @@ public class WaitForHandshakeMessageState implements PeerState {
     @Override
     public void handleMessage(Handler context, SelfPeerInfo myPeerInfo, DataInputStream inputStream, DataOutputStream outputStream) {
         try {
-            myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Waiting for handshake message....with reply:" + this.reply + " from " + context.getHostName() + ":" + context.getPortNumber() + " peer id:" + context.getTheirPeerId());
+            myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Waiting for handshake message....with reply:" + this.reply + " from peer id:" + context.getTheirPeerId());
 
             byte[] messageBytes = new byte[32];
             inputStream.readFully(messageBytes);
@@ -27,7 +27,7 @@ public class WaitForHandshakeMessageState implements PeerState {
                 myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Verified Handshake header and PeerID.");
                 neighbourConnectionsInfo.get(message.getPeerID()).setContext(context);
 
-                myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Got a handshake message from " + context.getHostName() + ":" + context.getPortNumber() + " and it has peer id " + message.getPeerID() + "....");
+                myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Got a handshake message from and it has peer id " + message.getPeerID() + "....");
 
                 if (this.reply) {
                     myPeerInfo.log( "[PEER" + myPeerInfo.getPeerID() + "]Sending a handshake reply message to " + message.getPeerID() + "....");
@@ -50,9 +50,13 @@ public class WaitForHandshakeMessageState implements PeerState {
 
 
         } catch (EOFException e) {
-            e.printStackTrace();
+//            e.printStackTrace();
+            System.out.println("[WaitForHandshake]" + context.getTheirPeerId() + " closed the connection");
+            context.setState(null, true, true);
         } catch (IOException e) {
-            e.printStackTrace();
+//            e.printStackTrace();
+            System.out.println("[WaitForHandshake]" + context.getTheirPeerId() + " closed the connection");
+            context.setState(null, true, true);
         }
     }
 }

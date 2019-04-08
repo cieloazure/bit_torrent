@@ -1,5 +1,6 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.ConcurrentHashMap;
@@ -17,7 +18,7 @@ public class WaitForAnyMessageState implements PeerState {
     @Override
     public void handleMessage(Handler context, SelfPeerInfo myPeerInfo, DataInputStream inputStream, DataOutputStream outputStream) {
         try {
-            myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Waiting for any message....from peer id " + context.getTheirPeerId() + " whose current state is " + this.neighbourConnectionsInfo.get(context.getTheirPeerId()).getNeighbourState());
+            myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Waiting for any message....from peer id " + context.getTheirPeerId() + " whose current state is " + this.neighbourConnectionsInfo.get(context.getTheirPeerId()).getNeighbourState());
 
             byte[] length = new byte[4];
             inputStream.read(length, 0, 4);
@@ -61,8 +62,14 @@ public class WaitForAnyMessageState implements PeerState {
                     break;
             }
             context.setState(new WaitForAnyMessageState(neighbourConnectionsInfo), true, false);
+        } catch (EOFException e){
+//            e.printStackTrace();
+            System.out.println("[WaitForAnyState]" + context.getTheirPeerId() + " closed the connection");
+            context.setState(null, true, true);
         } catch (IOException e) {
-            e.printStackTrace();
+//            e.printStackTrace();
+            System.out.println("[WaitForAnyState]" + context.getTheirPeerId() + " closed the connection");
+            context.setState(null, true, true);
         }
     }
 

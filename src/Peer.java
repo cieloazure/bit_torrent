@@ -220,7 +220,8 @@ public class Peer {
      * @param logger Logger object to set up
      * @return logger
      */
-    private static Logger setUpLogger(int peerID, Logger logger) {
+    public static Logger setUpLogger(int peerID, Logger logger) {
+
         try {
             FileHandler fh;
             System.setProperty("java.util.logging.SimpleFormatter.format",
