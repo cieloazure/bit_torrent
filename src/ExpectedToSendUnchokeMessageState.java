@@ -10,10 +10,9 @@ public class ExpectedToSendUnchokeMessageState implements PeerState {
     BitSet theirBitfield;
     boolean setState;
 
-    public ExpectedToSendUnchokeMessageState(ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionInfo, BitSet theirBitfield, boolean setState) {
+    public ExpectedToSendUnchokeMessageState(ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionInfo) {
         this.neighbourConnectionInfo = neighbourConnectionInfo;
-        this.theirBitfield = theirBitfield;
-        this.setState = setState;
+
     }
 
     @Override
@@ -29,16 +28,6 @@ public class ExpectedToSendUnchokeMessageState implements PeerState {
                     //stays choked
                     neighbourConnectionInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.CHOKED_AND_NOT_INTERESTED);
                     break;
-//                case CHOKED:
-//                    neighbourConnectionInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.UNCHOKED);
-//                    break;
-//                case INTERESTED:
-//                    neighbourConnectionInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.UNCHOKED_AND_INTERESTED);
-//                    break;
-//                case NOT_INTERESTED:
-//                    //stays choked
-//                    neighbourConnectionInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.CHOKED_AND_NOT_INTERESTED);
-//                    break;
                 case CHOKED_AND_INTERESTED:
                     neighbourConnectionInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.UNCHOKED_AND_INTERESTED);
                     break;

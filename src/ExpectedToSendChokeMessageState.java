@@ -10,10 +10,8 @@ public class ExpectedToSendChokeMessageState implements PeerState {
     BitSet theirBitfield;
     boolean setState;
 
-    public ExpectedToSendChokeMessageState(ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionInfo, BitSet theirBitfield, boolean setState) {
+    public ExpectedToSendChokeMessageState(ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionInfo) {
         this.neighbourConnectionInfo = neighbourConnectionInfo;
-        this.theirBitfield = theirBitfield;
-        this.setState = setState;
     }
 
     @Override
