@@ -153,7 +153,7 @@ public class WaitForAnyMessageState implements PeerState {
         // 0. Update the state of the peer in concurrent hash map to choked **--->> done in ExpectedToSendChokeMessageState/Unchoke
         // 1. Do nothing!
         myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Got CHOKE message from peer " + context.getTheirPeerId() + "! Updating the state in hashmap to be used in next interval");
-      
+
     }
 
     private void handleIncomingRequestMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
@@ -164,7 +164,7 @@ public class WaitForAnyMessageState implements PeerState {
         ByteBuffer buffer = ByteBuffer.allocate(payload.length).wrap(payload);
         int pieceIndex = buffer.getInt();
         // Check if the state is unchoked
-        if (neighbourConnectionsInfo.get(context.getTheirPeerId()).getNeighbourState() == NeighbourState.UNCHOKED) {
+        if (neighbourConnectionsInfo.get(context.getTheirPeerId()).isUnChoked()) {
             context.setState(new ExpectedToSendPieceMessageState(neighbourConnectionsInfo, pieceIndex), false, false);
         }
     }
