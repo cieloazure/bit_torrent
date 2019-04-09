@@ -112,7 +112,6 @@ public class WaitForAnyMessageState implements PeerState {
 
         //5. Track to which peer we have sent a request message with that index, next time an unchoke message arrives, do not use the same index again, :
 
-        System.out.println("RECEIVED UNCHOKE MESSAGE! NOT IMPLEMENTED");
     }
 
     private void sendRequestMessage(Handler context, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
@@ -167,7 +166,7 @@ public class WaitForAnyMessageState implements PeerState {
     private void handleIncomingRequestMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
         // 1. Get the piece index from the fileChunks
         // 2. Send a piece with that index through a piece message payload on output thread
-        myPeerInfo.log( "RECEIVED REQUEST MESSAGE!");
+        myPeerInfo.log( "RECEIVED REQUEST MESSAGE from "+ context.getTheirPeerId());
         byte[] payload = message.getPayload();
         ByteBuffer buffer = ByteBuffer.allocate(payload.length).wrap(payload);
         int pieceIndex = buffer.getInt();
@@ -199,7 +198,7 @@ public class WaitForAnyMessageState implements PeerState {
     private void handleIncomingHaveMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
         // 1. Update the bitfield `theirPeer` in concurrent hashmap
         // 2. Take xor of the bitfield with myPeerInfo.getBitField() and decide whether an interested or not interested message is to be sent
-        myPeerInfo.log( "RECEIVED HAVE!");
+        myPeerInfo.log( "RECEIVED HAVE form "+ context.getTheirPeerId());
         byte[] payload = message.getPayload();
         int haveIndex = ByteBuffer.allocate(payload.length).wrap(payload).getInt();
         neighbourConnectionsInfo.get(context.getTheirPeerId()).setBitFieldIndex(haveIndex);
