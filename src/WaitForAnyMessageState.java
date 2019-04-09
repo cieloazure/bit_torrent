@@ -36,29 +36,32 @@ public class WaitForAnyMessageState implements PeerState {
             Double downloadSpeed = len / Double.parseDouble(timediff.toString());
 
             ActualMessage message = new ActualMessage(messageBytes);
+            System.out.println("[Wait for any message]:Received message:"+message.isValid());
 
-            switch (message.getMessageType()) {
-                case HAVE:
-                    handleIncomingHaveMessage(context, message, neighbourConnectionsInfo, myPeerInfo);
-                    break;
-                case PIECE:
-                    handleIncomingPieceMessage(context, message, neighbourConnectionsInfo, downloadSpeed, myPeerInfo);
-                    break;
-                case REQUEST:
-                    handleIncomingRequestMessage(context, message, neighbourConnectionsInfo, myPeerInfo);
-                    break;
-                case CHOKE:
-                    handleIncomingChokeMessage(context, message, neighbourConnectionsInfo, myPeerInfo);
-                    break;
-                case UNCHOKE:
-                    handleIncomingUnchokeMessage(context, message, neighbourConnectionsInfo, myPeerInfo);
-                    break;
-                case INTERESTED:
-                    handleIncomingInterestedMessage(context, message, neighbourConnectionsInfo, myPeerInfo);
-                    break;
-                case NOT_INTERESTED:
-                    handleIncomingNotInterestedMessage(context, message, neighbourConnectionsInfo, myPeerInfo);
-                    break;
+            if(message.isValid()){
+                switch (message.getMessageType()) {
+                    case HAVE:
+                        handleIncomingHaveMessage(context, message, neighbourConnectionsInfo, myPeerInfo);
+                        break;
+                    case PIECE:
+                        handleIncomingPieceMessage(context, message, neighbourConnectionsInfo, downloadSpeed, myPeerInfo);
+                        break;
+                    case REQUEST:
+                        handleIncomingRequestMessage(context, message, neighbourConnectionsInfo, myPeerInfo);
+                        break;
+                    case CHOKE:
+                        handleIncomingChokeMessage(context, message, neighbourConnectionsInfo, myPeerInfo);
+                        break;
+                    case UNCHOKE:
+                        handleIncomingUnchokeMessage(context, message, neighbourConnectionsInfo, myPeerInfo);
+                        break;
+                    case INTERESTED:
+                        handleIncomingInterestedMessage(context, message, neighbourConnectionsInfo, myPeerInfo);
+                        break;
+                    case NOT_INTERESTED:
+                        handleIncomingNotInterestedMessage(context, message, neighbourConnectionsInfo, myPeerInfo);
+                        break;
+                }
             }
             context.setState(new WaitForAnyMessageState(neighbourConnectionsInfo), true, false);
         } catch (IOException e) {
