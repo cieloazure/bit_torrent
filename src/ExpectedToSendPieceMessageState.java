@@ -18,7 +18,7 @@ public class ExpectedToSendPieceMessageState implements PeerState {
     public void handleMessage(Handler context, SelfPeerInfo myPeerInfo, DataInputStream in, DataOutputStream outputStream) {
         try {
             ActualMessage actualMessage = new ActualMessage(MessageType.PIECE, myPeerInfo.getFileChunk(this.pieceIndex));
-            myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Sent bitfield message to " + context.getTheirPeerId());
+            myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Sent PIECE message to " + context.getTheirPeerId());
             outputStream.write(actualMessage.serialize());
             outputStream.flush();
         } catch (IOException e) {

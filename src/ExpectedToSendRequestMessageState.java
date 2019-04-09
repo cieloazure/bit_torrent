@@ -21,6 +21,7 @@ public class ExpectedToSendRequestMessageState implements PeerState {
             ActualMessage message = new ActualMessage(MessageType.REQUEST, requestBytes);
             outputStream.write(message.serialize());
             outputStream.flush();
+            myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Sent REQUEST message to " + context.getTheirPeerId());
         } catch (IOException e) {
             e.printStackTrace();
         }
