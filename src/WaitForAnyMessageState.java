@@ -179,7 +179,7 @@ public class WaitForAnyMessageState implements PeerState {
 
     private void handleIncomingPieceMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, Double downloadSpeed, SelfPeerInfo myPeerInfo) {
 
-        myPeerInfo.log( "RECEIVED PIECE MESSAGE!");
+        myPeerInfo.log( "RECEIVED PIECE MESSAGE from "+ context.getTheirPeerId());
         // 1. Track the download speed of the message by putting start time and end time around read bytes
         // 2. Update the download speed of the peer in the concurrent hashmap
         // 3. Update out bitfield

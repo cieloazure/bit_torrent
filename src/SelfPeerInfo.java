@@ -62,7 +62,9 @@ public class SelfPeerInfo extends PeerInfo {
     public void log(String message){
         this.logger.info(message);
         if(this.toStdOutput){
-            this.stdOutputLogger.info(message);
+
+//            this.stdOutputLogger.info(message);
+            System.out.println(message);
         }
     }
 }

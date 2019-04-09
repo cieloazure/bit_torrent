@@ -82,7 +82,9 @@ public class Peer {
             String neighbourHostName = splitLine[1];
             int neighbourPortNumber = Integer.parseInt(splitLine[2]);
 
+            System.out.println("Calling the parsePeerInfoConfigToMakeConnections method with linePeerId "+linePeerId);
             while (linePeerId != myPeerInfo.getPeerID()) {
+                myPeerInfo.log("linePeerId:myPeerInfo.getPeerID() "+linePeerId+" : "+myPeerInfo.getPeerID());
                 // Log previous state
                 myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Connecting to a peer " + linePeerId + "....");
 
@@ -165,6 +167,13 @@ public class Peer {
                     .withPortNumber(portNumber);
 
             boolean hasFile = Integer.parseInt(splitLine[3]) == 1;
+            if(hasFile){
+                System.out.println("I have the file!");
+            }
+            else{
+                System.out.println("I DO NOT have the file!");
+            }
+
             builder.withHasFile(hasFile);
 
 
