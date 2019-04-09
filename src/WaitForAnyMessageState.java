@@ -159,7 +159,7 @@ public class WaitForAnyMessageState implements PeerState {
     private void handleIncomingRequestMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
         // 1. Get the piece index from the fileChunks
         // 2. Send a piece with that index through a piece message payload on output thread
-        myPeerInfo.log( "RECEIVED REQUEST MESSAGE! IMPLEMENTED BUT NOT TESTED!");
+        myPeerInfo.log( "RECEIVED REQUEST MESSAGE!");
         byte[] payload = message.getPayload();
         ByteBuffer buffer = ByteBuffer.allocate(payload.length).wrap(payload);
         int pieceIndex = buffer.getInt();
@@ -170,6 +170,8 @@ public class WaitForAnyMessageState implements PeerState {
     }
 
     private void handleIncomingPieceMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, Double downloadSpeed, SelfPeerInfo myPeerInfo) {
+
+        myPeerInfo.log( "RECEIVED PIECE MESSAGE!");
         // 1. Track the download speed of the message by putting start time and end time around read bytes
         // 2. Update the download speed of the peer in the concurrent hashmap
         // 3. Update out bitfield
@@ -179,20 +181,21 @@ public class WaitForAnyMessageState implements PeerState {
         myPeerInfo.setBitFieldIndex(gotPieceIndex);
         for (Integer peerId : neighbourConnectionsInfo.keySet()) {
             NeighbourPeerInfo peerInfo = neighbourConnectionsInfo.get(peerId);
-            peerInfo.setContextState(new ExpectedToSendHaveMessageState(neighbourConnectionsInfo, gotPieceIndex), false, false);
+            if(peerInfo.getContext() != null){
+                peerInfo.setContextState(new ExpectedToSendHaveMessageState(neighbourConnectionsInfo, gotPieceIndex), false, false);
+            }
         }
-        myPeerInfo.log( "RECEIVED PIECE MESSAGE! NOT IMPLEMENTED");
     }
 
     private void handleIncomingHaveMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
         // 1. Update the bitfield `theirPeer` in concurrent hashmap
         // 2. Take xor of the bitfield with myPeerInfo.getBitField() and decide whether an interested or not interested message is to be sent
+        myPeerInfo.log( "RECEIVED HAVE!");
         byte[] payload = message.getPayload();
         int haveIndex = ByteBuffer.allocate(payload.length).wrap(payload).getInt();
         neighbourConnectionsInfo.get(context.getTheirPeerId()).setBitFieldIndex(haveIndex);
         if (!myPeerInfo.getBitField().get(haveIndex)) {
             context.setState(new ExpectedToSendInterestedOrNotInterestedMessageState(neighbourConnectionsInfo, neighbourConnectionsInfo.get(context.getTheirPeerId()).getBitField(), false), false, false);
         }
-        myPeerInfo.log( "RECEIVED HAVE!NOT IMPLEMENTED!");
     }
 }
