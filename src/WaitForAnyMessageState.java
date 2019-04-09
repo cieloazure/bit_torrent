@@ -108,7 +108,14 @@ public class WaitForAnyMessageState implements PeerState {
 
     private void handleIncomingUnchokeMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
         myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Got UNCHOKE message from peer " + context.getTheirPeerId() + "! Updating the state in hashmap to be used in next interval");
+        sendRequestMessage(context, neighbourConnectionsInfo, myPeerInfo);
 
+        //5. Track to which peer we have sent a request message with that index, next time an unchoke message arrives, do not use the same index again, :
+
+        System.out.println("RECEIVED UNCHOKE MESSAGE! NOT IMPLEMENTED");
+    }
+
+    private void sendRequestMessage(Handler context, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
         // 0. Update the state of the peer in concurrent hash map to unchoke **--->> done in ExpectedToSendChokeMessageState/Unchoke
         //neighbourConnectionsInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.UNCHOKED);
 
@@ -135,18 +142,19 @@ public class WaitForAnyMessageState implements PeerState {
         System.out.printf("Bitset to be requested"+toRequest);
 
         // 2. From the set bits choose any random index (which has not been requesssted before)
-        int randomIndex = ThreadLocalRandom.current().nextInt(0,toRequest.cardinality());
-        int pieceToRequest = toRequest.nextSetBit(randomIndex);
+        if(toRequest.cardinality() > 0){
 
-        // 3. Send a request message with that index
-        context.setState(new ExpectedToSendRequestMessageState(this.neighbourConnectionsInfo,pieceToRequest), false, false);
+            int randomIndex = ThreadLocalRandom.current().nextInt(0,toRequest.cardinality());
+            int pieceToRequest = toRequest.nextSetBit(randomIndex);
 
-        //4.Set the piece index in requestedPieces bitset
-        myPeerInfo.setRequestPiecesIndex(pieceToRequest);
+            // 3. Send a request message with that index
+            context.setState(new ExpectedToSendRequestMessageState(this.neighbourConnectionsInfo,pieceToRequest), false, false);
 
-        //5. Track to which peer we have sent a request message with that index, next time an unchoke message arrives, do not use the same index again, :
-
-        System.out.println("RECEIVED UNCHOKE MESSAGE! NOT IMPLEMENTED");
+            //4.Set the piece index in requestedPieces bitset
+            myPeerInfo.setRequestPiecesIndex(pieceToRequest);
+        }else{
+            System.out.println("RECEIVED ENTIRE FILE!");
+        }
     }
 
     private void handleIncomingChokeMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
@@ -185,6 +193,7 @@ public class WaitForAnyMessageState implements PeerState {
                 peerInfo.setContextState(new ExpectedToSendHaveMessageState(neighbourConnectionsInfo, gotPieceIndex), false, false);
             }
         }
+        sendRequestMessage(context, neighbourConnectionsInfo, myPeerInfo);
     }
 
     private void handleIncomingHaveMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
