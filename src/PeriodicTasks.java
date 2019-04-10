@@ -170,12 +170,12 @@ public class PeriodicTasks {
         };
 
         schExec.scheduleAtFixedRate(selectTopK,
+                2,
                 topKinterval,
-                optUnchokedInt,
                 TimeUnit.SECONDS);
 
         schExec.scheduleAtFixedRate(selectOptUnchoked,
-                topKinterval,
+                2,
                 optUnchokedInt,
                 TimeUnit.SECONDS);
 

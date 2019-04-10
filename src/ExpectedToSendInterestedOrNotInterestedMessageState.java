@@ -25,7 +25,7 @@ public class ExpectedToSendInterestedOrNotInterestedMessageState implements Peer
 
             BitSet toRequest = (BitSet)myBitfieldClone.clone();
             //pieces that are not yet requested.
-            toRequest.andNot(myPeerInfo.getRequestedPieces());
+//            toRequest.andNot(myPeerInfo.getRequestedPieces());
 
             if (toRequest.cardinality() == 0) {
                 ActualMessage actualMessage = new ActualMessage(MessageType.NOT_INTERESTED);
