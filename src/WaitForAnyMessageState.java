@@ -133,8 +133,8 @@ public class WaitForAnyMessageState implements PeerState {
         theirBitSet = (BitSet)(neighbourConnectionsInfo.get(context.getTheirPeerId())).getBitField().clone();
         missing = (BitSet)(myPeerInfo.getBitField()).clone();
 
-        System.out.println("Server bitset:" +theirBitSet);
-        System.out.println("client bitset:"+missing);
+//        System.out.println("Server bitset:" +theirBitSet);
+//        System.out.println("client bitset:"+missing);
 
         missing.xor(theirBitSet);
 
@@ -145,7 +145,7 @@ public class WaitForAnyMessageState implements PeerState {
         //pieces that are not yet requested.
         toRequest.andNot(myPeerInfo.getRequestedPieces());
 
-        System.out.printf("Bitset to be requested"+toRequest);
+//        System.out.printf("Bitset to be requested"+toRequest);
 
         // 2. From the set bits choose any random index (which has not been requesssted before)
         if(toRequest.cardinality() > 0){
@@ -189,7 +189,7 @@ public class WaitForAnyMessageState implements PeerState {
 
     private void handleIncomingPieceMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, Double downloadSpeed, SelfPeerInfo myPeerInfo) {
         myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Got PIECE message from peer " + context.getTheirPeerId() + "! Will send have messages to all neighbours and next request message to the peer");
-//        System.out.println("RECEIVED PIECE MESSAGE from "+ context.getTheirPeerId());
+        System.out.println("RECEIVED PIECE MESSAGE from "+ context.getTheirPeerId());
         // 1. Track the download speed of the message by putting start time and end time around read bytes
         // Handled in handler message
 
