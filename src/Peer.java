@@ -189,7 +189,7 @@ public class Peer {
                         .withFileChunks(fileChunks);
             } else {
                 builder.withBitField(bitField)
-                        .withFileChunks(null);
+                        .withFileChunks(new HashMap<Integer, byte[]>());
             }
         } catch (FileNotFoundException e) {
             System.err.println("[ERROR]: Peer Info configuration file not found");
@@ -206,11 +206,11 @@ public class Peer {
             File f = new File(fileName);
             FileInputStream fis = new FileInputStream(f);
             int pieces = (int) Math.ceil(fileSize / pieceSize);
-            for (int i = 0; i < pieces; i++) {
-                byte[] buffer = new byte[(int) pieceSize];
-                while (fis.read(buffer) > 0) {
-                    fileChunks.putIfAbsent(i, buffer);
-                }
+            byte[] buffer = new byte[(int) pieceSize];
+            int i = 0;
+            while (fis.read(buffer) > 0) {
+                fileChunks.putIfAbsent(i, buffer);
+                i++;
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
