@@ -168,12 +168,13 @@ public class WaitForAnyMessageState implements PeerState {
     }
 
     private void handleIncomingRequestMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
-        myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Got REQUEST message from peer " + context.getTheirPeerId() + "! Will check the neighbour state and send a piece message if unchoked");
         byte[] payload = message.getPayload();
 
         // 1. Get the piece index from the fileChunks
         ByteBuffer buffer = ByteBuffer.allocate(payload.length).wrap(payload);
         int pieceIndex = buffer.getInt();
+
+        myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Got REQUEST message from peer " + context.getTheirPeerId() + " for piece index "+ pieceIndex +"! Will check the neighbour state and send a piece message if unchoked");
 
         // 2. Send a piece with that index through a piece message payload on output thread
         // 2.1. Check if the state is unchoked
@@ -183,13 +184,14 @@ public class WaitForAnyMessageState implements PeerState {
     }
 
     private void handleIncomingPieceMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, Double downloadSpeed, SelfPeerInfo myPeerInfo) {
-        myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Got PIECE message from peer " + context.getTheirPeerId() + "! Will send have messages to all neighbours and next request message to the peer");
 //        System.out.println("RECEIVED PIECE MESSAGE from "+ context.getTheirPeerId());
         // 1. Track the download speed of the message by putting start time and end time around read bytes
         // Handled in handler message
 
         // 1.1. Get the piece index that was requested from this peer
         int gotPieceIndex = neighbourConnectionsInfo.get(context.getTheirPeerId()).getRequestedPieceIndex();
+
+        myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Got PIECE message "+gotPieceIndex+" from peer " + context.getTheirPeerId() + "! Will send have messages to all neighbours and next request message to the peer");
 
         // 2. Update the download speed of the peer in the concurrent hashmap
         neighbourConnectionsInfo.get(context.getTheirPeerId()).setDownloadSpeed(downloadSpeed);
