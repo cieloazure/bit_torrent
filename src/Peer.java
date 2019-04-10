@@ -2,9 +2,7 @@ import com.oracle.tools.packager.Log;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.List;
+import java.util.*;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -186,7 +184,7 @@ public class Peer {
                 }
 //                System.out.println("Tushar debug");
                 System.out.println(commonConfig.getFileName());
-                List<byte[]> fileChunks = splitFileIntoChunks(commonConfig.getFileName(), commonConfig.getFileSize(), commonConfig.getPieceSize());
+                Map<Integer, byte[]> fileChunks = splitFileIntoChunks(commonConfig.getFileName(), commonConfig.getFileSize(), commonConfig.getPieceSize());
                 builder.withBitField(bitField)
                         .withFileChunks(fileChunks);
             } else {
@@ -202,8 +200,8 @@ public class Peer {
         }
     }
 
-    private static List<byte[]> splitFileIntoChunks(String fileName, long fileSize, long pieceSize) {
-        List<byte[]> chunks = new ArrayList<>();
+    private static Map<Integer, byte[]> splitFileIntoChunks(String fileName, long fileSize, long pieceSize) {
+        Map<Integer, byte[]> fileChunks = new HashMap<>();
         try {
             File f = new File(fileName);
             FileInputStream fis = new FileInputStream(f);
@@ -211,7 +209,7 @@ public class Peer {
             for (int i = 0; i < pieces; i++) {
                 byte[] buffer = new byte[(int) pieceSize];
                 while (fis.read(buffer) > 0) {
-                    chunks.add(buffer);
+                    fileChunks.putIfAbsent(i, buffer);
                 }
             }
         } catch (FileNotFoundException e) {
@@ -219,7 +217,7 @@ public class Peer {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return chunks;
+        return fileChunks;
     }
 
     /**

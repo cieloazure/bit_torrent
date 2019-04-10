@@ -183,18 +183,29 @@ public class WaitForAnyMessageState implements PeerState {
 
         myPeerInfo.log( "RECEIVED PIECE MESSAGE from "+ context.getTheirPeerId());
         // 1. Track the download speed of the message by putting start time and end time around read bytes
-        // 2. Update the download speed of the peer in the concurrent hashmap
-        // 3. Update out bitfield
-        // 4. Send a have message to all the neighbouring peers
+        // Handled in handler message
+
+        // 1.1. Get the piece index that was requested from this peer
         int gotPieceIndex = neighbourConnectionsInfo.get(context.getTheirPeerId()).getRequestedPieceIndex();
+
+        // 2. Update the download speed of the peer in the concurrent hashmap
         neighbourConnectionsInfo.get(context.getTheirPeerId()).setDownloadSpeed(downloadSpeed);
+
+        // 3. Update our bitfield
         myPeerInfo.setBitFieldIndex(gotPieceIndex);
+
+        // 3.1. Update file chunk index
+        myPeerInfo.setFileChunkIndex(gotPieceIndex, message.getPayload());
+
+        // 4. Send a have message to all the neighbouring peers
         for (Integer peerId : neighbourConnectionsInfo.keySet()) {
             NeighbourPeerInfo peerInfo = neighbourConnectionsInfo.get(peerId);
             if(peerInfo.getContext() != null){
                 peerInfo.setContextState(new ExpectedToSendHaveMessageState(neighbourConnectionsInfo, gotPieceIndex), false, false);
             }
         }
+
+        // 5. Send next request message to the same peer
         sendRequestMessage(context, neighbourConnectionsInfo, myPeerInfo);
     }
 

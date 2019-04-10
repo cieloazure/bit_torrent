@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 public class PeerInfo {
@@ -68,7 +69,7 @@ public class PeerInfo {
         private BitSet bitField;
         private Boolean hasFile;
         protected BitSet requestedPieces;
-        private List<byte[]> fileChunks;
+        private Map<Integer, byte[]> fileChunks;
         private Logger logger;
         private ArrayList<Integer> peerAddressToID;
         private Handler context;
@@ -113,7 +114,7 @@ public class PeerInfo {
             return this;
         }
 
-        public Builder withFileChunks(List<byte[]> fileChunks) {
+        public Builder withFileChunks(Map<Integer, byte[]> fileChunks) {
             this.fileChunks = fileChunks;
             return this;
         }
