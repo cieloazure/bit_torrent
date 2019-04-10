@@ -1,3 +1,5 @@
+
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
@@ -53,7 +55,8 @@ public class SelfPeerInfo extends PeerInfo {
     }
 
     public byte[] getFileChunk(int index) {
-        return fileChunks.get(index);
+        System.out.println("Index is "+ index);
+        return this.fileChunks.get(index);
     }
 
     public void setFileChunkIndex(int index, byte[] chunk){
@@ -69,7 +72,10 @@ public class SelfPeerInfo extends PeerInfo {
         if(this.toStdOutput){
 
 //            this.stdOutputLogger.info(message);
-            System.out.println(message);
+            System.out.println(ts()+" : "+message);
         }
+    }
+    public static String ts() {
+        return "" + new Timestamp(new java.util.Date().getTime());
     }
 }

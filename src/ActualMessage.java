@@ -58,6 +58,8 @@ class ActualMessage implements Message, Serializable {
                 i++;
             }
         }
+//        System.out.println("Serialize Message Length "+ this.messageLength);
+//        System.out.println("Serialize Message type "+ this.messageType);
         return result;
     }
 
