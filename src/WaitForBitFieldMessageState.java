@@ -33,7 +33,8 @@ public class WaitForBitFieldMessageState implements PeerState {
             inputStream.read(messageBytes, 4, len);
             ActualMessage message = new ActualMessage(messageBytes);
 
-            myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Got a bitfield message from " + context.getTheirPeerId());
+            myPeerInfo.log( "\n[PEER:" + myPeerInfo.getPeerID() + "][WaitForBitFieldMessageState] Received a message with following stats\n1. Message Type:"+message.getMessageType()+"\n2.Message Length:"+message.getMessageLength()+"\n3. Validity:"+message.isValid()+"\n");
+
 
             // TODO: Check if message is a bitfield
             if(message.messageType == MessageType.BITFIELD)

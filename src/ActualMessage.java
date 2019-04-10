@@ -91,4 +91,8 @@ class ActualMessage implements Message, Serializable {
     public boolean isValid() {
         return isValid;
     }
+
+    public int getMessageLength() {
+        return messageLength;
+    }
 }

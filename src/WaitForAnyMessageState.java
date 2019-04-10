@@ -17,7 +17,7 @@ public class WaitForAnyMessageState implements PeerState {
     @Override
     public void handleMessage(Handler context, SelfPeerInfo myPeerInfo, DataInputStream inputStream, DataOutputStream outputStream) {
         try {
-//            myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Waiting for any message....from peer id " + context.getTheirPeerId() + " whose current state is " + this.neighbourConnectionsInfo.get(context.getTheirPeerId()).getNeighbourState());
+            myPeerInfo.log( "\n[PEER:" + myPeerInfo.getPeerID() + "]Waiting for any message....from peer id " + context.getTheirPeerId() + " whose current state is " + this.neighbourConnectionsInfo.get(context.getTheirPeerId()).getNeighbourState()+"\n");
 
             int len = 0;
             byte[] messageBytes;
@@ -37,10 +37,11 @@ public class WaitForAnyMessageState implements PeerState {
 
             Long timediff = end - start;
             downloadSpeed = len / Double.parseDouble(timediff.toString());
-            System.out.println("Message length is "+len);
+
 
             ActualMessage message = new ActualMessage(messageBytes);
-//            System.out.println("[Wait for any message]:Received message:"+message.isValid());
+
+            myPeerInfo.log( "\n[PEER:" + myPeerInfo.getPeerID() + "][WaitForAnyMessageState] Received a message with following stats\n1. Message Type:"+message.getMessageType()+"\n2.Message Length:"+message.getMessageLength()+"\n3. Validity:"+message.isValid()+"\n");
 
             if(true){
                 switch (message.getMessageType()) {
