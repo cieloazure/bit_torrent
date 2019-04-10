@@ -134,8 +134,8 @@ public class WaitForAnyMessageState implements PeerState {
         theirBitSet = (BitSet)(neighbourConnectionsInfo.get(context.getTheirPeerId())).getBitField().clone();
         missing = (BitSet)(myPeerInfo.getBitField()).clone();
 
-//        System.out.println("Server bitset:" +theirBitSet);
-//        System.out.println("client bitset:"+missing);
+        System.out.println("Server bitset:" +theirBitSet);
+        System.out.println("client bitset:"+missing);
 
         missing.xor(theirBitSet);
 
@@ -146,7 +146,7 @@ public class WaitForAnyMessageState implements PeerState {
         //pieces that are not yet requested.
         toRequest.andNot(myPeerInfo.getRequestedPieces());
 
-//        System.out.printf("Bitset to be requested"+toRequest);
+        System.out.printf("Bitset to be requested"+toRequest);
 
         // 2. From the set bits choose any random index (which has not been requesssted before)
         if(toRequest.cardinality() > 0){
@@ -158,9 +158,10 @@ public class WaitForAnyMessageState implements PeerState {
             context.setState(new ExpectedToSendRequestMessageState(this.neighbourConnectionsInfo,pieceToRequest), false, false);
 
             //4.Set the piece index in requestedPieces bitset
-            myPeerInfo.setRequestPiecesIndex(pieceToRequest);
+            myPeerInfo.setRequestPiecesIndex(pieceToRequest, 0);
         }else{
             System.out.println("RECEIVED ENTIRE FILE!");
+            context.setState(new ExpectedToSendInterestedOrNotInterestedMessageState(neighbourConnectionsInfo, neighbourConnectionsInfo.get(context.getTheirPeerId()).getBitField(), false), false, false);
         }
     }
 
@@ -174,19 +175,23 @@ public class WaitForAnyMessageState implements PeerState {
     private void handleIncomingRequestMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
         // 1. Get the piece index from the fileChunks
         // 2. Send a piece with that index through a piece message payload on output thread
-        myPeerInfo.log( "RECEIVED REQUEST MESSAGE from "+ context.getTheirPeerId());
+
         byte[] payload = message.getPayload();
 
         // 1. Get the piece index from the fileChunks
         ByteBuffer buffer = ByteBuffer.allocate(payload.length).wrap(payload);
         int pieceIndex = buffer.getInt();
-
+        myPeerInfo.log( "RECEIVED REQUEST MESSAGE from "+ context.getTheirPeerId()+" for piece "+pieceIndex);
         myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Got REQUEST message from peer " + context.getTheirPeerId() + " for piece index "+ pieceIndex +"! Will check the neighbour state and send a piece message if unchoked");
 
         // 2. Send a piece with that index through a piece message payload on output thread
         // 2.1. Check if the state is unchoked
         if (neighbourConnectionsInfo.get(context.getTheirPeerId()).isUnChoked()) {
+
             context.setState(new ExpectedToSendPieceMessageState(neighbourConnectionsInfo, pieceIndex), false, false);
+        }
+        else{
+            System.out.println("Received request but state is not UNCHOKED!");
         }
     }
 
@@ -205,7 +210,7 @@ public class WaitForAnyMessageState implements PeerState {
 
         // 3. Update our bitfield
         myPeerInfo.setBitFieldIndex(gotPieceIndex);
-
+        myPeerInfo.setRequestPiecesIndex(gotPieceIndex, 1);
         // 3.1. Update file chunk index
         myPeerInfo.setFileChunkIndex(gotPieceIndex, message.getPayload());
 

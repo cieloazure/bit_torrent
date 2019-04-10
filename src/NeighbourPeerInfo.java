@@ -18,6 +18,7 @@ public class NeighbourPeerInfo extends PeerInfo {
     }
 
     public void setRequestedPieceIndex(int requestedPieceIndex) {
+
         this.requestedPieceIndex = requestedPieceIndex;
     }
 
@@ -54,7 +55,7 @@ public class NeighbourPeerInfo extends PeerInfo {
     }
 
     public boolean isUnChoked(){
-        if(neighbourState == NeighbourState.UNCHOKED_AND_INTERESTED){
+        if(neighbourState != NeighbourState.CHOKED_AND_NOT_INTERESTED && neighbourState != NeighbourState.CHOKED_AND_INTERESTED){
             return true;
         }
         return false;
