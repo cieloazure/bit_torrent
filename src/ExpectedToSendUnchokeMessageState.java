@@ -18,23 +18,25 @@ public class ExpectedToSendUnchokeMessageState implements PeerState {
     @Override
     public void handleMessage(Handler context, SelfPeerInfo myPeerInfo, DataInputStream inputStream, DataOutputStream outputStream) {
         try{
-            ActualMessage actualMessage = new ActualMessage(MessageType.UNCHOKE);
-            myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Sent CHOKE message to " + context.getTheirPeerId());
+            if(!neighbourConnectionInfo.get(context.getTheirPeerId()).isUnChoked()){
+                ActualMessage actualMessage = new ActualMessage(MessageType.UNCHOKE);
+                outputStream.write(actualMessage.serialize());
+                outputStream.flush();
+                switch (neighbourConnectionInfo.get(context.getTheirPeerId()).getNeighbourState()) {
+                    case UNKNOWN:
+                        //stays choked
+                        neighbourConnectionInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.UNCHOKED_AND_INTERESTED);
+                        break;
+                    case CHOKED_AND_INTERESTED:
+                        neighbourConnectionInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.UNCHOKED_AND_INTERESTED);
+                        break;
+                    case CHOKED_AND_NOT_INTERESTED:
+                        break;
+                    case UNCHOKED_AND_INTERESTED:
+                        break;
 
-            outputStream.write(actualMessage.serialize());
-            outputStream.flush();
-            switch (neighbourConnectionInfo.get(context.getTheirPeerId()).getNeighbourState()) {
-                case UNKNOWN:
-                    //stays choked
-                    neighbourConnectionInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.UNCHOKED_AND_INTERESTED);
-                    break;
-                case CHOKED_AND_INTERESTED:
-                    neighbourConnectionInfo.get(context.getTheirPeerId()).setNeighbourState(NeighbourState.UNCHOKED_AND_INTERESTED);
-                    break;
-                case CHOKED_AND_NOT_INTERESTED:
-                    break;
-                case UNCHOKED_AND_INTERESTED:
-                    break;
+                }
+                myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Sent UNCHOKE message to " + context.getTheirPeerId());
 
             }
 
