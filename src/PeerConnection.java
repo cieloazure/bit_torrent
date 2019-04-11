@@ -1,7 +1,6 @@
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -83,6 +82,32 @@ public class PeerConnection {
         pt.startScheduledExecution(topKinterval, optUnchokedInt);
     }
 
+    public void initializeNeighbourConnectionsInfo(String peerInfoConfigFile) {
+        try {
+            BufferedReader in = new BufferedReader(new FileReader(peerInfoConfigFile));
+            String peerInfoFileLine = in.readLine();
+            while (peerInfoFileLine != null) {
+                String[] splitLine = peerInfoFileLine.split(" ");
+                int peerId = Integer.parseInt(splitLine[0]);
+                if (peerId != this.myPeerInfo.getPeerID()) {
+                    PeerInfo.Builder builder = new PeerInfo.Builder();
+                    builder.withPeerID(peerId)
+                            .withHostName(splitLine[1])
+                            .withPortNumber(Integer.parseInt(splitLine[2]))
+                            .withHasFile(Boolean.parseBoolean(splitLine[3]));
+
+                    NeighbourPeerInfo neighbourPeerInfo = builder.buildNeighbourPeerInfo();
+                    this.neighbourConnectionsInfo.putIfAbsent(peerId, neighbourPeerInfo);
+                }
+                peerInfoFileLine = in.readLine();
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     private class ConnectionListener implements Runnable {
         PeerConnection peerConnection;
         SelfPeerInfo myPeerInfo;
@@ -97,7 +122,7 @@ public class PeerConnection {
         @Override
         public void run() {
             try {
-                myPeerInfo.log( "[PEER:" + this.myPeerInfo.getPeerID() + "]Listening for connections....at " + this.myPeerInfo.getHostName() + ":" + this.myPeerInfo.getPortNumber());
+                myPeerInfo.log("[PEER:" + this.myPeerInfo.getPeerID() + "]Listening for connections....at " + this.myPeerInfo.getHostName() + ":" + this.myPeerInfo.getPortNumber());
                 ServerSocket listener = new ServerSocket(this.myPeerInfo.getPortNumber());
                 while (true) {
                     Socket newConnection = listener.accept();
@@ -113,41 +138,15 @@ public class PeerConnection {
                     // Read the peer id for connection
                     int theirPeerId = inputStream.readInt();
 
-                    myPeerInfo.log("Peer [peer_ID "+myPeerInfo.getPeerID()+"] is connected from Peer[peer_ID "+theirPeerId+"]");
+                    myPeerInfo.log("Peer [peer_ID " + myPeerInfo.getPeerID() + "] is connected from Peer[peer_ID " + theirPeerId + "]");
 
                     // Spawn handlers for the new connection
                     handleNewConnection(newConnection, false, inputStream, outputStream, theirPeerId);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
-                myPeerInfo.log( e.getMessage());
+                myPeerInfo.log(e.getMessage());
             }
-        }
-    }
-
-    public void initializeNeighbourConnectionsInfo(String peerInfoConfigFile){
-        try {
-            BufferedReader in = new BufferedReader(new FileReader(peerInfoConfigFile));
-            String peerInfoFileLine = in.readLine();
-            while(peerInfoFileLine != null){
-                String[] splitLine = peerInfoFileLine.split(" ");
-                int peerId = Integer.parseInt(splitLine[0]);
-                if(peerId != this.myPeerInfo.getPeerID()){
-                    PeerInfo.Builder builder = new PeerInfo.Builder();
-                    builder.withPeerID(peerId)
-                           .withHostName(splitLine[1])
-                           .withPortNumber(Integer.parseInt(splitLine[2]))
-                           .withHasFile(Boolean.parseBoolean(splitLine[3]));
-
-                    NeighbourPeerInfo neighbourPeerInfo = builder.buildNeighbourPeerInfo();
-                    this.neighbourConnectionsInfo.putIfAbsent(peerId, neighbourPeerInfo);
-                }
-                peerInfoFileLine = in.readLine();
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 

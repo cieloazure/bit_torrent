@@ -18,25 +18,25 @@ public class ExpectedToSendInterestedOrNotInterestedMessageState implements Peer
     @Override
     public void handleMessage(Handler context, SelfPeerInfo myPeerInfo, DataInputStream inputStream, DataOutputStream outputStream) {
         try {
-            BitSet theirBitfieldClone = (BitSet)this.theirBitfield.clone();
-            BitSet myBitfieldClone = (BitSet)myPeerInfo.getBitField().clone();
+            BitSet theirBitfieldClone = (BitSet) this.theirBitfield.clone();
+            BitSet myBitfieldClone = (BitSet) myPeerInfo.getBitField().clone();
             myBitfieldClone.xor(theirBitfieldClone);
             myBitfieldClone.and(theirBitfieldClone);
 
-            BitSet toRequest = (BitSet)myBitfieldClone.clone();
+            BitSet toRequest = (BitSet) myBitfieldClone.clone();
             //pieces that are not yet requested.
 //            toRequest.andNot(myPeerInfo.getRequestedPieces());
 
             if (toRequest.cardinality() == 0) {
                 ActualMessage actualMessage = new ActualMessage(MessageType.NOT_INTERESTED);
-                myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Sent NOT INTERESTED message to " + context.getTheirPeerId());
+                myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Sent NOT INTERESTED message to " + context.getTheirPeerId());
 
                 outputStream.write(actualMessage.serialize());
                 outputStream.flush();
 
             } else {
                 ActualMessage actualMessage = new ActualMessage(MessageType.INTERESTED);
-                myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Sent INTERESTED message to " + context.getTheirPeerId());
+                myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Sent INTERESTED message to " + context.getTheirPeerId());
 
                 outputStream.write(actualMessage.serialize());
                 outputStream.flush();

@@ -17,8 +17,8 @@ public class ExpectedToSendUnchokeMessageState implements PeerState {
 
     @Override
     public void handleMessage(Handler context, SelfPeerInfo myPeerInfo, DataInputStream inputStream, DataOutputStream outputStream) {
-        try{
-            if(!neighbourConnectionInfo.get(context.getTheirPeerId()).isUnChoked()){
+        try {
+            if (!neighbourConnectionInfo.get(context.getTheirPeerId()).isUnChoked()) {
                 ActualMessage actualMessage = new ActualMessage(MessageType.UNCHOKE);
                 outputStream.write(actualMessage.serialize());
                 outputStream.flush();
@@ -36,11 +36,11 @@ public class ExpectedToSendUnchokeMessageState implements PeerState {
                         break;
 
                 }
-                myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Sent UNCHOKE message to " + context.getTheirPeerId());
+                myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Sent UNCHOKE message to " + context.getTheirPeerId());
 
             }
 
-        }catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }

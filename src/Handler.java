@@ -60,12 +60,14 @@ class Handler {
         }
     }
 
-    public void setLastStateRef(PeerState whichState){
-        this.lastStateRef.set(whichState);
-    }
-    public PeerState getLastStateRef(){
+    public PeerState getLastStateRef() {
         return this.lastStateRef.get();
     }
+
+    public void setLastStateRef(PeerState whichState) {
+        this.lastStateRef.set(whichState);
+    }
+
     public String getHostName() {
         return this.connection.getInetAddress().getHostName();
     }

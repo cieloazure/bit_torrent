@@ -16,9 +16,9 @@ public class ExpectedToSendChokeMessageState implements PeerState {
 
     @Override
     public void handleMessage(Handler context, SelfPeerInfo myPeerInfo, DataInputStream inputStream, DataOutputStream outputStream) {
-        try{
+        try {
             ActualMessage actualMessage = new ActualMessage(MessageType.CHOKE);
-            myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Sent CHOKE message to " + context.getTheirPeerId());
+            myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Sent CHOKE message to " + context.getTheirPeerId());
 
             outputStream.write(actualMessage.serialize());
             outputStream.flush();
@@ -37,7 +37,7 @@ public class ExpectedToSendChokeMessageState implements PeerState {
 
             }
 
-        }catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
