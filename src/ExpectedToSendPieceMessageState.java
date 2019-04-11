@@ -19,7 +19,7 @@ public class ExpectedToSendPieceMessageState implements PeerState {
         try {
             System.out.println("Piece index is " + this.pieceIndex);
             ActualMessage actualMessage = new ActualMessage(MessageType.PIECE, myPeerInfo.getFileChunk(this.pieceIndex));
-            myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Sent PIECE " + this.pieceIndex + " message to " + context.getTheirPeerId());
+//            myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Sent PIECE " + this.pieceIndex + " message to " + context.getTheirPeerId());
             outputStream.write(actualMessage.serialize());
             outputStream.flush();
         } catch (IOException e) {

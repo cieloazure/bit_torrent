@@ -17,7 +17,7 @@ public class WaitForAnyMessageState implements PeerState {
     @Override
     public void handleMessage(Handler context, SelfPeerInfo myPeerInfo, DataInputStream inputStream, DataOutputStream outputStream) {
         try {
-            myPeerInfo.log("\n[PEER:" + myPeerInfo.getPeerID() + "]Waiting for any message....from peer id " + context.getTheirPeerId() + " whose current state is " + this.neighbourConnectionsInfo.get(context.getTheirPeerId()).getNeighbourState() + "\n");
+//            myPeerInfo.log("\n[PEER:" + myPeerInfo.getPeerID() + "]Waiting for any message....from peer id " + context.getTheirPeerId() + " whose current state is " + this.neighbourConnectionsInfo.get(context.getTheirPeerId()).getNeighbourState() + "\n");
 
             int len = 0;
             byte[] messageBytes;
@@ -41,7 +41,7 @@ public class WaitForAnyMessageState implements PeerState {
 
             ActualMessage message = new ActualMessage(messageBytes);
 
-            myPeerInfo.log("\n[PEER:" + myPeerInfo.getPeerID() + "][WaitForAnyMessageState] Received a message with following stats\n1. Message Type:" + message.getMessageType() + "\n2.Message Length:" + message.getMessageLength() + "\n3. Validity:" + message.isValid() + "\n");
+//            myPeerInfo.log("\n[Peer:" + myPeerInfo.getPeerID() + "][WaitForAnyMessageState] Received a message with following stats\n1. Message Type:" + message.getMessageType() + "\n2.Message Length:" + message.getMessageLength() + "\n3. Validity:" + message.isValid() + "\n");
 
             if (message.isValid()) {
                 switch (message.getMessageType()) {
@@ -82,7 +82,7 @@ public class WaitForAnyMessageState implements PeerState {
 
     private void handleIncomingNotInterestedMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
         // 1. Update the state of the peer in concurrent hash map, this will be used when decided the peers to upload to, not interested peers won't be considered at all
-        myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Got NOT INTERESTED message from peer " + context.getTheirPeerId() + "! Updating the state in hashmap to be used in next interval");
+        myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "] received 'not-interested' message from peer [" + context.getTheirPeerId() + "]");
         switch (neighbourConnectionsInfo.get(context.getTheirPeerId()).getNeighbourState()) {
 
             case UNKNOWN:
@@ -102,7 +102,7 @@ public class WaitForAnyMessageState implements PeerState {
     private void handleIncomingInterestedMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
         // 1. Update the state of the peer in the concurrent hash map, this will be used when unchoking interval elapses in timertask1 or when optimistic unchoking interval elapses in timertask2
 
-        myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Got INTERESTED message from peer " + context.getTheirPeerId() + "! Updating the state in hashmap to be used in next interval");
+        myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "] received 'interested' message from peer [" + context.getTheirPeerId()+"]");
         switch (neighbourConnectionsInfo.get(context.getTheirPeerId()).getNeighbourState()) {
 
             case UNKNOWN:
@@ -121,7 +121,7 @@ public class WaitForAnyMessageState implements PeerState {
     }
 
     private void handleIncomingUnchokeMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
-        myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Got UNCHOKE message from peer " + context.getTheirPeerId() + "! Updating the state in hashmap to be used in next interval");
+        myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "]is unchoked by " + context.getTheirPeerId() );
         sendRequestMessage(context, neighbourConnectionsInfo, myPeerInfo);
 
         //5. Track to which peer we have sent a request message with that index, next time an unchoke message arrives, do not use the same index again, :
@@ -177,7 +177,7 @@ public class WaitForAnyMessageState implements PeerState {
     private void handleIncomingChokeMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
         // 0. Update the state of the peer in concurrent hash map to choked **--->> done in ExpectedToSendChokeMessageState/Unchoke
         // 1. Do nothing!
-        myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Got CHOKE message from peer " + context.getTheirPeerId() + "! Updating the state in hashmap to be used in next interval");
+        myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "] is choked by [" + context.getTheirPeerId() + "]");
 
     }
 
@@ -190,8 +190,8 @@ public class WaitForAnyMessageState implements PeerState {
         // 1. Get the piece index from the fileChunks
         ByteBuffer buffer = ByteBuffer.allocate(payload.length).wrap(payload);
         int pieceIndex = buffer.getInt();
-        myPeerInfo.log("RECEIVED REQUEST MESSAGE from " + context.getTheirPeerId() + " for piece " + pieceIndex);
-        myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Got REQUEST message from peer " + context.getTheirPeerId() + " for piece index " + pieceIndex + "! Will check the neighbour state and send a piece message if unchoked");
+//        myPeerInfo.log("RECEIVED REQUEST MESSAGE from " + context.getTheirPeerId() + " for piece " + pieceIndex);
+        myPeerInfo.log("[Peer [" + myPeerInfo.getPeerID() + "] Got 'request' message from peer [" + context.getTheirPeerId() + "] for piece index " + pieceIndex);
 
         // 2. Send a piece with that index through a piece message payload on output thread
         // 2.1. Check if the state is unchoked
@@ -205,14 +205,14 @@ public class WaitForAnyMessageState implements PeerState {
     }
 
     private void handleIncomingPieceMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, Double downloadSpeed, SelfPeerInfo myPeerInfo) {
-        myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Got PIECE message from peer " + context.getTheirPeerId() + "! Will send have messages to all neighbours and next request message to the peer");
+//        myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Got PIECE message from peer " + context.getTheirPeerId() + "! Will send have messages to all neighbours and next request message to the peer");
         // 1. Track the download speed of the message by putting start time and end time around read bytes
         // Handled in handler message
 
         // 1.1. Get the piece index that was requested from this peer
         int gotPieceIndex = neighbourConnectionsInfo.get(context.getTheirPeerId()).getRequestedPieceIndex();
 
-        myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Got PIECE message " + gotPieceIndex + " from peer " + context.getTheirPeerId() + "! Will send have messages to all neighbours and next request message to the peer");
+//        myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Got PIECE message " + gotPieceIndex + " from peer " + context.getTheirPeerId() + "! Will send have messages to all neighbours and next request message to the peer");
 
         // 2. Update the download speed of the peer in the concurrent hashmap
         neighbourConnectionsInfo.get(context.getTheirPeerId()).setDownloadSpeed(downloadSpeed);
@@ -222,6 +222,8 @@ public class WaitForAnyMessageState implements PeerState {
         myPeerInfo.setRequestPiecesIndex(gotPieceIndex, 1);
         // 3.1. Update file chunk index
         myPeerInfo.setFileChunkIndex(gotPieceIndex, message.getPayload());
+
+        myPeerInfo.log("[Peer ["+myPeerInfo.getPeerID()+"] has downloaded the piece" + gotPieceIndex+ " from Peer [" +context.getTheirPeerId()+"]. Now number of pieces it has is "+myPeerInfo.getBitField().cardinality());
 
         // 4. Send a have message to all the neighbouring peers
         for (Integer peerId : neighbourConnectionsInfo.keySet()) {
@@ -240,17 +242,19 @@ public class WaitForAnyMessageState implements PeerState {
     private void handleIncomingHaveMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
         // 1. Update the bitfield `theirPeer` in concurrent hashmap
         // 2. Take xor of the bitfield with myPeerInfo.getBitField() and decide whether an interested or not interested message is to be sent
-        myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Got HAVE message from peer " + context.getTheirPeerId() + "! Will check whether I have that pieceIndex and send interested/not-interested message");
+
         byte[] payload = message.getPayload();
         int haveIndex = ByteBuffer.allocate(payload.length).wrap(payload).getInt();
         neighbourConnectionsInfo.get(context.getTheirPeerId()).setBitFieldIndex(haveIndex);
+        myPeerInfo.log("Peer [" + myPeerInfo.getPeerID() + "] received 'have' message from peer [" + context.getTheirPeerId() + "] for the piece" + haveIndex);
+
 //        if (!myPeerInfo.getBitField().get(haveIndex)) {
         context.setState(new ExpectedToSendInterestedOrNotInterestedMessageState(neighbourConnectionsInfo, neighbourConnectionsInfo.get(context.getTheirPeerId()).getBitField(), false), false, false);
 //        }
     }
 
     private void handleMessageFailure(Handler context, SelfPeerInfo myPeerInfo) {
-        myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "] FAILED message from peer " + context.getTheirPeerId() + "!");
+//        myPeerInfo.log("Peer [" + myPeerInfo.getPeerID() + "] FAILED message from peer " + context.getTheirPeerId() + "!");
 
         context.setState(new ExpectedToSendFailedMessageState(), false, false);
         //5. Track to which peer we have sent a request message with that index, next time an unchoke message arrives, do not use the same index again, :

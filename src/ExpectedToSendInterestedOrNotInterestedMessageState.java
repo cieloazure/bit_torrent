@@ -29,14 +29,14 @@ public class ExpectedToSendInterestedOrNotInterestedMessageState implements Peer
 
             if (toRequest.cardinality() == 0) {
                 ActualMessage actualMessage = new ActualMessage(MessageType.NOT_INTERESTED);
-                myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Sent NOT INTERESTED message to " + context.getTheirPeerId());
+//                myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Sent NOT INTERESTED message to " + context.getTheirPeerId());
 
                 outputStream.write(actualMessage.serialize());
                 outputStream.flush();
 
             } else {
                 ActualMessage actualMessage = new ActualMessage(MessageType.INTERESTED);
-                myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Sent INTERESTED message to " + context.getTheirPeerId());
+//                myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Sent INTERESTED message to " + context.getTheirPeerId());
 
                 outputStream.write(actualMessage.serialize());
                 outputStream.flush();
