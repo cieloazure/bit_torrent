@@ -43,7 +43,7 @@ public class WaitForAnyMessageState implements PeerState {
 
             myPeerInfo.log( "\n[PEER:" + myPeerInfo.getPeerID() + "][WaitForAnyMessageState] Received a message with following stats\n1. Message Type:"+message.getMessageType()+"\n2.Message Length:"+message.getMessageLength()+"\n3. Validity:"+message.isValid()+"\n");
 
-            if(true){
+            if(message.isValid()){
                 switch (message.getMessageType()) {
                     case HAVE:
                         handleIncomingHaveMessage(context, message, neighbourConnectionsInfo, myPeerInfo);
@@ -66,8 +66,15 @@ public class WaitForAnyMessageState implements PeerState {
                     case NOT_INTERESTED:
                         handleIncomingNotInterestedMessage(context, message, neighbourConnectionsInfo, myPeerInfo);
                         break;
+                    case FAILED:
+                        handleIncomingFailedMessage(context, message, neighbourConnectionsInfo, myPeerInfo);
+
                 }
             }
+            else{
+                handleMessageFailure(context, myPeerInfo);
+            }
+
             context.setState(new WaitForAnyMessageState(neighbourConnectionsInfo), true, false);
         } catch (IOException e) {
             e.printStackTrace();
@@ -155,7 +162,9 @@ public class WaitForAnyMessageState implements PeerState {
             int pieceToRequest = toRequest.nextSetBit(randomIndex);
 
             // 3. Send a request message with that index
-            context.setState(new ExpectedToSendRequestMessageState(this.neighbourConnectionsInfo,pieceToRequest), false, false);
+            ExpectedToSendRequestMessageState requestMessageState = new ExpectedToSendRequestMessageState(this.neighbourConnectionsInfo,pieceToRequest);
+            context.setLastStateRef(requestMessageState);
+            context.setState(requestMessageState, false, false);
 
             //4.Set the piece index in requestedPieces bitset
             myPeerInfo.setRequestPiecesIndex(pieceToRequest, 0);
@@ -187,8 +196,9 @@ public class WaitForAnyMessageState implements PeerState {
         // 2. Send a piece with that index through a piece message payload on output thread
         // 2.1. Check if the state is unchoked
         if (neighbourConnectionsInfo.get(context.getTheirPeerId()).isUnChoked()) {
-
-            context.setState(new ExpectedToSendPieceMessageState(neighbourConnectionsInfo, pieceIndex), false, false);
+            ExpectedToSendPieceMessageState pieceMessageState = new ExpectedToSendPieceMessageState(neighbourConnectionsInfo, pieceIndex);
+            context.setLastStateRef(pieceMessageState);
+            context.setState(pieceMessageState, false, false);
         }
         else{
             System.out.println("Received request but state is not UNCHOKED!");
@@ -218,7 +228,9 @@ public class WaitForAnyMessageState implements PeerState {
         for (Integer peerId : neighbourConnectionsInfo.keySet()) {
             NeighbourPeerInfo peerInfo = neighbourConnectionsInfo.get(peerId);
             if(peerInfo.getContext() != null){
-                peerInfo.setContextState(new ExpectedToSendHaveMessageState(neighbourConnectionsInfo, gotPieceIndex), false, false);
+                ExpectedToSendHaveMessageState haveMessageState = new ExpectedToSendHaveMessageState(neighbourConnectionsInfo, gotPieceIndex);
+                context.setLastStateRef(haveMessageState);
+                peerInfo.setContextState(haveMessageState, false, false);
             }
         }
 
@@ -236,5 +248,17 @@ public class WaitForAnyMessageState implements PeerState {
 //        if (!myPeerInfo.getBitField().get(haveIndex)) {
         context.setState(new ExpectedToSendInterestedOrNotInterestedMessageState(neighbourConnectionsInfo, neighbourConnectionsInfo.get(context.getTheirPeerId()).getBitField(), false), false, false);
 //        }
+    }
+
+    private void handleMessageFailure(Handler context, SelfPeerInfo myPeerInfo) {
+        myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "] FAILED message from peer " + context.getTheirPeerId() + "!");
+
+        context.setState(new ExpectedToSendFailedMessageState(), false, false);
+        //5. Track to which peer we have sent a request message with that index, next time an unchoke message arrives, do not use the same index again, :
+
+    }
+    private void handleIncomingFailedMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
+        System.out.println("Handle incoming failed message");
+        context.setState(context.getLastStateRef(), false, false);
     }
 }
