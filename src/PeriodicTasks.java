@@ -31,6 +31,11 @@ public class PeriodicTasks {
             // This TreeMap stores the mapping of download rate to an ArrayList of peerIDs
             // Using array list so as to deal with the corner case of two peers having the same download rate
             Map<Double, ArrayList<Integer>> downloadRateToPeerId = new TreeMap<>();
+
+            int totalPieces = (int)(this.myPeerInfo.getCommonConfig().getFileSize()/this.myPeerInfo.getCommonConfig().getPieceSize());
+            int numReceivedPeers = 0;
+            boolean canShutdown = false;
+
             for (Integer key : neighbourInfo.keySet()) {
 
                 if (neighbourInfo.get(key).isInterested()) {
@@ -42,15 +47,23 @@ public class PeriodicTasks {
                         downloadRateToPeerId.get(neighbourInfo.get(key).getDownloadSpeed()).add(key);
                     }
                 }
-                BitSet bf = this.neighbourInfo.get(key).getBitField();
-                if(bf!=null) {
-                    System.out.println("Peer " + key + " has " + bf.cardinality() + " chunks");
-                    System.out.println("Peer "+myPeerInfo.getPeerID()+" has "+ neighbourInfo.size()+" neighbours");
+                //if the Peer itself has received all pieces, check if the neighbors have received all pieces.
+                if(this.myPeerInfo.getBitField().cardinality() == totalPieces) {
+                    //if neighbour peer has all pieces
+                    if(neighbourInfo.get(key).getBitField() != null) {
+                        if(neighbourInfo.get(key).getBitField().cardinality() == totalPieces)
+                            numReceivedPeers ++;
+                    }
                 }
-//                this.myPeerInfo.getCommonConfig().getFileSize();
-//                this.myPeerInfo.getCommonConfig().getPieceSize();
 
             }
+
+            if(numReceivedPeers == neighbourInfo.size()) {
+                System.out.println("Killing !!!!!!");
+                myPeerInfo.killAllPeriodicTasks();
+            }
+
+
             if (downloadRateToPeerId.size() == 0) {
                 myPeerInfo.log("DEBUG: downloadRateToPeerId is empty");
             }
