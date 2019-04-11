@@ -98,9 +98,9 @@ public class SelfPeerInfo extends PeerInfo {
     }
 
     public void combineFileChunks() {
-        File dir = new File("received_file_" + peerID.toString() + "/");
+        File dir = new File("peer_" + peerID.toString() + "/");
         dir.mkdirs();
-        File f = new File("received_file_" + peerID.toString() + "/" + commonConfig.getFileName());
+        File f = new File("peer_" + peerID.toString() + "/" + commonConfig.getFileName());
         TreeSet<Integer> pieceIndexes = new TreeSet<>(fileChunks.keySet());
 
         try {
