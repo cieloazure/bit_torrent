@@ -2,6 +2,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.ServerSocket;
+import java.sql.Connection;
 import java.sql.Timestamp;
 import java.util.BitSet;
 import java.util.Map;
@@ -23,6 +25,8 @@ public class SelfPeerInfo extends PeerInfo {
     private CommonConfig commonConfig;
     private boolean toStdOutput;
     private ConcurrentHashMap<Integer, Integer> requestedPieces; //to track the requested pieces
+    private ServerSocket listener;
+    private boolean keepWorking;
 
     public SelfPeerInfo(PeerInfo.Builder b,
                         Boolean hasFile,
@@ -42,6 +46,7 @@ public class SelfPeerInfo extends PeerInfo {
             this.setRequestPiecesIndex(i, 1);
         }
         this.commonConfig = commonConfig;
+        this.keepWorking = true;
     }
 
     public static String ts() {
@@ -117,5 +122,26 @@ public class SelfPeerInfo extends PeerInfo {
     }
     public CommonConfig getCommonConfig(){
         return this.commonConfig;
+    }
+
+    public void setListener(ServerSocket listener) {
+        this.listener = listener;
+    }
+
+    public void interruptListener(){
+        try {
+            this.listener.close();
+        }
+        catch (Exception e){
+
+        }
+
+    }
+
+    public void setKeepWorking(boolean keepWorking) {
+        this.keepWorking = keepWorking;
+    }
+    public boolean getKeepWorking(){
+        return this.keepWorking;
     }
 }

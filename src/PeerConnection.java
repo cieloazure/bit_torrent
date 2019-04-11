@@ -25,7 +25,10 @@ public class PeerConnection {
         // Start the listener process to listen for new connections
         ConnectionListener listener = new ConnectionListener(this);
         Thread listenerThread = new Thread(listener);
+
         listenerThread.start();
+
+
     }
 
     public void handleNewConnection(Socket connection, boolean sendHandshake, DataInputStream inputStream, DataOutputStream outputStream, int theirPeerId) {
@@ -124,6 +127,7 @@ public class PeerConnection {
             try {
                 myPeerInfo.log("[PEER:" + this.myPeerInfo.getPeerID() + "]Listening for connections....at " + this.myPeerInfo.getHostName() + ":" + this.myPeerInfo.getPortNumber());
                 ServerSocket listener = new ServerSocket(this.myPeerInfo.getPortNumber());
+                this.myPeerInfo.setListener(listener);
                 while (true) {
                     Socket newConnection = listener.accept();
 
@@ -143,9 +147,10 @@ public class PeerConnection {
                     // Spawn handlers for the new connection
                     handleNewConnection(newConnection, false, inputStream, outputStream, theirPeerId);
                 }
+
             } catch (IOException e) {
-                e.printStackTrace();
-                myPeerInfo.log(e.getMessage());
+//                e.printStackTrace();
+//                myPeerInfo.log(e.getMessage());
             }
         }
     }

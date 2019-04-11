@@ -25,15 +25,17 @@ class NeighbourOutputHandler extends Handler implements Runnable {
 
     @Override
     public void run() {
-        while (!neighbourInfo.get(this.theirPeerId).shutdown()) {
+        while (myPeerInfo.getKeepWorking()) {
             try {
                 synchronized (this.outputMutex) {
                     while (this.outputStateRef.isEmpty()) {
                         this.outputMutex.wait();
                     }
-                    while (!this.outputStateRef.isEmpty()) {
-                        PeerState outputState = this.outputStateRef.poll();
-                        outputState.handleMessage(this, this.myPeerInfo, this.inputStream, this.outputStream);
+                    if(myPeerInfo.getKeepWorking()) {
+                        while (!this.outputStateRef.isEmpty()) {
+                            PeerState outputState = this.outputStateRef.poll();
+                            outputState.handleMessage(this, this.myPeerInfo, this.inputStream, this.outputStream);
+                        }
                     }
                 }
             } catch (InterruptedException e) {

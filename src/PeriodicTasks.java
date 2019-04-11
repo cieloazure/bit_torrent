@@ -1,3 +1,4 @@
+
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -33,7 +34,7 @@ public class PeriodicTasks {
             Map<Double, ArrayList<Integer>> downloadRateToPeerId = new TreeMap<>();
 
             int totalPieces = (int)(this.myPeerInfo.getCommonConfig().getFileSize()/this.myPeerInfo.getCommonConfig().getPieceSize());
-            int numReceivedPeers = 0;
+            int peersWithCompleteFile = 0;
             boolean canShutdown = false;
 
             for (Integer key : neighbourInfo.keySet()) {
@@ -52,15 +53,21 @@ public class PeriodicTasks {
                     //if neighbour peer has all pieces
                     if(neighbourInfo.get(key).getBitField() != null) {
                         if(neighbourInfo.get(key).getBitField().cardinality() == totalPieces)
-                            numReceivedPeers ++;
+                            peersWithCompleteFile ++;
                     }
                 }
 
             }
 
-            if(numReceivedPeers == neighbourInfo.size()) {
-                System.out.println("Killing !!!!!!");
-                myPeerInfo.killAllPeriodicTasks();
+            if(peersWithCompleteFile == neighbourInfo.size()) {
+                this.myPeerInfo.interruptListener();
+                myPeerInfo.setKeepWorking(false);
+                for (Integer key : neighbourInfo.keySet()) {
+                    neighbourInfo.get(key).getContext().setState(new ExpectedToSendFailedMessageState(), false, false);
+                    neighbourInfo.get(key).getContext().closeConnection();
+                }
+                this.myPeerInfo.killAllPeriodicTasks();
+
             }
 
 
