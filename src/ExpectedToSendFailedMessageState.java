@@ -1,7 +1,6 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class ExpectedToSendFailedMessageState implements PeerState {
 

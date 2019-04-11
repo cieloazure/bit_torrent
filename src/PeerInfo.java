@@ -1,6 +1,5 @@
 import java.util.ArrayList;
 import java.util.BitSet;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -73,6 +72,7 @@ public class PeerInfo {
         private Logger logger;
         private ArrayList<Integer> peerAddressToID;
         private Handler context;
+        private CommonConfig commonConfig;
 
         public Builder() {
 
@@ -119,8 +119,13 @@ public class PeerInfo {
             return this;
         }
 
+        public  Builder withCommonConfig(CommonConfig commonConfig){
+            this.commonConfig = commonConfig;
+            return this;
+        }
+
         public SelfPeerInfo buildSelfPeerInfo() {
-            return new SelfPeerInfo(this, this.hasFile, this.fileChunks, this.logger, this.requestedPieces);
+            return new SelfPeerInfo(this, this.hasFile, this.fileChunks, this.logger, this.requestedPieces, this.commonConfig);
         }
 
         public NeighbourPeerInfo buildNeighbourPeerInfo() {

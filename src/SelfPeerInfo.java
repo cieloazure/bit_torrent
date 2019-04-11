@@ -1,17 +1,17 @@
-
-import org.omg.CORBA.INTERNAL;
-
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.BitSet;
-import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import java.util.logging.StreamHandler;
+
 
 public class SelfPeerInfo extends PeerInfo {
     private Boolean hasFile;
@@ -19,6 +19,7 @@ public class SelfPeerInfo extends PeerInfo {
     private BitSet requestedbitField;
     private Logger logger;
     private Logger stdOutputLogger;
+    private CommonConfig commonConfig;
     private boolean toStdOutput;
     private ConcurrentHashMap<Integer, Integer> requestedPieces; //to track the requested pieces
     protected ScheduledExecutorService schExec;
@@ -27,7 +28,8 @@ public class SelfPeerInfo extends PeerInfo {
                         Boolean hasFile,
                         Map<Integer, byte[]>fileChunks,
                         Logger logger,
-                        BitSet requestedPieces) {
+                        BitSet requestedPieces,
+                        CommonConfig commonConfig) {
         super(b);
         this.hasFile = hasFile;
         this.fileChunks = fileChunks;
@@ -39,7 +41,7 @@ public class SelfPeerInfo extends PeerInfo {
         for (int i = requestedPieces.nextSetBit(0); i >= 0; i = requestedPieces.nextSetBit(i+1)) {
             this.setRequestPiecesIndex(i,1);
         }
-
+        this.commonConfig = commonConfig;
     }
 
     public BitSet getRequestedPieces() {
@@ -88,7 +90,30 @@ public class SelfPeerInfo extends PeerInfo {
             System.out.println(ts()+" : "+message);
         }
     }
+
     public static String ts() {
         return "" + new Timestamp(new java.util.Date().getTime());
+    }
+
+    public void combineFileChunks(){
+        File dir = new File("received_file_"+peerID.toString()+"/");
+        dir.mkdirs();
+        File f = new File("received_file_"+peerID.toString()+"/"+commonConfig.getFileName());
+        TreeSet<Integer> pieceIndexes = new TreeSet<>(fileChunks.keySet());
+
+        try {
+            FileOutputStream outputStream = new FileOutputStream(f);
+            for(Integer piece: pieceIndexes){
+                byte[] buffer = fileChunks.get(piece);
+                String s = new String(buffer);
+                System.out.println(s);
+                outputStream.write(fileChunks.get(piece));
+            }
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

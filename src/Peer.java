@@ -1,10 +1,9 @@
-import com.oracle.tools.packager.Log;
-
 import java.io.*;
 import java.net.Socket;
-import java.util.*;
+import java.util.BitSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.FileHandler;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
@@ -19,7 +18,7 @@ public class Peer {
     /* Self peer info variables */
     private static SelfPeerInfo myPeerInfo;
 
-    public static void main(String[] args) {
+    public static void start(int peerID) {
         Logger logger = null;
         // Parse common config file
         CommonConfig.Builder configBuilder = new CommonConfig.Builder();
@@ -28,10 +27,10 @@ public class Peer {
 
 
         PeerInfo.Builder peerInfoBuilder = new PeerInfo.Builder();
+        peerInfoBuilder.withCommonConfig(commonConfig);
 
         // Set peer ID
         // TODO: Check for NAN exception, terminate program in that case
-        int peerID = Integer.parseInt(args[0]);
         peerInfoBuilder.withPeerID(peerID);
 
         //Setting up the logger
@@ -213,6 +212,7 @@ public class Peer {
             while (fis.read(buffer) > 0) {
                 fileChunks.putIfAbsent(i, buffer);
                 i++;
+                buffer = new byte[(int)pieceSize];
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
