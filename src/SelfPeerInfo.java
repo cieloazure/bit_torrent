@@ -106,9 +106,6 @@ public class SelfPeerInfo extends PeerInfo {
         try {
             FileOutputStream outputStream = new FileOutputStream(f);
             for (Integer piece : pieceIndexes) {
-                byte[] buffer = fileChunks.get(piece);
-                String s = new String(buffer);
-                System.out.println(s);
                 outputStream.write(fileChunks.get(piece));
             }
 

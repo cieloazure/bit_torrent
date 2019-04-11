@@ -169,6 +169,7 @@ public class WaitForAnyMessageState implements PeerState {
             myPeerInfo.setRequestPiecesIndex(pieceToRequest, 0);
         } else {
             System.out.println("RECEIVED ENTIRE FILE!");
+            myPeerInfo.combineFileChunks();
             context.setState(new ExpectedToSendInterestedOrNotInterestedMessageState(neighbourConnectionsInfo, neighbourConnectionsInfo.get(context.getTheirPeerId()).getBitField(), false), false, false);
         }
     }
