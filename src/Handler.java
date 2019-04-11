@@ -33,7 +33,7 @@ class Handler {
         this.inputMutex = inputMutex;
         this.outputMutex = outputMutex;
         this.theirPeerId = theirPeerId;
-        this.lastStateRef = null;
+        this.lastStateRef = new AtomicReference<>();
     }
 
     public void setState(PeerState whichState, boolean isForInputState, boolean setOtherStateAsNull) {
