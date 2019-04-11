@@ -17,7 +17,7 @@ public class WaitForAnyMessageState implements PeerState {
     @Override
     public void handleMessage(Handler context, SelfPeerInfo myPeerInfo, DataInputStream inputStream, DataOutputStream outputStream) {
         try {
-            myPeerInfo.log( "\n[PEER:" + myPeerInfo.getPeerID() + "]Waiting for any message....from peer id " + context.getTheirPeerId() + " whose current state is " + this.neighbourConnectionsInfo.get(context.getTheirPeerId()).getNeighbourState()+"\n");
+            myPeerInfo.log("\n[PEER:" + myPeerInfo.getPeerID() + "]Waiting for any message....from peer id " + context.getTheirPeerId() + " whose current state is " + this.neighbourConnectionsInfo.get(context.getTheirPeerId()).getNeighbourState() + "\n");
 
             int len = 0;
             byte[] messageBytes;
@@ -41,9 +41,9 @@ public class WaitForAnyMessageState implements PeerState {
 
             ActualMessage message = new ActualMessage(messageBytes);
 
-            myPeerInfo.log( "\n[PEER:" + myPeerInfo.getPeerID() + "][WaitForAnyMessageState] Received a message with following stats\n1. Message Type:"+message.getMessageType()+"\n2.Message Length:"+message.getMessageLength()+"\n3. Validity:"+message.isValid()+"\n");
+            myPeerInfo.log("\n[PEER:" + myPeerInfo.getPeerID() + "][WaitForAnyMessageState] Received a message with following stats\n1. Message Type:" + message.getMessageType() + "\n2.Message Length:" + message.getMessageLength() + "\n3. Validity:" + message.isValid() + "\n");
 
-            if(message.isValid()){
+            if (message.isValid()) {
                 switch (message.getMessageType()) {
                     case HAVE:
                         handleIncomingHaveMessage(context, message, neighbourConnectionsInfo, myPeerInfo);
@@ -70,8 +70,7 @@ public class WaitForAnyMessageState implements PeerState {
                         handleIncomingFailedMessage(context, message, neighbourConnectionsInfo, myPeerInfo);
 
                 }
-            }
-            else{
+            } else {
                 handleMessageFailure(context, myPeerInfo);
             }
 
@@ -83,7 +82,7 @@ public class WaitForAnyMessageState implements PeerState {
 
     private void handleIncomingNotInterestedMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
         // 1. Update the state of the peer in concurrent hash map, this will be used when decided the peers to upload to, not interested peers won't be considered at all
-        myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Got NOT INTERESTED message from peer " + context.getTheirPeerId() + "! Updating the state in hashmap to be used in next interval");
+        myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Got NOT INTERESTED message from peer " + context.getTheirPeerId() + "! Updating the state in hashmap to be used in next interval");
         switch (neighbourConnectionsInfo.get(context.getTheirPeerId()).getNeighbourState()) {
 
             case UNKNOWN:
@@ -103,7 +102,7 @@ public class WaitForAnyMessageState implements PeerState {
     private void handleIncomingInterestedMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
         // 1. Update the state of the peer in the concurrent hash map, this will be used when unchoking interval elapses in timertask1 or when optimistic unchoking interval elapses in timertask2
 
-        myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Got INTERESTED message from peer " + context.getTheirPeerId() + "! Updating the state in hashmap to be used in next interval");
+        myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Got INTERESTED message from peer " + context.getTheirPeerId() + "! Updating the state in hashmap to be used in next interval");
         switch (neighbourConnectionsInfo.get(context.getTheirPeerId()).getNeighbourState()) {
 
             case UNKNOWN:
@@ -138,37 +137,37 @@ public class WaitForAnyMessageState implements PeerState {
         BitSet toRequest = new BitSet();
         BitSet theirBitSet = new BitSet();
 
-        theirBitSet = (BitSet)(neighbourConnectionsInfo.get(context.getTheirPeerId())).getBitField().clone();
-        missing = (BitSet)(myPeerInfo.getBitField()).clone();
+        theirBitSet = (BitSet) (neighbourConnectionsInfo.get(context.getTheirPeerId())).getBitField().clone();
+        missing = (BitSet) (myPeerInfo.getBitField()).clone();
 
-        System.out.println("Server bitset:" +theirBitSet);
-        System.out.println("client bitset:"+missing);
+        System.out.println("Server bitset:" + theirBitSet);
+        System.out.println("client bitset:" + missing);
 
         missing.xor(theirBitSet);
 
         //pieces that are missing from client and present in server
         missing.and(theirBitSet);
 
-        toRequest = (BitSet)missing.clone();
+        toRequest = (BitSet) missing.clone();
         //pieces that are not yet requested.
         toRequest.andNot(myPeerInfo.getRequestedPieces());
 
-        System.out.printf("Bitset to be requested"+toRequest);
+        System.out.printf("Bitset to be requested" + toRequest);
 
         // 2. From the set bits choose any random index (which has not been requesssted before)
-        if(toRequest.cardinality() > 0){
+        if (toRequest.cardinality() > 0) {
 
-            int randomIndex = ThreadLocalRandom.current().nextInt(0,toRequest.cardinality());
+            int randomIndex = ThreadLocalRandom.current().nextInt(0, toRequest.cardinality());
             int pieceToRequest = toRequest.nextSetBit(randomIndex);
 
             // 3. Send a request message with that index
-            ExpectedToSendRequestMessageState requestMessageState = new ExpectedToSendRequestMessageState(this.neighbourConnectionsInfo,pieceToRequest);
+            ExpectedToSendRequestMessageState requestMessageState = new ExpectedToSendRequestMessageState(this.neighbourConnectionsInfo, pieceToRequest);
             context.setLastStateRef(requestMessageState);
             context.setState(requestMessageState, false, false);
 
             //4.Set the piece index in requestedPieces bitset
             myPeerInfo.setRequestPiecesIndex(pieceToRequest, 0);
-        }else{
+        } else {
             System.out.println("RECEIVED ENTIRE FILE!");
             context.setState(new ExpectedToSendInterestedOrNotInterestedMessageState(neighbourConnectionsInfo, neighbourConnectionsInfo.get(context.getTheirPeerId()).getBitField(), false), false, false);
         }
@@ -190,8 +189,8 @@ public class WaitForAnyMessageState implements PeerState {
         // 1. Get the piece index from the fileChunks
         ByteBuffer buffer = ByteBuffer.allocate(payload.length).wrap(payload);
         int pieceIndex = buffer.getInt();
-        myPeerInfo.log( "RECEIVED REQUEST MESSAGE from "+ context.getTheirPeerId()+" for piece "+pieceIndex);
-        myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Got REQUEST message from peer " + context.getTheirPeerId() + " for piece index "+ pieceIndex +"! Will check the neighbour state and send a piece message if unchoked");
+        myPeerInfo.log("RECEIVED REQUEST MESSAGE from " + context.getTheirPeerId() + " for piece " + pieceIndex);
+        myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Got REQUEST message from peer " + context.getTheirPeerId() + " for piece index " + pieceIndex + "! Will check the neighbour state and send a piece message if unchoked");
 
         // 2. Send a piece with that index through a piece message payload on output thread
         // 2.1. Check if the state is unchoked
@@ -199,8 +198,7 @@ public class WaitForAnyMessageState implements PeerState {
             ExpectedToSendPieceMessageState pieceMessageState = new ExpectedToSendPieceMessageState(neighbourConnectionsInfo, pieceIndex);
             context.setLastStateRef(pieceMessageState);
             context.setState(pieceMessageState, false, false);
-        }
-        else{
+        } else {
             System.out.println("Received request but state is not UNCHOKED!");
         }
     }
@@ -213,7 +211,7 @@ public class WaitForAnyMessageState implements PeerState {
         // 1.1. Get the piece index that was requested from this peer
         int gotPieceIndex = neighbourConnectionsInfo.get(context.getTheirPeerId()).getRequestedPieceIndex();
 
-        myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Got PIECE message "+gotPieceIndex+" from peer " + context.getTheirPeerId() + "! Will send have messages to all neighbours and next request message to the peer");
+        myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Got PIECE message " + gotPieceIndex + " from peer " + context.getTheirPeerId() + "! Will send have messages to all neighbours and next request message to the peer");
 
         // 2. Update the download speed of the peer in the concurrent hashmap
         neighbourConnectionsInfo.get(context.getTheirPeerId()).setDownloadSpeed(downloadSpeed);
@@ -227,7 +225,7 @@ public class WaitForAnyMessageState implements PeerState {
         // 4. Send a have message to all the neighbouring peers
         for (Integer peerId : neighbourConnectionsInfo.keySet()) {
             NeighbourPeerInfo peerInfo = neighbourConnectionsInfo.get(peerId);
-            if(peerInfo.getContext() != null){
+            if (peerInfo.getContext() != null) {
                 ExpectedToSendHaveMessageState haveMessageState = new ExpectedToSendHaveMessageState(neighbourConnectionsInfo, gotPieceIndex);
                 context.setLastStateRef(haveMessageState);
                 peerInfo.setContextState(haveMessageState, false, false);
@@ -257,6 +255,7 @@ public class WaitForAnyMessageState implements PeerState {
         //5. Track to which peer we have sent a request message with that index, next time an unchoke message arrives, do not use the same index again, :
 
     }
+
     private void handleIncomingFailedMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
         System.out.println("Handle incoming failed message");
         context.setState(context.getLastStateRef(), false, false);

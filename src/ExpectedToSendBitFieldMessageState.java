@@ -15,7 +15,7 @@ public class ExpectedToSendBitFieldMessageState implements PeerState {
     public void handleMessage(Handler context, SelfPeerInfo myPeerInfo, DataInputStream inputStream, DataOutputStream outputStream) {
         try {
             ActualMessage actualMessage = new ActualMessage(MessageType.BITFIELD, myPeerInfo.getBitFieldByteArray(1));
-            myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Sent BITFIELD message to " + context.getTheirPeerId());
+            myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Sent BITFIELD message to " + context.getTheirPeerId());
             outputStream.write(actualMessage.serialize());
             outputStream.flush();
             context.setState(new WaitForBitFieldMessageState(false, neighbourConnectionInfo), true, true);

@@ -80,11 +80,11 @@ public class Peer {
             String neighbourHostName = splitLine[1];
             int neighbourPortNumber = Integer.parseInt(splitLine[2]);
 
-            System.out.println("Calling the parsePeerInfoConfigToMakeConnections method with linePeerId "+linePeerId);
+            System.out.println("Calling the parsePeerInfoConfigToMakeConnections method with linePeerId " + linePeerId);
             while (linePeerId != myPeerInfo.getPeerID()) {
-                myPeerInfo.log("linePeerId:myPeerInfo.getPeerID() "+linePeerId+" : "+myPeerInfo.getPeerID());
+                myPeerInfo.log("linePeerId:myPeerInfo.getPeerID() " + linePeerId + " : " + myPeerInfo.getPeerID());
                 // Log previous state
-                myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Connecting to a peer " + linePeerId + "....");
+                myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Connecting to a peer " + linePeerId + "....");
 
                 // Make a connection with the peer
                 Socket newConnection = new Socket(neighbourHostName, neighbourPortNumber);
@@ -165,10 +165,9 @@ public class Peer {
                     .withPortNumber(portNumber);
 
             boolean hasFile = Integer.parseInt(splitLine[3]) == 1;
-            if(hasFile){
+            if (hasFile) {
                 System.out.println("I have the file!");
-            }
-            else{
+            } else {
                 System.out.println("I DO NOT have the file!");
             }
 
@@ -212,7 +211,7 @@ public class Peer {
             while (fis.read(buffer) > 0) {
                 fileChunks.putIfAbsent(i, buffer);
                 i++;
-                buffer = new byte[(int)pieceSize];
+                buffer = new byte[(int) pieceSize];
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();

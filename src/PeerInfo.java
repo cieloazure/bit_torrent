@@ -62,12 +62,12 @@ public class PeerInfo {
     }
 
     public static class Builder {
+        protected BitSet requestedPieces;
         private String hostName;
         private Integer portNumber;
         private Integer peerID;
         private BitSet bitField;
         private Boolean hasFile;
-        protected BitSet requestedPieces;
         private Map<Integer, byte[]> fileChunks;
         private Logger logger;
         private ArrayList<Integer> peerAddressToID;
@@ -105,7 +105,7 @@ public class PeerInfo {
 
         public Builder withBitField(BitSet bitField) {
             this.bitField = bitField;
-            this.requestedPieces = (BitSet)this.bitField.clone();
+            this.requestedPieces = (BitSet) this.bitField.clone();
             return this;
         }
 
@@ -119,7 +119,7 @@ public class PeerInfo {
             return this;
         }
 
-        public  Builder withCommonConfig(CommonConfig commonConfig){
+        public Builder withCommonConfig(CommonConfig commonConfig) {
             this.commonConfig = commonConfig;
             return this;
         }

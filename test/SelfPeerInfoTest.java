@@ -11,7 +11,6 @@ import java.util.Map;
 class SelfPeerInfoTest {
 
 
-
     private static Map<Integer, byte[]> splitFileIntoChunks(String fileName, long fileSize, long pieceSize) {
         Map<Integer, byte[]> fileChunks = new HashMap<>();
         try {
@@ -23,7 +22,7 @@ class SelfPeerInfoTest {
             while (fis.read(buffer) > 0) {
                 fileChunks.putIfAbsent(i, buffer);
                 i++;
-                buffer = new byte[(int)pieceSize];
+                buffer = new byte[(int) pieceSize];
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
