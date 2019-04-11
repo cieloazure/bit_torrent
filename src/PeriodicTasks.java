@@ -84,6 +84,7 @@ public class PeriodicTasks {
                 // Check for choked or unchoked state here and take action accordingly
                 // The below code can be uncommented and used once  isChoked() function is in place and
                 // the handling of choked unchoked messages is done
+                System.out.println("Check the status of the piece "+neighbourInfo.get(temp).getNeighbourState());
                 if (neighbourInfo.get(temp).isChoked()){
                     myPeerInfo.log("DEBUG: Unchoking "+temp);
                     neighbourInfo.get(temp).setContextState(new ExpectedToSendUnchokeMessageState(neighbourInfo), false, false);
@@ -93,7 +94,6 @@ public class PeriodicTasks {
                     if (temp!=optimisticallyUnchokedPeerID){
                             myPeerInfo.log("DEBUG: Choking "+temp);
                             neighbourInfo.get(temp).setContextState(new ExpectedToSendChokeMessageState(neighbourInfo), false, false);
-//                          This is where Sharmilee's function to CHOKE will be called
                     }
 //
                 }

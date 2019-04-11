@@ -1,9 +1,12 @@
 
+import org.omg.CORBA.INTERNAL;
+
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -17,10 +20,14 @@ public class SelfPeerInfo extends PeerInfo {
     private Logger logger;
     private Logger stdOutputLogger;
     private boolean toStdOutput;
-    private BitSet requestedPieces; //to track the requested pieces
+    private ConcurrentHashMap<Integer, Integer> requestedPieces; //to track the requested pieces
     protected ScheduledExecutorService schExec;
 
-    public SelfPeerInfo(PeerInfo.Builder b, Boolean hasFile, Map<Integer, byte[]>fileChunks, Logger logger, BitSet requestedPieces) {
+    public SelfPeerInfo(PeerInfo.Builder b,
+                        Boolean hasFile,
+                        Map<Integer, byte[]>fileChunks,
+                        Logger logger,
+                        BitSet requestedPieces) {
         super(b);
         this.hasFile = hasFile;
         this.fileChunks = fileChunks;
@@ -28,19 +35,25 @@ public class SelfPeerInfo extends PeerInfo {
         this.stdOutputLogger = Logger.getAnonymousLogger();
         this.stdOutputLogger.addHandler(new StreamHandler(System.out, new SimpleFormatter()));
         this.toStdOutput = false;
-        this.requestedPieces = requestedPieces;
-    }
+        this.requestedPieces = new ConcurrentHashMap<>();
+        for (int i = requestedPieces.nextSetBit(0); i >= 0; i = requestedPieces.nextSetBit(i+1)) {
+            this.setRequestPiecesIndex(i,1);
+        }
 
-    public void setRequestedPieces(BitSet requestedPieces) {
-        this.requestedPieces = requestedPieces;
     }
 
     public BitSet getRequestedPieces() {
-        return this.requestedPieces;
-    }
 
-    public void setRequestPiecesIndex(int index) {
-        this.requestedPieces.set(index);
+        BitSet reqPieces = new BitSet();
+        for (Integer key: this.requestedPieces.keySet()){
+            if(this.requestedPieces.get(key) == 1){
+                reqPieces.set(key);
+            }
+        }
+        return reqPieces;
+    }
+    public void setRequestPiecesIndex(int index, int value) {
+        this.requestedPieces.put(index, value);
     }
 
     public void setSchExec(ScheduledExecutorService schExec){

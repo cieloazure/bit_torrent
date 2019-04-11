@@ -10,13 +10,20 @@ class Handler {
     protected DataOutputStream outputStream;
     protected SelfPeerInfo myPeerInfo;
     protected AtomicReference<PeerState> inputStateRef;
+    protected AtomicReference<PeerState> lastStateRef;
     protected BlockingQueue<PeerState> outputStateRef;
     protected Object inputMutex;
     protected Object outputMutex;
     protected int whichHandler;
     protected int theirPeerId;
 
-    public Handler(Socket connection, SelfPeerInfo myPeerInfo, AtomicReference<PeerState> inputStateRef, BlockingQueue<PeerState> outputMessageQueue, DataInputStream inputStream, DataOutputStream outputStream, Object inputMutex, Object outputMutex, int theirPeerId) {
+    public Handler(Socket connection,
+                   SelfPeerInfo myPeerInfo,
+                   AtomicReference<PeerState> inputStateRef,
+                   BlockingQueue<PeerState> outputMessageQueue,
+                   DataInputStream inputStream, DataOutputStream outputStream,
+                   Object inputMutex, Object outputMutex,
+                   int theirPeerId) {
         this.connection = connection;
         this.myPeerInfo = myPeerInfo;
         this.inputStateRef = inputStateRef;
@@ -26,6 +33,7 @@ class Handler {
         this.inputMutex = inputMutex;
         this.outputMutex = outputMutex;
         this.theirPeerId = theirPeerId;
+        this.lastStateRef = new AtomicReference<>();
     }
 
     public void setState(PeerState whichState, boolean isForInputState, boolean setOtherStateAsNull) {
@@ -52,6 +60,12 @@ class Handler {
         }
     }
 
+    public void setLastStateRef(PeerState whichState){
+        this.lastStateRef.set(whichState);
+    }
+    public PeerState getLastStateRef(){
+        return this.lastStateRef.get();
+    }
     public String getHostName() {
         return this.connection.getInetAddress().getHostName();
     }

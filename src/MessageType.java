@@ -6,5 +6,6 @@ enum MessageType {
     HAVE,
     BITFIELD,
     REQUEST,
-    PIECE
+    PIECE,
+    FAILED
 }

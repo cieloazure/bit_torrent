@@ -43,7 +43,8 @@ public class Peer {
 
         // Build myPeerInfo object
         myPeerInfo = peerInfoBuilder.buildSelfPeerInfo();
-
+        System.out.println("Requested pieces set to");
+        System.out.println(myPeerInfo.getRequestedPieces());
         // Enable std output logging
         myPeerInfo.enableStdOutputLogging();
 
@@ -191,6 +192,7 @@ public class Peer {
                 builder.withBitField(bitField)
                         .withFileChunks(new HashMap<Integer, byte[]>());
             }
+
         } catch (FileNotFoundException e) {
             System.err.println("[ERROR]: Peer Info configuration file not found");
             e.printStackTrace();

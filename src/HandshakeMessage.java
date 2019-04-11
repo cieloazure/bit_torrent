@@ -83,4 +83,6 @@ class HandshakeMessage implements Message, Serializable {
     public boolean isValid() {
         return isValid;
     }
+
+
 }
