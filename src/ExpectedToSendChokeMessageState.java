@@ -18,7 +18,7 @@ public class ExpectedToSendChokeMessageState implements PeerState {
     public void handleMessage(Handler context, SelfPeerInfo myPeerInfo, DataInputStream inputStream, DataOutputStream outputStream) {
         try {
             ActualMessage actualMessage = new ActualMessage(MessageType.CHOKE);
-            myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Sent CHOKE message to " + context.getTheirPeerId());
+//            myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Sent CHOKE message to " + context.getTheirPeerId());
 
             outputStream.write(actualMessage.serialize());
             outputStream.flush();

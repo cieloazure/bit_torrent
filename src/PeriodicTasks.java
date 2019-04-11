@@ -72,7 +72,7 @@ public class PeriodicTasks {
 
 
             if (downloadRateToPeerId.size() == 0) {
-                myPeerInfo.log("DEBUG: downloadRateToPeerId is empty");
+//                myPeerInfo.log("DEBUG: downloadRateToPeerId is empty");
             }
             Set<Map.Entry<Double, ArrayList<Integer>>> set = downloadRateToPeerId.entrySet();
             Set<Integer> selectedK = new HashSet<>();
@@ -113,19 +113,19 @@ public class PeriodicTasks {
                 // the handling of choked unchoked messages is done
                 System.out.println("Check the status of the piece " + neighbourInfo.get(temp).getNeighbourState());
                 if (neighbourInfo.get(temp).isChoked()) {
-                    myPeerInfo.log("DEBUG: Unchoking " + temp);
+//                    myPeerInfo.log("DEBUG: Unchoking " + temp);
                     neighbourInfo.get(temp).setContextState(new ExpectedToSendUnchokeMessageState(neighbourInfo), false, false);
                     // This is where Sharmilee's function to UNCHOKE will be called
                 } else if (neighbourInfo.get(temp).isUnChoked()) {
                     if (temp != optimisticallyUnchokedPeerID) {
-                        myPeerInfo.log("DEBUG: Choking " + temp);
+//                        myPeerInfo.log("DEBUG: Choking " + temp);
                         neighbourInfo.get(temp).setContextState(new ExpectedToSendChokeMessageState(neighbourInfo), false, false);
                     }
 //
                 }
 
             }
-            myPeerInfo.log("DEBUG: These are the K selected neighbours");
+            myPeerInfo.log("Peer ["+myPeerInfo.getPeerID()+"] has the preferred neighbors " + selectedK);
             System.out.println(selectedK);
 
         } catch (Exception e) {
@@ -154,11 +154,16 @@ public class PeriodicTasks {
 
                 if (!kPreferred.contains(optimisticallyUnchokedPeerID)) {
                     System.out.println("DEBUG: Choke this->" + optimisticallyUnchokedPeerID);
+                    neighbourInfo.get(optimisticallyUnchokedPeerID).setContextState(new ExpectedToSendChokeMessageState(neighbourInfo), false, false);
                 }
+
+                //change the optimistically unchoked peer
                 optimisticallyUnchokedPeerID = optUnchokedPeer;
 
                 // Unchoke the peer with this peer id
                 System.out.println("DEBUG: " + optUnchokedPeer + ": Unchoke me! " + optimisticallyUnchokedPeerID);
+                myPeerInfo.log("Peer ["+myPeerInfo.getPeerID()+"] has the optimistically unchoked neighbor [" + optimisticallyUnchokedPeerID + "]");
+                neighbourInfo.get(optimisticallyUnchokedPeerID).setContextState(new ExpectedToSendUnchokeMessageState(neighbourInfo), false, false);
 
             } else {
                 myPeerInfo.log("DEBUG: optUnchokedPool is empty");

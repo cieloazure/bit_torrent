@@ -36,7 +36,7 @@ public class ExpectedToSendUnchokeMessageState implements PeerState {
                         break;
 
                 }
-                myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Sent UNCHOKE message to " + context.getTheirPeerId());
+//                myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Sent UNCHOKE message to " + context.getTheirPeerId());
 
             }
 
