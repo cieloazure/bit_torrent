@@ -37,7 +37,7 @@ public class PeerInfo {
     }
 
     public BitSet getBitField() {
-        return bitField;
+        return this.bitField;
     }
 
     public void setBitField(BitSet bitField) {

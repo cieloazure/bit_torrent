@@ -42,6 +42,14 @@ public class PeriodicTasks {
                         downloadRateToPeerId.get(neighbourInfo.get(key).getDownloadSpeed()).add(key);
                     }
                 }
+                BitSet bf = this.neighbourInfo.get(key).getBitField();
+                if(bf!=null) {
+                    System.out.println("Peer " + key + " has " + bf.cardinality() + " chunks");
+                    System.out.println("Peer "+myPeerInfo.getPeerID()+" has "+ neighbourInfo.size()+" neighbours");
+                }
+//                this.myPeerInfo.getCommonConfig().getFileSize();
+//                this.myPeerInfo.getCommonConfig().getPieceSize();
+
             }
             if (downloadRateToPeerId.size() == 0) {
                 myPeerInfo.log("DEBUG: downloadRateToPeerId is empty");

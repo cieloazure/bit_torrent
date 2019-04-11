@@ -115,4 +115,7 @@ public class SelfPeerInfo extends PeerInfo {
             e.printStackTrace();
         }
     }
+    public CommonConfig getCommonConfig(){
+        return this.commonConfig;
+    }
 }
