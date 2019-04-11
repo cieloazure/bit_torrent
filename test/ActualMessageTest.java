@@ -1,17 +1,18 @@
 import org.junit.jupiter.api.Test;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.BitSet;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ActualMessageTest {
 
     @Test
     void serialize() throws IOException, ClassNotFoundException {
         BitSet b = new BitSet();
-        for(int i = 0; i < 16; i++){
+        for (int i = 0; i < 16; i++) {
             b.set(i);
         }
         ActualMessage message = new ActualMessage(MessageType.BITFIELD, b.toByteArray());
@@ -22,9 +23,9 @@ class ActualMessageTest {
     }
 
     @Test
-    void serialize2() throws  IOException, ClassNotFoundException {
+    void serialize2() throws IOException, ClassNotFoundException {
         BitSet b = new BitSet();
-        for(int i = 0; i < 16; i++){
+        for (int i = 0; i < 16; i++) {
             b.set(i);
         }
         ActualMessage message = new ActualMessage(MessageType.BITFIELD, b.toByteArray());

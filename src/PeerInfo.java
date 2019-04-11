@@ -1,6 +1,6 @@
 import java.util.ArrayList;
 import java.util.BitSet;
-import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 public class PeerInfo {
@@ -62,15 +62,17 @@ public class PeerInfo {
     }
 
     public static class Builder {
+        protected BitSet requestedPieces;
         private String hostName;
         private Integer portNumber;
         private Integer peerID;
         private BitSet bitField;
         private Boolean hasFile;
-        private List<byte[]> fileChunks;
+        private Map<Integer, byte[]> fileChunks;
         private Logger logger;
         private ArrayList<Integer> peerAddressToID;
         private Handler context;
+        private CommonConfig commonConfig;
 
         public Builder() {
 
@@ -103,6 +105,7 @@ public class PeerInfo {
 
         public Builder withBitField(BitSet bitField) {
             this.bitField = bitField;
+            this.requestedPieces = (BitSet) this.bitField.clone();
             return this;
         }
 
@@ -111,13 +114,18 @@ public class PeerInfo {
             return this;
         }
 
-        public Builder withFileChunks(List<byte[]> fileChunks) {
+        public Builder withFileChunks(Map<Integer, byte[]> fileChunks) {
             this.fileChunks = fileChunks;
             return this;
         }
 
+        public Builder withCommonConfig(CommonConfig commonConfig) {
+            this.commonConfig = commonConfig;
+            return this;
+        }
+
         public SelfPeerInfo buildSelfPeerInfo() {
-            return new SelfPeerInfo(this, this.hasFile, this.fileChunks, this.logger);
+            return new SelfPeerInfo(this, this.hasFile, this.fileChunks, this.logger, this.requestedPieces, this.commonConfig);
         }
 
         public NeighbourPeerInfo buildNeighbourPeerInfo() {

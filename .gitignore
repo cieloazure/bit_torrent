@@ -3,3 +3,8 @@ bittorrent-clone.iws
 .DS_Store
 bittorrent-clone.iml
 bittorrent-clone.ipr
+bit_torrent.iml
+bit_torrent.ipr
+bit_torrent.iws
+**/*/lineitem.tbl
+lineitem.tbl

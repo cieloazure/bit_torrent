@@ -16,33 +16,37 @@ public class WaitForHandshakeMessageState implements PeerState {
     @Override
     public void handleMessage(Handler context, SelfPeerInfo myPeerInfo, DataInputStream inputStream, DataOutputStream outputStream) {
         try {
-            myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Waiting for handshake message....with reply:" + this.reply + " from " + context.getHostName() + ":" + context.getPortNumber() + " peer id:" + context.getTheirPeerId());
+            myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Waiting for handshake message....with reply:" + this.reply + " from " + context.getHostName() + ":" + context.getPortNumber() + " peer id:" + context.getTheirPeerId());
 
             byte[] messageBytes = new byte[32];
             inputStream.readFully(messageBytes);
             HandshakeMessage message = new HandshakeMessage(messageBytes);
 
-            if (message.getHeader().equals("P2PFILESHARINGPROJ")) {
-                myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Verified Handshake header.");
-            } else {
-                myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]ERROR: Invalid Handshake header.");
-            }
+            if (message.getHeader().equals("P2PFILESHARINGPROJ") && message.getPeerID() == context.getTheirPeerId()) {
 
-            neighbourConnectionsInfo.get(message.getPeerID()).setContext(context);
+                myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Verified Handshake header and PeerID.");
+                neighbourConnectionsInfo.get(message.getPeerID()).setContext(context);
 
-            myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Got a handshake message from " + context.getHostName() + ":" + context.getPortNumber() + " and it has peer id " + message.getPeerID() + "....");
+                myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Got a handshake message from " + context.getHostName() + ":" + context.getPortNumber() + " and it has peer id " + message.getPeerID() + "....");
 
-            if (this.reply) {
-                myPeerInfo.log( "[PEER" + myPeerInfo.getPeerID() + "]Sending a handshake reply message to " + message.getPeerID() + "....");
-                if (message.isValid()) {
-                    HandshakeMessage reply = new HandshakeMessage(myPeerInfo.getPeerID());
-                    outputStream.write(reply.serialize());
-                    outputStream.flush();
+                if (this.reply) {
+                    myPeerInfo.log("[PEER" + myPeerInfo.getPeerID() + "]Sending a handshake reply message to " + message.getPeerID() + "....");
+                    if (message.isValid()) {
+                        HandshakeMessage reply = new HandshakeMessage(myPeerInfo.getPeerID());
+                        outputStream.write(reply.serialize());
+                        outputStream.flush();
+                    }
+                    context.setState(new WaitForBitFieldMessageState(true, neighbourConnectionsInfo), true, true);
+                } else {
+                    context.setState(new ExpectedToSendBitFieldMessageState(neighbourConnectionsInfo), false, true);
                 }
-                context.setState(new WaitForBitFieldMessageState(true, neighbourConnectionsInfo), true, true);
+
             } else {
-                context.setState(new ExpectedToSendBitFieldMessageState(neighbourConnectionsInfo), false, true);
+                myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]ERROR: Invalid Handshake header or PeerID. Resend HandShake");
+//                System.out.println("***Peerid: "+ context.getTheirPeerId());
+                context.setState(new ExpectedToSendHandshakeMessageState(neighbourConnectionsInfo), false, false);
             }
+
 
         } catch (EOFException e) {
             e.printStackTrace();

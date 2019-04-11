@@ -1,12 +1,9 @@
-import com.oracle.tools.packager.Log;
-
 import java.io.*;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.BitSet;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.FileHandler;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
@@ -21,7 +18,7 @@ public class Peer {
     /* Self peer info variables */
     private static SelfPeerInfo myPeerInfo;
 
-    public static void main(String[] args) {
+    public static void start(int peerID) {
         Logger logger = null;
         // Parse common config file
         CommonConfig.Builder configBuilder = new CommonConfig.Builder();
@@ -30,10 +27,10 @@ public class Peer {
 
 
         PeerInfo.Builder peerInfoBuilder = new PeerInfo.Builder();
+        peerInfoBuilder.withCommonConfig(commonConfig);
 
         // Set peer ID
         // TODO: Check for NAN exception, terminate program in that case
-        int peerID = Integer.parseInt(args[0]);
         peerInfoBuilder.withPeerID(peerID);
 
         //Setting up the logger
@@ -45,7 +42,8 @@ public class Peer {
 
         // Build myPeerInfo object
         myPeerInfo = peerInfoBuilder.buildSelfPeerInfo();
-
+        System.out.println("Requested pieces set to");
+        System.out.println(myPeerInfo.getRequestedPieces());
         // Enable std output logging
         myPeerInfo.enableStdOutputLogging();
 
@@ -82,9 +80,11 @@ public class Peer {
             String neighbourHostName = splitLine[1];
             int neighbourPortNumber = Integer.parseInt(splitLine[2]);
 
+            System.out.println("Calling the parsePeerInfoConfigToMakeConnections method with linePeerId " + linePeerId);
             while (linePeerId != myPeerInfo.getPeerID()) {
+                myPeerInfo.log("linePeerId:myPeerInfo.getPeerID() " + linePeerId + " : " + myPeerInfo.getPeerID());
                 // Log previous state
-                myPeerInfo.log( "[PEER:" + myPeerInfo.getPeerID() + "]Connecting to a peer " + linePeerId + "....");
+                myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Connecting to a peer " + linePeerId + "....");
 
                 // Make a connection with the peer
                 Socket newConnection = new Socket(neighbourHostName, neighbourPortNumber);
@@ -165,24 +165,32 @@ public class Peer {
                     .withPortNumber(portNumber);
 
             boolean hasFile = Integer.parseInt(splitLine[3]) == 1;
+            if (hasFile) {
+                System.out.println("I have the file!");
+            } else {
+                System.out.println("I DO NOT have the file!");
+            }
+
             builder.withHasFile(hasFile);
 
 
             int pieces = (int) Math.ceil(commonConfig.getFileSize() / commonConfig.getPieceSize());
             BitSet bitField = new BitSet(pieces);
+//            BitSet requestedPieces = new BitSet(pieces);
             if (hasFile) {
                 for (int i = 0; i < pieces; i++) {
                     bitField.set(i);
                 }
 //                System.out.println("Tushar debug");
                 System.out.println(commonConfig.getFileName());
-                List<byte[]> fileChunks = splitFileIntoChunks(commonConfig.getFileName(), commonConfig.getFileSize(), commonConfig.getPieceSize());
+                Map<Integer, byte[]> fileChunks = splitFileIntoChunks(commonConfig.getFileName(), commonConfig.getFileSize(), commonConfig.getPieceSize());
                 builder.withBitField(bitField)
                         .withFileChunks(fileChunks);
             } else {
                 builder.withBitField(bitField)
-                        .withFileChunks(null);
+                        .withFileChunks(new HashMap<Integer, byte[]>());
             }
+
         } catch (FileNotFoundException e) {
             System.err.println("[ERROR]: Peer Info configuration file not found");
             e.printStackTrace();
@@ -192,24 +200,25 @@ public class Peer {
         }
     }
 
-    private static List<byte[]> splitFileIntoChunks(String fileName, long fileSize, long pieceSize) {
-        List<byte[]> chunks = new ArrayList<>();
+    private static Map<Integer, byte[]> splitFileIntoChunks(String fileName, long fileSize, long pieceSize) {
+        Map<Integer, byte[]> fileChunks = new HashMap<>();
         try {
             File f = new File(fileName);
             FileInputStream fis = new FileInputStream(f);
             int pieces = (int) Math.ceil(fileSize / pieceSize);
-            for (int i = 0; i < pieces; i++) {
-                byte[] buffer = new byte[(int) pieceSize];
-                while (fis.read(buffer) > 0) {
-                    chunks.add(buffer);
-                }
+            byte[] buffer = new byte[(int) pieceSize];
+            int i = 0;
+            while (fis.read(buffer) > 0) {
+                fileChunks.putIfAbsent(i, buffer);
+                i++;
+                buffer = new byte[(int) pieceSize];
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return chunks;
+        return fileChunks;
     }
 
     /**

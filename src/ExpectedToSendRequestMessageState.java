@@ -16,10 +16,12 @@ public class ExpectedToSendRequestMessageState implements PeerState {
     @Override
     public void handleMessage(Handler context, SelfPeerInfo myPeerInfo, DataInputStream inputStream, DataOutputStream outputStream) {
         try {
-            byte[] requestBytes = ByteBuffer.allocate(4).putInt(requestIndex).array();
+            byte[] requestBytes = ByteBuffer.allocate(4).putInt(this.requestIndex).array();
+            neighbourConnectionsInfo.get(context.getTheirPeerId()).setRequestedPieceIndex(this.requestIndex);
             ActualMessage message = new ActualMessage(MessageType.REQUEST, requestBytes);
             outputStream.write(message.serialize());
             outputStream.flush();
+            myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Sent REQUEST message to " + context.getTheirPeerId() + " for index " + this.requestIndex);
         } catch (IOException e) {
             e.printStackTrace();
         }

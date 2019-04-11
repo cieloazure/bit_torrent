@@ -58,19 +58,23 @@ class ActualMessage implements Message, Serializable {
                 i++;
             }
         }
+//        System.out.println("Serialize Message Length "+ this.messageLength);
+//        System.out.println("Serialize Message type "+ this.messageType);
         return result;
     }
 
     @Override
     public void deserialize(byte[] message) {
         byte[] messageLengthByteArr = Arrays.copyOfRange(message, 0, 4);
-        ByteBuffer messageLengthBuffer = ByteBuffer.wrap(messageLengthByteArr);
+        ByteBuffer messageLengthBuffer = ByteBuffer.allocate(4).wrap(messageLengthByteArr);
         this.messageLength = messageLengthBuffer.getInt(); // 2
+        System.out.println("Message length:" + this.messageLength);
         if (messageLength < 0) {
             this.isValid = false;
             return;
         }
         int messageTypeInt = (int) message[4];
+        System.out.println("Message type:" + messageTypeInt);
         if (messageTypeInt < 0 || messageTypeInt > messageValues.length) {
             this.isValid = false;
             return;
@@ -80,10 +84,15 @@ class ActualMessage implements Message, Serializable {
         for (int i = 5, j = 0; i < message.length; i++, j++) {
             this.payload[j] = message[i];
         }
+        this.isValid = true;
     }
 
     @Override
     public boolean isValid() {
         return isValid;
+    }
+
+    public int getMessageLength() {
+        return messageLength;
     }
 }
