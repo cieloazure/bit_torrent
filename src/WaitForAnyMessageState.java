@@ -26,51 +26,56 @@ public class WaitForAnyMessageState implements PeerState {
             inputStream.read(length, 0, 4);
             len = ByteBuffer.allocate(4).wrap(length).getInt();
 
-            messageBytes = new byte[len + 4];
-            int i = 0;
-            for (; i < 4; i++) {
-                messageBytes[i] = length[i];
-            }
-            Long start = System.nanoTime();
-            inputStream.read(messageBytes, 4, len);
-            Long end = System.nanoTime();
-
-            Long timediff = end - start;
-            downloadSpeed = len / Double.parseDouble(timediff.toString());
-
-
-            ActualMessage message = new ActualMessage(messageBytes);
-
-//            myPeerInfo.log("\n[Peer:" + myPeerInfo.getPeerID() + "][WaitForAnyMessageState] Received a message with following stats\n1. Message Type:" + message.getMessageType() + "\n2.Message Length:" + message.getMessageLength() + "\n3. Validity:" + message.isValid() + "\n");
-
-            if (message.isValid()) {
-                switch (message.getMessageType()) {
-                    case HAVE:
-                        handleIncomingHaveMessage(context, message, neighbourConnectionsInfo, myPeerInfo);
-                        break;
-                    case PIECE:
-                        handleIncomingPieceMessage(context, message, neighbourConnectionsInfo, downloadSpeed, myPeerInfo);
-                        break;
-                    case REQUEST:
-                        handleIncomingRequestMessage(context, message, neighbourConnectionsInfo, myPeerInfo);
-                        break;
-                    case CHOKE:
-                        handleIncomingChokeMessage(context, message, neighbourConnectionsInfo, myPeerInfo);
-                        break;
-                    case UNCHOKE:
-                        handleIncomingUnchokeMessage(context, message, neighbourConnectionsInfo, myPeerInfo);
-                        break;
-                    case INTERESTED:
-                        handleIncomingInterestedMessage(context, message, neighbourConnectionsInfo, myPeerInfo);
-                        break;
-                    case NOT_INTERESTED:
-                        handleIncomingNotInterestedMessage(context, message, neighbourConnectionsInfo, myPeerInfo);
-                        break;
-                    case FAILED:
-                        handleIncomingFailedMessage(context, message, neighbourConnectionsInfo, myPeerInfo);
-
+            if(len<myPeerInfo.getCommonConfig().getPieceSize()+10) {
+                messageBytes = new byte[len + 4];
+                int i = 0;
+                for (; i < 4; i++) {
+                    messageBytes[i] = length[i];
                 }
-            } else {
+                Long start = System.nanoTime();
+                inputStream.read(messageBytes, 4, len);
+                Long end = System.nanoTime();
+
+                Long timediff = end - start;
+                downloadSpeed = len / Double.parseDouble(timediff.toString());
+
+
+                ActualMessage message = new ActualMessage(messageBytes);
+
+                //            myPeerInfo.log("\n[Peer:" + myPeerInfo.getPeerID() + "][WaitForAnyMessageState] Received a message with following stats\n1. Message Type:" + message.getMessageType() + "\n2.Message Length:" + message.getMessageLength() + "\n3. Validity:" + message.isValid() + "\n");
+
+                if (message.isValid()) {
+                    switch (message.getMessageType()) {
+                        case HAVE:
+                            handleIncomingHaveMessage(context, message, neighbourConnectionsInfo, myPeerInfo);
+                            break;
+                        case PIECE:
+                            handleIncomingPieceMessage(context, message, neighbourConnectionsInfo, downloadSpeed, myPeerInfo);
+                            break;
+                        case REQUEST:
+                            handleIncomingRequestMessage(context, message, neighbourConnectionsInfo, myPeerInfo);
+                            break;
+                        case CHOKE:
+                            handleIncomingChokeMessage(context, message, neighbourConnectionsInfo, myPeerInfo);
+                            break;
+                        case UNCHOKE:
+                            handleIncomingUnchokeMessage(context, message, neighbourConnectionsInfo, myPeerInfo);
+                            break;
+                        case INTERESTED:
+                            handleIncomingInterestedMessage(context, message, neighbourConnectionsInfo, myPeerInfo);
+                            break;
+                        case NOT_INTERESTED:
+                            handleIncomingNotInterestedMessage(context, message, neighbourConnectionsInfo, myPeerInfo);
+                            break;
+                        case FAILED:
+                            handleIncomingFailedMessage(context, message, neighbourConnectionsInfo, myPeerInfo);
+
+                    }
+                } else {
+                    handleMessageFailure(context, myPeerInfo);
+                }
+            }
+            else{
                 handleMessageFailure(context, myPeerInfo);
             }
 
