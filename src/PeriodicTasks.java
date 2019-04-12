@@ -48,25 +48,6 @@ public class PeriodicTasks {
                         downloadRateToPeerId.get(neighbourInfo.get(key).getDownloadSpeed()).add(key);
                     }
                 }
-                //if the Peer itself has received all pieces, check if the neighbors have received all pieces.
-                if(this.myPeerInfo.getBitField().cardinality() == totalPieces) {
-                    //if neighbour peer has all pieces
-                    if(neighbourInfo.get(key).getBitField() != null) {
-                        if(neighbourInfo.get(key).getBitField().cardinality() == totalPieces)
-                            peersWithCompleteFile ++;
-                    }
-                }
-
-            }
-
-            if(peersWithCompleteFile == neighbourInfo.size()) {
-                this.myPeerInfo.interruptListener();
-                myPeerInfo.setKeepWorking(false);
-                for (Integer key : neighbourInfo.keySet()) {
-                    neighbourInfo.get(key).getContext().setState(new ExpectedToSendFailedMessageState(), false, false);
-                    neighbourInfo.get(key).getContext().closeConnection();
-                }
-                this.myPeerInfo.killAllPeriodicTasks();
 
             }
 
@@ -176,6 +157,48 @@ public class PeriodicTasks {
     }
 
     /**
+     * Function to shutdown peers
+     */
+    public void shutdownPeer() {
+        try {
+
+            int totalPieces = (int)(this.myPeerInfo.getCommonConfig().getFileSize()/this.myPeerInfo.getCommonConfig().getPieceSize());
+            int peersWithCompleteFile = 0;
+
+            for (Integer key : neighbourInfo.keySet()) {
+                //if the Peer itself has received all pieces, check if the neighbors have received all pieces.
+                if(this.myPeerInfo.getBitField().cardinality() == totalPieces) {
+                    //if neighbour peer has all pieces
+                    if(neighbourInfo.get(key).getBitField() != null) {
+                        if(neighbourInfo.get(key).getBitField().cardinality() == totalPieces)
+                            peersWithCompleteFile ++;
+                    }
+                }
+            }
+
+            if(peersWithCompleteFile == neighbourInfo.size()) {
+                this.myPeerInfo.interruptListener();
+                myPeerInfo.setKeepWorking(false);
+                for (Integer key : neighbourInfo.keySet()) {
+                    neighbourInfo.get(key).getContext().setState(new ExpectedToSendFailedMessageState(), false, false);
+                    neighbourInfo.get(key).getContext().closeConnection();
+                }
+                this.myPeerInfo.killAllPeriodicTasks();
+
+            }
+            else{
+                for (Integer key : neighbourInfo.keySet()) {
+                    System.out.println("Peer "+key+" is messing up");
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+    }
+    /**
      * This function triggers the threads that periodically perform the following two actions-
      * Choose k preferred neighbours
      * Choose optimistically unchoked neighbour
@@ -190,7 +213,7 @@ public class PeriodicTasks {
         // TODO: Should there be a thread for the termination check as well?
         // TODO: (which periodically checks if everyone has the file and then triggers a graceful shutdown)
 
-        ScheduledExecutorService schExec = Executors.newScheduledThreadPool(2);
+        ScheduledExecutorService schExec = Executors.newScheduledThreadPool(3);
         myPeerInfo.setSchExec(schExec);
 
         Runnable selectTopK = () -> {
@@ -199,7 +222,9 @@ public class PeriodicTasks {
         Runnable selectOptUnchoked = () -> {
             selectOptimisticallyUnchoked();
         };
-
+        Runnable shutdown = () -> {
+            shutdownPeer();
+        };
         schExec.scheduleAtFixedRate(selectTopK,
                 2,
                 topKinterval,
@@ -209,6 +234,13 @@ public class PeriodicTasks {
                 2,
                 optUnchokedInt,
                 TimeUnit.SECONDS);
+
+        schExec.scheduleAtFixedRate(shutdown,
+                10,
+                2,
+                TimeUnit.SECONDS);
+
+
 
     }
 
