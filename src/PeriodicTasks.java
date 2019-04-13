@@ -135,7 +135,10 @@ public class PeriodicTasks {
 
                 if (!kPreferred.contains(optimisticallyUnchokedPeerID)) {
                     System.out.println("DEBUG: Choke this->" + optimisticallyUnchokedPeerID);
-                    neighbourInfo.get(optimisticallyUnchokedPeerID).setContextState(new ExpectedToSendChokeMessageState(neighbourInfo), false, false);
+                    if (optimisticallyUnchokedPeerID==0){
+                        neighbourInfo.get(optimisticallyUnchokedPeerID).setContextState(new ExpectedToSendChokeMessageState(neighbourInfo), false, false);
+                    }
+
                 }
 
                 //change the optimistically unchoked peer
