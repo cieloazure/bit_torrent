@@ -9,7 +9,9 @@ public class ExpectedToSendFailedMessageState implements PeerState {
     public void handleMessage(Handler context, SelfPeerInfo myPeerInfo, DataInputStream in, DataOutputStream outputStream) {
         try {
             ActualMessage actualMessage = new ActualMessage(MessageType.FAILED);
+            System.out.println("---------------------------------------------------------");
             System.out.println("[PEER:" + myPeerInfo.getPeerID() + "]Sent FAILED message to " + context.getTheirPeerId());
+            System.out.println("----------------------------------------------------");
             outputStream.write(actualMessage.serialize());
             outputStream.flush();
         } catch (IOException e) {

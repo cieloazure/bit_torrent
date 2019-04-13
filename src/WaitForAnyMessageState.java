@@ -152,7 +152,7 @@ public class WaitForAnyMessageState implements PeerState {
         //pieces that are not yet requested.
         toRequest.andNot(myPeerInfo.getRequestedPieces());
 
-        System.out.printf("Bitset to be requested" + toRequest);
+        System.out.println("Bitset to be requested" + toRequest);
 
         // 2. From the set bits choose any random index (which has not been requesssted before)
         if (toRequest.cardinality() > 0) {
