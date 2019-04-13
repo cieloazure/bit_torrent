@@ -130,6 +130,8 @@ public class PeerConnection {
                 this.myPeerInfo.setListener(listener);
                 while (true) {
                     Socket newConnection = listener.accept();
+                    int bufferSize =(int)myPeerInfo.getCommonConfig().getPieceSize();
+                    newConnection.setReceiveBufferSize(bufferSize);
 
                     // Get input and output streams of the socket
                     // !IMPORTANT NOTE!

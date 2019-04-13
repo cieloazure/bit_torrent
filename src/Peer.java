@@ -88,6 +88,8 @@ public class Peer {
 
                 // Make a connection with the peer
                 Socket newConnection = new Socket(neighbourHostName, neighbourPortNumber);
+                int bufferSize = (int)myPeerInfo.getCommonConfig().getPieceSize() + 50;
+                newConnection.setReceiveBufferSize(bufferSize);
 
                 // Log connection
                 myPeerInfo.log("Peer [peerID " + myPeerInfo.getPeerID() + "] makes a connection to Peer[peer_ID " + linePeerId + "]");
