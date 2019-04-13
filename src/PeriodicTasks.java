@@ -180,6 +180,7 @@ public class PeriodicTasks {
             }
 
             if(peersWithCompleteFile == neighbourInfo.size()) {
+                this.myPeerInfo.combineFileChunks();
                 this.myPeerInfo.interruptListener();
                 myPeerInfo.setKeepWorking(false);
                 for (Integer key : neighbourInfo.keySet()) {
