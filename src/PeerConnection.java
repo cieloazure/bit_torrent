@@ -127,11 +127,12 @@ public class PeerConnection {
             try {
                 myPeerInfo.log("[PEER:" + this.myPeerInfo.getPeerID() + "]Listening for connections....at " + this.myPeerInfo.getHostName() + ":" + this.myPeerInfo.getPortNumber());
                 ServerSocket listener = new ServerSocket(this.myPeerInfo.getPortNumber());
+                listener.setReceiveBufferSize(myPeerInfo.getCommonConfig().RECEIVE_BUFFER_SIZE);
+
                 this.myPeerInfo.setListener(listener);
                 while (true) {
                     Socket newConnection = listener.accept();
-                    int bufferSize =(int)myPeerInfo.getCommonConfig().getPieceSize();
-                    newConnection.setReceiveBufferSize(bufferSize);
+                    newConnection.setReceiveBufferSize(myPeerInfo.getCommonConfig().RECEIVE_BUFFER_SIZE);
 
                     // Get input and output streams of the socket
                     // !IMPORTANT NOTE!

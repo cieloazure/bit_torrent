@@ -1,4 +1,5 @@
 public class CommonConfig {
+    public final int RECEIVE_BUFFER_SIZE = 64000;
     private Integer numOfPreferredNeighbours;
     private Integer unchokingInterval;
     private Integer optimisticUnchokingInterval;
