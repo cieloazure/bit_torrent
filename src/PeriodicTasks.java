@@ -53,6 +53,7 @@ public class PeriodicTasks {
 
 
             if (downloadRateToPeerId.size() == 0) {
+                killAll();
 //                myPeerInfo.log("DEBUG: downloadRateToPeerId is empty");
             }
             Set<Map.Entry<Double, ArrayList<Integer>>> set = downloadRateToPeerId.entrySet();
@@ -180,14 +181,7 @@ public class PeriodicTasks {
             }
 
             if(peersWithCompleteFile == neighbourInfo.size()) {
-                this.myPeerInfo.combineFileChunks();
-                this.myPeerInfo.interruptListener();
-                myPeerInfo.setKeepWorking(false);
-                for (Integer key : neighbourInfo.keySet()) {
-                    neighbourInfo.get(key).getContext().setState(new ExpectedToSendFailedMessageState(), false, false);
-                    neighbourInfo.get(key).getContext().closeConnection();
-                }
-                this.myPeerInfo.killAllPeriodicTasks();
+                killAll();
 
             }
             else{
@@ -201,6 +195,17 @@ public class PeriodicTasks {
         }
 
 
+    }
+    public void killAll(){
+        this.myPeerInfo.combineFileChunks();
+        this.myPeerInfo.interruptListener();
+        myPeerInfo.setKeepWorking(false);
+        for (Integer key : neighbourInfo.keySet()) {
+            neighbourInfo.get(key).getContext().setState(new ExpectedToSendFailedMessageState(),
+                    false, false);
+            neighbourInfo.get(key).getContext().closeConnection();
+        }
+        this.myPeerInfo.killAllPeriodicTasks();
     }
     /**
      * This function triggers the threads that periodically perform the following two actions-
