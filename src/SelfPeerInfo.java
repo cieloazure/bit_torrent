@@ -8,17 +8,18 @@ import java.util.BitSet;
 import java.util.Map;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import java.util.logging.StreamHandler;
 
 
 public class SelfPeerInfo extends PeerInfo {
-    protected ScheduledExecutorService schExec;
-    private Boolean hasFile;
+    private ScheduledExecutorService periodicTasksSchExecutor;
+    private ScheduledExecutorService lastBitfieldMessageSchExec;
     private Map<Integer, byte[]> fileChunks;
-    private BitSet requestedbitField;
     private Logger logger;
     private Logger stdOutputLogger;
     private CommonConfig commonConfig;
@@ -26,6 +27,7 @@ public class SelfPeerInfo extends PeerInfo {
     private ConcurrentHashMap<Integer, Integer> requestedPieces; //to track the requested pieces
     private ServerSocket listener;
     private boolean keepWorking;
+    private AtomicInteger myNeighboursCount;
 
     public SelfPeerInfo(PeerInfo.Builder b,
                         Boolean hasFile,
@@ -34,7 +36,6 @@ public class SelfPeerInfo extends PeerInfo {
                         BitSet requestedPieces,
                         CommonConfig commonConfig) {
         super(b);
-        this.hasFile = hasFile;
         this.fileChunks = fileChunks;
         this.logger = logger;
         this.stdOutputLogger = Logger.getAnonymousLogger();
@@ -46,6 +47,7 @@ public class SelfPeerInfo extends PeerInfo {
         }
         this.commonConfig = commonConfig;
         this.keepWorking = true;
+        this.lastBitfieldMessageSchExec = Executors.newScheduledThreadPool(1);
     }
 
     public static String ts() {
@@ -67,12 +69,12 @@ public class SelfPeerInfo extends PeerInfo {
         this.requestedPieces.put(index, value);
     }
 
-    public void setSchExec(ScheduledExecutorService schExec) {
-        this.schExec = schExec;
+    public void setPeriodicTasksSchExecutor(ScheduledExecutorService periodicTasksSchExecutor) {
+        this.periodicTasksSchExecutor = periodicTasksSchExecutor;
     }
 
     public void killAllPeriodicTasks() {
-        schExec.shutdown();
+        periodicTasksSchExecutor.shutdown();
     }
 
     public Logger getLogger() {
@@ -136,26 +138,31 @@ public class SelfPeerInfo extends PeerInfo {
         }
 
     }
-
     public void setKeepWorking(boolean keepWorking) {
         this.keepWorking = keepWorking;
     }
+
     public boolean getKeepWorking(){
         return this.keepWorking;
     }
 
-    public void killAll(ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourInfo){
-        combineFileChunks();
-        interruptListener();
-        setKeepWorking(false);
-        for (Integer key : neighbourInfo.keySet()) {
-            Handler context = neighbourInfo.get(key).getContext();
-            if(context != null){
-                context.setState(new ExpectedToSendFailedMessageState(),
-                        false, false);
-                context.closeConnection();
-            }
-        }
-        killAllPeriodicTasks();
+    public ScheduledExecutorService getLastBitfieldMessageSchExec() {
+        return lastBitfieldMessageSchExec;
+    }
+
+    public void setLastBitfieldMessageSchExec(ScheduledExecutorService lastBitfieldMessageSchExec) {
+        this.lastBitfieldMessageSchExec = lastBitfieldMessageSchExec;
+    }
+
+    public int getMyNeighboursCount() {
+        return myNeighboursCount.get();
+    }
+
+    public void setMyNeighboursCount(int myNeighboursCount) {
+        this.myNeighboursCount.set(myNeighboursCount);
+    }
+
+    public int decrementMyNeighboursCount(){
+        return this.myNeighboursCount.decrementAndGet();
     }
 }

@@ -9,7 +9,7 @@ public class NeighbourPeerInfo extends PeerInfo {
     private NeighbourState neighbourState;
     private Handler context;
     private int requestedPieceIndex;
-    private ScheduledExecutorService schExService;
+    private boolean receivedLastBitfieldAck;
 
     public NeighbourPeerInfo(PeerInfo.Builder b, Handler context) {
         super(b);
@@ -17,7 +17,7 @@ public class NeighbourPeerInfo extends PeerInfo {
         this.downloadSpeed = 0.0;
         this.neighbourState = NeighbourState.UNKNOWN;
         this.requestedPieceIndex = -1;
-        this.schExService = Executors.newScheduledThreadPool(1);
+        this.receivedLastBitfieldAck = false;
     }
 
     public int getRequestedPieceIndex() {
@@ -107,11 +107,11 @@ public class NeighbourPeerInfo extends PeerInfo {
         this.context.setState(newState, isForInputState, setOtherStateAsNull);
     }
 
-    public ScheduledExecutorService getSchExService() {
-        return schExService;
+    public boolean hasReceivedLastBitfieldAck() {
+        return receivedLastBitfieldAck;
     }
 
-    public void setSchExService(ScheduledExecutorService schExService) {
-        this.schExService = schExService;
+    public void setReceivedLastBitfieldAck(boolean receivedLastBitfieldAck) {
+        this.receivedLastBitfieldAck = receivedLastBitfieldAck;
     }
 }

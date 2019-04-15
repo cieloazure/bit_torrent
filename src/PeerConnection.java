@@ -89,6 +89,7 @@ public class PeerConnection {
         try {
             BufferedReader in = new BufferedReader(new FileReader(peerInfoConfigFile));
             String peerInfoFileLine = in.readLine();
+            int numberOfPeers = 0;
             while (peerInfoFileLine != null) {
                 String[] splitLine = peerInfoFileLine.split(" ");
                 int peerId = Integer.parseInt(splitLine[0]);
@@ -101,9 +102,12 @@ public class PeerConnection {
 
                     NeighbourPeerInfo neighbourPeerInfo = builder.buildNeighbourPeerInfo();
                     this.neighbourConnectionsInfo.putIfAbsent(peerId, neighbourPeerInfo);
+                    numberOfPeers++;
                 }
                 peerInfoFileLine = in.readLine();
             }
+
+            myPeerInfo.setMyNeighboursCount(numberOfPeers);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {

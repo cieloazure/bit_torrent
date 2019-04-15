@@ -220,7 +220,7 @@ public class PeriodicTasks {
         // TODO: (which periodically checks if everyone has the file and then triggers a graceful shutdown)
 
         ScheduledExecutorService schExec = Executors.newScheduledThreadPool(3);
-        myPeerInfo.setSchExec(schExec);
+        myPeerInfo.setPeriodicTasksSchExecutor(schExec);
 
         Runnable selectTopK = () -> {
             selectTopK();
