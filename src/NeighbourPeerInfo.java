@@ -1,16 +1,23 @@
+import java.util.BitSet;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 public class NeighbourPeerInfo extends PeerInfo {
     // In context of when Peer is a neighbour
     private Double downloadSpeed;
     private NeighbourState neighbourState;
     private Handler context;
     private int requestedPieceIndex;
+    private ScheduledExecutorService schExService;
 
     public NeighbourPeerInfo(PeerInfo.Builder b, Handler context) {
         super(b);
         this.context = context;
-        downloadSpeed = 0.0;
-        neighbourState = NeighbourState.UNKNOWN;
-        requestedPieceIndex = -1;
+        this.downloadSpeed = 0.0;
+        this.neighbourState = NeighbourState.UNKNOWN;
+        this.requestedPieceIndex = -1;
+        this.schExService = Executors.newScheduledThreadPool(1);
     }
 
     public int getRequestedPieceIndex() {
@@ -98,5 +105,13 @@ public class NeighbourPeerInfo extends PeerInfo {
 
     public void setContextState(PeerState newState, boolean isForInputState, boolean setOtherStateAsNull) {
         this.context.setState(newState, isForInputState, setOtherStateAsNull);
+    }
+
+    public ScheduledExecutorService getSchExService() {
+        return schExService;
+    }
+
+    public void setSchExService(ScheduledExecutorService schExService) {
+        this.schExService = schExService;
     }
 }

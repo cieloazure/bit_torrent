@@ -5,6 +5,7 @@ import java.nio.ByteBuffer;
 import java.util.BitSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 
 public class WaitForAnyMessageState implements PeerState {
     private ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo;
@@ -69,6 +70,13 @@ public class WaitForAnyMessageState implements PeerState {
                             break;
                         case FAILED:
                             handleIncomingFailedMessage(context, message, neighbourConnectionsInfo, myPeerInfo);
+                            break;
+                        case BITFIELD:
+                            handleIncomingLastBitfieldMessage(context, message, neighbourConnectionsInfo, myPeerInfo);
+                            break;
+                        case LAST_BITFIELD_ACK:
+                            handleIncomingLastBitfieldAckMessage(context, message, neighbourConnectionsInfo, myPeerInfo);
+                            break;
 
                     }
                 } else {
@@ -83,6 +91,17 @@ public class WaitForAnyMessageState implements PeerState {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void handleIncomingLastBitfieldAckMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer,NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
+        neighbourConnectionsInfo.get(context.getTheirPeerId()).getSchExService().shutdownNow();
+    }
+
+    private void handleIncomingLastBitfieldMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer,NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
+        BitSet theirBitField = BitSet.valueOf(message.payload);
+        neighbourConnectionsInfo.get(context.getTheirPeerId()).setBitField(theirBitField);
+
+        context.setState(new ExpectedToSendLastBitfieldAckMessage(), false, false);
     }
 
     private void handleIncomingNotInterestedMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
@@ -120,7 +139,6 @@ public class WaitForAnyMessageState implements PeerState {
                 break;
             case CHOKED_AND_INTERESTED:
                 break;
-
         }
 
     }
@@ -241,7 +259,15 @@ public class WaitForAnyMessageState implements PeerState {
         }
 
         // 5. Send next request message to the same peer
-        sendRequestMessage(context, neighbourConnectionsInfo, myPeerInfo);
+        if(myPeerInfo.getBitField().cardinality() == myPeerInfo.getCommonConfig().getPieces()){
+            // schedule a service which sends the bitfield message periodically until the task is cancelled
+            Runnable task = () ->{
+                context.setState(new ExpectedToSendLastBitfieldMessage(), false, false);
+            };
+            neighbourConnectionsInfo.get(context.getTheirPeerId()).getSchExService().scheduleAtFixedRate(task, 10, 5, TimeUnit.SECONDS);
+        } else{
+            sendRequestMessage(context, neighbourConnectionsInfo, myPeerInfo);
+        }
     }
 
     private void handleIncomingHaveMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
@@ -258,16 +284,16 @@ public class WaitForAnyMessageState implements PeerState {
 //        }
     }
 
+    private void handleIncomingFailedMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
+        System.out.println("Handle incoming failed message");
+        context.setState(context.getLastStateRef(), false, false);
+    }
+
     private void handleMessageFailure(Handler context, SelfPeerInfo myPeerInfo) {
 //        myPeerInfo.log("Peer [" + myPeerInfo.getPeerID() + "] FAILED message from peer " + context.getTheirPeerId() + "!");
 
         context.setState(new ExpectedToSendFailedMessageState(), false, false);
         //5. Track to which peer we have sent a request message with that index, next time an unchoke message arrives, do not use the same index again, :
 
-    }
-
-    private void handleIncomingFailedMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
-        System.out.println("Handle incoming failed message");
-        context.setState(context.getLastStateRef(), false, false);
     }
 }

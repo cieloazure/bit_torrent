@@ -249,8 +249,6 @@ public class PeriodicTasks {
                 2,
                 TimeUnit.SECONDS);
 
-
-
     }
 
 }
