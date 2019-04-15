@@ -175,7 +175,7 @@ public class Peer {
             builder.withHasFile(hasFile);
 
 
-            int pieces = (int) Math.ceil(commonConfig.getFileSize() / commonConfig.getPieceSize());
+            int pieces = (int)Math.ceil(commonConfig.getFileSize() /(double)commonConfig.getPieceSize());
             BitSet bitField = new BitSet(pieces);
 //            BitSet requestedPieces = new BitSet(pieces);
             if (hasFile) {

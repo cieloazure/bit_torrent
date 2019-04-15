@@ -109,7 +109,6 @@ public class SelfPeerInfo extends PeerInfo {
         dir.mkdirs();
         File f = new File("peer_" + peerID.toString() + "/" + commonConfig.getFileName());
         TreeSet<Integer> pieceIndexes = new TreeSet<>(fileChunks.keySet());
-
         try {
             FileOutputStream outputStream = new FileOutputStream(f);
             for (Integer piece : pieceIndexes) {

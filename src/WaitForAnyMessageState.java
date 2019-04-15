@@ -107,6 +107,8 @@ public class WaitForAnyMessageState implements PeerState {
             if(remainingNeighbours == 0){
                 myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "] Proceeding to cancel broadcast of bitfield");
                 myPeerInfo.getLastBitfieldMessageSchExec().shutdownNow();
+                myPeerInfo.combineFileChunks();
+                // can be shutdown now.....
             }
         }
     }
@@ -206,8 +208,7 @@ public class WaitForAnyMessageState implements PeerState {
             //4.Set the piece index in requestedPieces bitset
             myPeerInfo.setRequestPiecesIndex(pieceToRequest, 0);
         } else {
-            System.out.println("RECEIVED ENTIRE FILE!");
-            myPeerInfo.combineFileChunks();
+            myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "] Has the ENTIRE FILE! Sending not interested message to "+context.getTheirPeerId()+"!");
             context.setState(new ExpectedToSendInterestedOrNotInterestedMessageState(neighbourConnectionsInfo, neighbourConnectionsInfo.get(context.getTheirPeerId()).getBitField(), false), false, false);
         }
     }
