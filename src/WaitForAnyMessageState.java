@@ -94,10 +94,12 @@ public class WaitForAnyMessageState implements PeerState {
     }
 
     private void handleIncomingLastBitfieldAckMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer,NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
+        myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "] received 'last_bitfield_ack_message' message from peer [" + context.getTheirPeerId() + "] Proceeding to cancel periodic task!");
         neighbourConnectionsInfo.get(context.getTheirPeerId()).getSchExService().shutdownNow();
     }
 
     private void handleIncomingLastBitfieldMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer,NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
+        myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "] received 'last_bitfield_message' message from peer [" + context.getTheirPeerId() + "]");
         BitSet theirBitField = BitSet.valueOf(message.payload);
         neighbourConnectionsInfo.get(context.getTheirPeerId()).setBitField(theirBitField);
 

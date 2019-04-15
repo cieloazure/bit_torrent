@@ -40,7 +40,6 @@ public class PeriodicTasks {
             for (Integer key : neighbourInfo.keySet()) {
 
                 if (neighbourInfo.get(key).isInterested()) {
-
                     if (!downloadRateToPeerId.containsKey(neighbourInfo.get(key).getDownloadSpeed())) {
                         downloadRateToPeerId.put(neighbourInfo.get(key).getDownloadSpeed(), new ArrayList<Integer>());
                         downloadRateToPeerId.get(neighbourInfo.get(key).getDownloadSpeed()).add(key);
@@ -48,14 +47,8 @@ public class PeriodicTasks {
                         downloadRateToPeerId.get(neighbourInfo.get(key).getDownloadSpeed()).add(key);
                     }
                 }
-
             }
 
-
-            if (downloadRateToPeerId.size() == 0) {
-                killAll();
-//                myPeerInfo.log("DEBUG: downloadRateToPeerId is empty");
-            }
             Set<Map.Entry<Double, ArrayList<Integer>>> set = downloadRateToPeerId.entrySet();
             Set<Integer> selectedK = new HashSet<>();
 
@@ -108,7 +101,6 @@ public class PeriodicTasks {
 
             }
             myPeerInfo.log("Peer ["+myPeerInfo.getPeerID()+"] has the preferred neighbors " + selectedK);
-            System.out.println(selectedK);
 
         } catch (Exception e) {
             System.out.println("Some issue in K select");
@@ -137,7 +129,10 @@ public class PeriodicTasks {
                 if (!kPreferred.contains(optimisticallyUnchokedPeerID)) {
                     System.out.println("DEBUG: Choke this->" + optimisticallyUnchokedPeerID);
                     if (optimisticallyUnchokedPeerID==0){
-                        neighbourInfo.get(optimisticallyUnchokedPeerID).setContextState(new ExpectedToSendChokeMessageState(neighbourInfo), false, false);
+                        Handler context = neighbourInfo.get(optimisticallyUnchokedPeerID).getContext();
+                        if(context != null){
+                            context.setState(new ExpectedToSendChokeMessageState(neighbourInfo), false, false);
+                        }
                     }
 
                 }
@@ -167,6 +162,7 @@ public class PeriodicTasks {
         try {
 
             int totalPieces = (int)(this.myPeerInfo.getCommonConfig().getFileSize()/this.myPeerInfo.getCommonConfig().getPieceSize());
+            System.out.println(totalPieces);
             int peersWithCompleteFile = 0;
 
             for (Integer key : neighbourInfo.keySet()) {
@@ -175,16 +171,14 @@ public class PeriodicTasks {
                     //if neighbour peer has all pieces
                     if(neighbourInfo.get(key).getBitField() != null) {
                         if(neighbourInfo.get(key).getBitField().cardinality() == totalPieces)
-                            peersWithCompleteFile ++;
+                            peersWithCompleteFile++;
                     }
                 }
             }
 
             if(peersWithCompleteFile == neighbourInfo.size()) {
                 killAll();
-
-            }
-            else{
+            }else{
                 for (Integer key : neighbourInfo.keySet()) {
                     System.out.println("Peer "+key+" is messing up");
                 }
@@ -201,9 +195,12 @@ public class PeriodicTasks {
         this.myPeerInfo.interruptListener();
         myPeerInfo.setKeepWorking(false);
         for (Integer key : neighbourInfo.keySet()) {
-            neighbourInfo.get(key).getContext().setState(new ExpectedToSendFailedMessageState(),
-                    false, false);
-            neighbourInfo.get(key).getContext().closeConnection();
+            Handler context = neighbourInfo.get(key).getContext();
+            if(context != null){
+                context.setState(new ExpectedToSendFailedMessageState(),
+                        false, false);
+                context.closeConnection();
+            }
         }
         this.myPeerInfo.killAllPeriodicTasks();
     }
@@ -244,10 +241,10 @@ public class PeriodicTasks {
                 optUnchokedInt,
                 TimeUnit.SECONDS);
 
-        schExec.scheduleAtFixedRate(shutdown,
-                10,
-                2,
-                TimeUnit.SECONDS);
+//        schExec.scheduleAtFixedRate(shutdown,
+//                10,
+//                2,
+//                TimeUnit.SECONDS);
 
     }
 
