@@ -13,7 +13,7 @@ class NeighbourInputHandler extends Handler implements Runnable {
                                  SelfPeerInfo myPeerInfo,
                                  AtomicReference<PeerState> inputStateRef,
                                  BlockingQueue<PeerState> outputStateRef,
-                                 DataInputStream inputStream,DataOutputStream outputStream,
+                                 DataInputStream inputStream, DataOutputStream outputStream,
                                  Object inputMutex, Object outputMutex,
                                  int theirPeerId, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourInfo) {
         super(connection, myPeerInfo,
@@ -32,7 +32,7 @@ class NeighbourInputHandler extends Handler implements Runnable {
                     while (this.inputStateRef.get() == null) {
                         this.inputMutex.wait();
                     }
-                    if(myPeerInfo.getKeepWorking()){
+                    if (myPeerInfo.getKeepWorking()) {
                         PeerState inputState = inputStateRef.get();
                         inputState.handleMessage(this, this.myPeerInfo, this.inputStream, this.outputStream);
                     }

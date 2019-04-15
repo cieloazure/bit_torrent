@@ -93,18 +93,18 @@ public class WaitForAnyMessageState implements PeerState {
         } catch (EOFException e) {
             e.printStackTrace();
         } catch (IOException e) {
-            System.out.println("["+myPeerInfo.getPeerID()+"] Peer "+context.getTheirPeerId()+" closed the connection!");
+            System.out.println("[" + myPeerInfo.getPeerID() + "] Peer " + context.getTheirPeerId() + " closed the connection!");
             e.printStackTrace();
         }
     }
 
-    private void handleIncomingLastBitfieldAckMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer,NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
+    private void handleIncomingLastBitfieldAckMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
         myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "] received 'last_bitfield_ack_message' message from peer [" + context.getTheirPeerId() + "]");
 
-        if(!neighbourConnectionsInfo.get(context.getTheirPeerId()).hasReceivedLastBitfieldAck()){
+        if (!neighbourConnectionsInfo.get(context.getTheirPeerId()).hasReceivedLastBitfieldAck()) {
             neighbourConnectionsInfo.get(context.getTheirPeerId()).setReceivedLastBitfieldAck(true);
             int remainingNeighbours = myPeerInfo.decrementMyNeighboursCount();
-            if(remainingNeighbours == 0){
+            if (remainingNeighbours == 0) {
                 myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "] Proceeding to cancel broadcast of bitfield");
                 myPeerInfo.getLastBitfieldMessageSchExec().shutdownNow();
                 myPeerInfo.combineFileChunks();
@@ -113,7 +113,7 @@ public class WaitForAnyMessageState implements PeerState {
         }
     }
 
-    private void handleIncomingLastBitfieldMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer,NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
+    private void handleIncomingLastBitfieldMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
         myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "] received 'last_bitfield_message' message from peer [" + context.getTheirPeerId() + "]");
         BitSet theirBitField = BitSet.valueOf(message.payload);
         neighbourConnectionsInfo.get(context.getTheirPeerId()).setBitField(theirBitField);
@@ -143,7 +143,7 @@ public class WaitForAnyMessageState implements PeerState {
     private void handleIncomingInterestedMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
         // 1. Update the state of the peer in the concurrent hash map, this will be used when unchoking interval elapses in timertask1 or when optimistic unchoking interval elapses in timertask2
 
-        myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "] received 'interested' message from peer [" + context.getTheirPeerId()+"]");
+        myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "] received 'interested' message from peer [" + context.getTheirPeerId() + "]");
         switch (neighbourConnectionsInfo.get(context.getTheirPeerId()).getNeighbourState()) {
 
             case UNKNOWN:
@@ -161,7 +161,7 @@ public class WaitForAnyMessageState implements PeerState {
     }
 
     private void handleIncomingUnchokeMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
-        myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "]is unchoked by " + context.getTheirPeerId() );
+        myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "]is unchoked by " + context.getTheirPeerId());
         sendRequestMessage(context, neighbourConnectionsInfo, myPeerInfo);
 
         //5. Track to which peer we have sent a request message with that index, next time an unchoke message arrives, do not use the same index again, :
@@ -208,7 +208,7 @@ public class WaitForAnyMessageState implements PeerState {
             //4.Set the piece index in requestedPieces bitset
             myPeerInfo.setRequestPiecesIndex(pieceToRequest, 0);
         } else {
-            myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "] Has the ENTIRE FILE! Sending not interested message to "+context.getTheirPeerId()+"!");
+            myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "] Has the ENTIRE FILE! Sending not interested message to " + context.getTheirPeerId() + "!");
             context.setState(new ExpectedToSendInterestedOrNotInterestedMessageState(neighbourConnectionsInfo, neighbourConnectionsInfo.get(context.getTheirPeerId()).getBitField(), false), false, false);
         }
     }
@@ -262,7 +262,7 @@ public class WaitForAnyMessageState implements PeerState {
         // 3.1. Update file chunk index
         myPeerInfo.setFileChunkIndex(gotPieceIndex, message.getPayload());
 
-        myPeerInfo.log("[Peer ["+myPeerInfo.getPeerID()+"] has downloaded the piece" + gotPieceIndex+ " from Peer [" +context.getTheirPeerId()+"]. Now number of pieces it has is "+myPeerInfo.getBitField().cardinality());
+        myPeerInfo.log("[Peer [" + myPeerInfo.getPeerID() + "] has downloaded the piece" + gotPieceIndex + " from Peer [" + context.getTheirPeerId() + "]. Now number of pieces it has is " + myPeerInfo.getBitField().cardinality());
 
         // 4. Send a have message to all the neighbouring peers
         for (Integer peerId : neighbourConnectionsInfo.keySet()) {
@@ -278,21 +278,21 @@ public class WaitForAnyMessageState implements PeerState {
         // If yes, then broadcast the bitfield at a fixed interval of time
         // until, all peers acknowledge of your bitfield
         // If not, then, send a request for another piece
-        if(myPeerInfo.getBitField().cardinality() == myPeerInfo.getCommonConfig().getPieces()){
+        if (myPeerInfo.getBitField().cardinality() == myPeerInfo.getCommonConfig().getPieces()) {
             // schedule a service which sends the bitfield message periodically until the task is cancelled
-            Runnable task = () ->{
+            Runnable task = () -> {
                 myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "] Broadcasting 'last_bitfield_message' message");
 
-                for(Integer key: neighbourConnectionsInfo.keySet()){
+                for (Integer key : neighbourConnectionsInfo.keySet()) {
                     NeighbourPeerInfo peer = neighbourConnectionsInfo.get(key);
-                    if(peer.getContext() != null && !peer.hasReceivedLastBitfieldAck()){
+                    if (peer.getContext() != null && !peer.hasReceivedLastBitfieldAck()) {
                         peer.setContextState(new ExpectedToSendLastBitfieldMessage(), false, false);
                     }
                 }
             };
 
             myPeerInfo.getLastBitfieldMessageSchExec().scheduleAtFixedRate(task, 10, 10, TimeUnit.SECONDS);
-        } else{
+        } else {
             sendRequestMessage(context, neighbourConnectionsInfo, myPeerInfo);
         }
     }

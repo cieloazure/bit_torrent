@@ -104,11 +104,11 @@ class Handler {
         noh.setWhichHandler(0);
         return noh;
     }
-    public void closeConnection(){
+
+    public void closeConnection() {
         try {
             this.connection.close();
-        }
-        catch (Exception e){
+        } catch (Exception e) {
 
         }
 

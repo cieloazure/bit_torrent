@@ -121,7 +121,8 @@ public class SelfPeerInfo extends PeerInfo {
             e.printStackTrace();
         }
     }
-    public CommonConfig getCommonConfig(){
+
+    public CommonConfig getCommonConfig() {
         return this.commonConfig;
     }
 
@@ -129,21 +130,21 @@ public class SelfPeerInfo extends PeerInfo {
         this.listener = listener;
     }
 
-    public void interruptListener(){
+    public void interruptListener() {
         try {
             this.listener.close();
-        }
-        catch (Exception e){
+        } catch (Exception e) {
 
         }
 
     }
+
+    public boolean getKeepWorking() {
+        return this.keepWorking;
+    }
+
     public void setKeepWorking(boolean keepWorking) {
         this.keepWorking = keepWorking;
-    }
-
-    public boolean getKeepWorking(){
-        return this.keepWorking;
     }
 
     public ScheduledExecutorService getLastBitfieldMessageSchExec() {
@@ -162,7 +163,7 @@ public class SelfPeerInfo extends PeerInfo {
         this.myNeighboursCount.set(myNeighboursCount);
     }
 
-    public int decrementMyNeighboursCount(){
+    public int decrementMyNeighboursCount() {
         return this.myNeighboursCount.decrementAndGet();
     }
 }

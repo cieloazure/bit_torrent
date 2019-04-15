@@ -1,8 +1,3 @@
-import java.util.BitSet;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
 public class NeighbourPeerInfo extends PeerInfo {
     // In context of when Peer is a neighbour
     private Double downloadSpeed;
@@ -66,8 +61,9 @@ public class NeighbourPeerInfo extends PeerInfo {
         }
         return false;
     }
-    public boolean shutdown(){
-        if(neighbourState == NeighbourState.SHUTDOWN){
+
+    public boolean shutdown() {
+        if (neighbourState == NeighbourState.SHUTDOWN) {
             return true;
         }
         return false;

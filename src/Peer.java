@@ -175,7 +175,7 @@ public class Peer {
             builder.withHasFile(hasFile);
 
 
-            int pieces = (int)Math.ceil(commonConfig.getFileSize() /(double)commonConfig.getPieceSize());
+            int pieces = (int) Math.ceil(commonConfig.getFileSize() / (double) commonConfig.getPieceSize());
             BitSet bitField = new BitSet(pieces);
 //            BitSet requestedPieces = new BitSet(pieces);
             if (hasFile) {
@@ -213,10 +213,10 @@ public class Peer {
                 fileChunks.putIfAbsent(i, buffer);
                 i++;
                 fileSize -= bytesRead;
-                if(fileSize > pieceSize){
-                    buffer = new byte[(int)pieceSize];
-                }else{
-                    buffer = new byte[(int)fileSize];
+                if (fileSize > pieceSize) {
+                    buffer = new byte[(int) pieceSize];
+                } else {
+                    buffer = new byte[(int) fileSize];
                 }
             }
         } catch (FileNotFoundException e) {

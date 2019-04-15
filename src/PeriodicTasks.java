@@ -1,4 +1,3 @@
-
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -33,7 +32,7 @@ public class PeriodicTasks {
             // Using array list so as to deal with the corner case of two peers having the same download rate
             Map<Double, ArrayList<Integer>> downloadRateToPeerId = new TreeMap<>();
 
-            int totalPieces = (int)(this.myPeerInfo.getCommonConfig().getFileSize()/this.myPeerInfo.getCommonConfig().getPieceSize());
+            int totalPieces = (int)Math.ceil(this.myPeerInfo.getCommonConfig().getFileSize() / (double)this.myPeerInfo.getCommonConfig().getPieceSize());
             int peersWithCompleteFile = 0;
             boolean canShutdown = false;
 
@@ -100,7 +99,7 @@ public class PeriodicTasks {
                 }
 
             }
-            myPeerInfo.log("Peer ["+myPeerInfo.getPeerID()+"] has the preferred neighbors " + selectedK);
+            myPeerInfo.log("Peer [" + myPeerInfo.getPeerID() + "] has the preferred neighbors " + selectedK);
 
         } catch (Exception e) {
             System.out.println("Some issue in K select");
@@ -128,9 +127,9 @@ public class PeriodicTasks {
 
                 if (!kPreferred.contains(optimisticallyUnchokedPeerID)) {
                     System.out.println("DEBUG: Choke this->" + optimisticallyUnchokedPeerID);
-                    if (optimisticallyUnchokedPeerID==0){
-                        NeighbourPeerInfo neighbourPeerInfo= neighbourInfo.get(optimisticallyUnchokedPeerID);
-                        if(neighbourPeerInfo != null && neighbourPeerInfo.getContext() != null){
+                    if (optimisticallyUnchokedPeerID == 0) {
+                        NeighbourPeerInfo neighbourPeerInfo = neighbourInfo.get(optimisticallyUnchokedPeerID);
+                        if (neighbourPeerInfo != null && neighbourPeerInfo.getContext() != null) {
                             neighbourPeerInfo.getContext().setState(new ExpectedToSendChokeMessageState(neighbourInfo), false, false);
                         }
                     }
@@ -142,11 +141,11 @@ public class PeriodicTasks {
 
                 // Unchoke the peer with this peer id
                 System.out.println("DEBUG: " + optUnchokedPeer + ": Unchoke me! " + optimisticallyUnchokedPeerID);
-                myPeerInfo.log("Peer ["+myPeerInfo.getPeerID()+"] has the optimistically unchoked neighbor [" + optimisticallyUnchokedPeerID + "]");
+                myPeerInfo.log("Peer [" + myPeerInfo.getPeerID() + "] has the optimistically unchoked neighbor [" + optimisticallyUnchokedPeerID + "]");
                 neighbourInfo.get(optimisticallyUnchokedPeerID).setContextState(new ExpectedToSendUnchokeMessageState(neighbourInfo), false, false);
 
             } else {
-                myPeerInfo.log("Peer ["+myPeerInfo.getPeerID()+"] has the optimistically unchoked neighbor [" + (optimisticallyUnchokedPeerID == 0 ? "" : optimisticallyUnchokedPeerID) + "]");
+                myPeerInfo.log("Peer [" + myPeerInfo.getPeerID() + "] has the optimistically unchoked neighbor [" + (optimisticallyUnchokedPeerID == 0 ? "" : optimisticallyUnchokedPeerID) + "]");
 //                myPeerInfo.log("DEBUG: optUnchokedPool is empty");
             }
         } catch (Exception e) {
@@ -162,26 +161,26 @@ public class PeriodicTasks {
     public void shutdownPeer() {
         try {
             int totalPiecesExpected = this.myPeerInfo.getCommonConfig().getPieces();
-            System.out.printf("[PEER "+this.myPeerInfo.getPeerID()+"][SHUTDOWN] "+this.myPeerInfo.getBitField().cardinality() + "/" + totalPiecesExpected);
-            if(this.myPeerInfo.getBitField().cardinality() == totalPiecesExpected){
+            System.out.printf("[PEER " + this.myPeerInfo.getPeerID() + "][SHUTDOWN] " + this.myPeerInfo.getBitField().cardinality() + "/" + totalPiecesExpected);
+            if (this.myPeerInfo.getBitField().cardinality() == totalPiecesExpected) {
                 System.out.printf(" initiated!\n");
                 int peersWithCompleteFile = 0;
                 for (Integer key : neighbourInfo.keySet()) {
-                    if(neighbourInfo.get(key).getBitField() != null) {
-                        System.out.println("[SHUTDOWN]:Peer "+key+" has pieces "+neighbourInfo.get(key).getBitField().cardinality());
-                        if(neighbourInfo.get(key).getBitField().cardinality() == totalPiecesExpected){
-                            System.out.println("[SHUTDOWN]:Peer "+key+" has the entire file");
+                    if (neighbourInfo.get(key).getBitField() != null) {
+                        System.out.println("[SHUTDOWN]:Peer " + key + " has pieces " + neighbourInfo.get(key).getBitField().cardinality());
+                        if (neighbourInfo.get(key).getBitField().cardinality() == totalPiecesExpected) {
+                            System.out.println("[SHUTDOWN]:Peer " + key + " has the entire file");
                             peersWithCompleteFile++;
-                        }else{
-                            System.out.println("[SHUTDOWN]:Peer "+key+" DOES NOT HAVE THE entire file yet...");
+                        } else {
+                            System.out.println("[SHUTDOWN]:Peer " + key + " DOES NOT HAVE THE entire file yet...");
                         }
                     }
                 }
-                if(peersWithCompleteFile == neighbourInfo.size()) {
+                if (peersWithCompleteFile == neighbourInfo.size()) {
                     System.out.println("[SHUTDOWN]: All peers have the entire file! OK to shut down...");
                     killAll();
                 }
-            }else{
+            } else {
                 System.out.println(" not initiated yet...!\n");
             }
         } catch (Exception e) {
@@ -190,13 +189,14 @@ public class PeriodicTasks {
 
 
     }
-    public void killAll(){
+
+    public void killAll() {
         this.myPeerInfo.combineFileChunks();
         this.myPeerInfo.interruptListener();
         myPeerInfo.setKeepWorking(false);
         for (Integer key : neighbourInfo.keySet()) {
             Handler context = neighbourInfo.get(key).getContext();
-            if(context != null){
+            if (context != null) {
                 context.setState(new ExpectedToSendFailedMessageState(),
                         false, false);
                 context.closeConnection();
@@ -204,6 +204,7 @@ public class PeriodicTasks {
         }
         this.myPeerInfo.killAllPeriodicTasks();
     }
+
     /**
      * This function triggers the threads that periodically perform the following two actions-
      * Choose k preferred neighbours

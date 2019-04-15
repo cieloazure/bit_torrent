@@ -62,7 +62,7 @@ class HandshakeMessage implements Message, Serializable {
             return;
         }
 
-        for (int i = header.length(); i < 10; i++) {
+        for (int i = header.length(); i < header.length() + 10; i++) {
             if ((int) message[i] != 0) {
                 this.isValid = false;
                 return;
