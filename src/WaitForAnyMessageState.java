@@ -100,12 +100,14 @@ public class WaitForAnyMessageState implements PeerState {
 
     private void handleIncomingLastBitfieldAckMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer,NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
         myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "] received 'last_bitfield_ack_message' message from peer [" + context.getTheirPeerId() + "]");
-        neighbourConnectionsInfo.get(context.getTheirPeerId()).setReceivedLastBitfieldAck(true);
 
-        int remainingNeighbours = myPeerInfo.decrementMyNeighboursCount();
-        if(remainingNeighbours == 0){
-            myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "] Proceeding to cancel broadcast of bitfield");
-            myPeerInfo.getLastBitfieldMessageSchExec().shutdownNow();
+        if(!neighbourConnectionsInfo.get(context.getTheirPeerId()).hasReceivedLastBitfieldAck()){
+            neighbourConnectionsInfo.get(context.getTheirPeerId()).setReceivedLastBitfieldAck(true);
+            int remainingNeighbours = myPeerInfo.decrementMyNeighboursCount();
+            if(remainingNeighbours == 0){
+                myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "] Proceeding to cancel broadcast of bitfield");
+                myPeerInfo.getLastBitfieldMessageSchExec().shutdownNow();
+            }
         }
     }
 
