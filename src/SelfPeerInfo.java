@@ -48,6 +48,7 @@ public class SelfPeerInfo extends PeerInfo {
         this.commonConfig = commonConfig;
         this.keepWorking = true;
         this.lastBitfieldMessageSchExec = Executors.newScheduledThreadPool(1);
+        this.myNeighboursCount = new AtomicInteger(0);
     }
 
     public static String ts() {

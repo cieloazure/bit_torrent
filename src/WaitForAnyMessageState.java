@@ -99,11 +99,12 @@ public class WaitForAnyMessageState implements PeerState {
     }
 
     private void handleIncomingLastBitfieldAckMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer,NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
-        myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "] received 'last_bitfield_ack_message' message from peer [" + context.getTheirPeerId() + "] Proceeding to cancel periodic task!");
+        myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "] received 'last_bitfield_ack_message' message from peer [" + context.getTheirPeerId() + "]");
         neighbourConnectionsInfo.get(context.getTheirPeerId()).setReceivedLastBitfieldAck(true);
 
         int remainingNeighbours = myPeerInfo.decrementMyNeighboursCount();
         if(remainingNeighbours == 0){
+            myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "] Proceeding to cancel broadcast of bitfield");
             myPeerInfo.getLastBitfieldMessageSchExec().shutdownNow();
         }
     }
@@ -277,7 +278,7 @@ public class WaitForAnyMessageState implements PeerState {
         if(myPeerInfo.getBitField().cardinality() == myPeerInfo.getCommonConfig().getPieces()){
             // schedule a service which sends the bitfield message periodically until the task is cancelled
             Runnable task = () ->{
-                myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "] Broadcasting 'last_bitfield_message' message from peer [" + context.getTheirPeerId() + "]");
+                myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "] Broadcasting 'last_bitfield_message' message");
 
                 for(Integer key: neighbourConnectionsInfo.keySet()){
                     NeighbourPeerInfo peer = neighbourConnectionsInfo.get(key);

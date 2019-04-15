@@ -241,10 +241,10 @@ public class PeriodicTasks {
                 optUnchokedInt,
                 TimeUnit.SECONDS);
 
-        schExec.scheduleAtFixedRate(shutdown,
-                3,
-                5,
-                TimeUnit.SECONDS);
+//        schExec.scheduleAtFixedRate(shutdown,
+//                3,
+//                5,
+//                TimeUnit.SECONDS);
     }
 
 }
