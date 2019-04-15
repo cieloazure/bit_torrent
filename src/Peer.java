@@ -206,13 +206,18 @@ public class Peer {
         try {
             File f = new File(fileName);
             FileInputStream fis = new FileInputStream(f);
-            int pieces = (int) Math.ceil(fileSize / pieceSize);
             byte[] buffer = new byte[(int) pieceSize];
             int i = 0;
-            while (fis.read(buffer) > 0) {
+            int bytesRead = 0;
+            while ((bytesRead = fis.read(buffer)) > 0) {
                 fileChunks.putIfAbsent(i, buffer);
                 i++;
-                buffer = new byte[(int) pieceSize];
+                fileSize -= bytesRead;
+                if(fileSize > pieceSize){
+                    buffer = new byte[(int)pieceSize];
+                }else{
+                    buffer = new byte[(int)fileSize];
+                }
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
