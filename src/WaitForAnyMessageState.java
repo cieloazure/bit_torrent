@@ -1,5 +1,6 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.BitSet;
@@ -8,6 +9,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 public class WaitForAnyMessageState implements PeerState {
+    private static final int MESSAGE_HEADER = 5;
     private ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo;
 
 
@@ -26,8 +28,9 @@ public class WaitForAnyMessageState implements PeerState {
             byte[] length = new byte[4];
             inputStream.read(length, 0, 4);
             len = ByteBuffer.allocate(4).wrap(length).getInt();
+            long maxMessageSize = myPeerInfo.getCommonConfig().getPieceSize() + MESSAGE_HEADER;
 
-            if(len<myPeerInfo.getCommonConfig().getPieceSize()+10) {
+            if (len < maxMessageSize && len > 0) {
                 messageBytes = new byte[len + 4];
                 int i = 0;
                 for (; i < 4; i++) {
@@ -82,13 +85,15 @@ public class WaitForAnyMessageState implements PeerState {
                 } else {
                     handleMessageFailure(context, myPeerInfo);
                 }
-            }
-            else{
+            } else {
                 handleMessageFailure(context, myPeerInfo);
             }
 
             context.setState(new WaitForAnyMessageState(neighbourConnectionsInfo), true, false);
+        } catch (EOFException e) {
+            e.printStackTrace();
         } catch (IOException e) {
+            System.out.println("["+myPeerInfo.getPeerID()+"] Peer "+context.getTheirPeerId()+" closed the connection!");
             e.printStackTrace();
         }
     }
@@ -103,7 +108,7 @@ public class WaitForAnyMessageState implements PeerState {
         BitSet theirBitField = BitSet.valueOf(message.payload);
         neighbourConnectionsInfo.get(context.getTheirPeerId()).setBitField(theirBitField);
 
-        context.setState(new ExpectedToSendLastBitfieldAckMessage(), false, false);
+//        context.setState(new ExpectedToSendLastBitfieldAckMessage(), false, false);
     }
 
     private void handleIncomingNotInterestedMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
@@ -264,6 +269,7 @@ public class WaitForAnyMessageState implements PeerState {
         if(myPeerInfo.getBitField().cardinality() == myPeerInfo.getCommonConfig().getPieces()){
             // schedule a service which sends the bitfield message periodically until the task is cancelled
             Runnable task = () ->{
+                myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "]sent 'last_bitfield_message' message from peer [" + context.getTheirPeerId() + "]");
                 context.setState(new ExpectedToSendLastBitfieldMessage(), false, false);
             };
             neighbourConnectionsInfo.get(context.getTheirPeerId()).getSchExService().scheduleAtFixedRate(task, 10, 5, TimeUnit.SECONDS);

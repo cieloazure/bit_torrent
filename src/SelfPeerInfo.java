@@ -143,4 +143,19 @@ public class SelfPeerInfo extends PeerInfo {
     public boolean getKeepWorking(){
         return this.keepWorking;
     }
+
+    public void killAll(ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourInfo){
+        combineFileChunks();
+        interruptListener();
+        setKeepWorking(false);
+        for (Integer key : neighbourInfo.keySet()) {
+            Handler context = neighbourInfo.get(key).getContext();
+            if(context != null){
+                context.setState(new ExpectedToSendFailedMessageState(),
+                        false, false);
+                context.closeConnection();
+            }
+        }
+        killAllPeriodicTasks();
+    }
 }

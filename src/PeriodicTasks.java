@@ -129,9 +129,9 @@ public class PeriodicTasks {
                 if (!kPreferred.contains(optimisticallyUnchokedPeerID)) {
                     System.out.println("DEBUG: Choke this->" + optimisticallyUnchokedPeerID);
                     if (optimisticallyUnchokedPeerID==0){
-                        Handler context = neighbourInfo.get(optimisticallyUnchokedPeerID).getContext();
-                        if(context != null){
-                            context.setState(new ExpectedToSendChokeMessageState(neighbourInfo), false, false);
+                        NeighbourPeerInfo neighbourPeerInfo= neighbourInfo.get(optimisticallyUnchokedPeerID);
+                        if(neighbourPeerInfo != null && neighbourPeerInfo.getContext() != null){
+                            neighbourPeerInfo.getContext().setState(new ExpectedToSendChokeMessageState(neighbourInfo), false, false);
                         }
                     }
 
@@ -146,7 +146,8 @@ public class PeriodicTasks {
                 neighbourInfo.get(optimisticallyUnchokedPeerID).setContextState(new ExpectedToSendUnchokeMessageState(neighbourInfo), false, false);
 
             } else {
-                myPeerInfo.log("DEBUG: optUnchokedPool is empty");
+                myPeerInfo.log("Peer ["+myPeerInfo.getPeerID()+"] has the optimistically unchoked neighbor [" + (optimisticallyUnchokedPeerID == 0 ? "" : optimisticallyUnchokedPeerID) + "]");
+//                myPeerInfo.log("DEBUG: optUnchokedPool is empty");
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -160,30 +161,29 @@ public class PeriodicTasks {
      */
     public void shutdownPeer() {
         try {
-
-            int totalPieces = (int)(this.myPeerInfo.getCommonConfig().getFileSize()/this.myPeerInfo.getCommonConfig().getPieceSize());
-            System.out.println(totalPieces);
-            int peersWithCompleteFile = 0;
-
-            for (Integer key : neighbourInfo.keySet()) {
-                //if the Peer itself has received all pieces, check if the neighbors have received all pieces.
-                if(this.myPeerInfo.getBitField().cardinality() == totalPieces) {
-                    //if neighbour peer has all pieces
+            int totalPiecesExpected = this.myPeerInfo.getCommonConfig().getPieces();
+            System.out.printf("[PEER "+this.myPeerInfo.getPeerID()+"][SHUTDOWN] "+this.myPeerInfo.getBitField().cardinality() + "/" + totalPiecesExpected);
+            if(this.myPeerInfo.getBitField().cardinality() == totalPiecesExpected){
+                System.out.printf(" initiated!\n");
+                int peersWithCompleteFile = 0;
+                for (Integer key : neighbourInfo.keySet()) {
                     if(neighbourInfo.get(key).getBitField() != null) {
-                        if(neighbourInfo.get(key).getBitField().cardinality() == totalPieces)
+                        System.out.println("[SHUTDOWN]:Peer "+key+" has pieces "+neighbourInfo.get(key).getBitField().cardinality());
+                        if(neighbourInfo.get(key).getBitField().cardinality() == totalPiecesExpected){
+                            System.out.println("[SHUTDOWN]:Peer "+key+" has the entire file");
                             peersWithCompleteFile++;
+                        }else{
+                            System.out.println("[SHUTDOWN]:Peer "+key+" DOES NOT HAVE THE entire file yet...");
+                        }
                     }
                 }
-            }
-
-            if(peersWithCompleteFile == neighbourInfo.size()) {
-                killAll();
-            }else{
-                for (Integer key : neighbourInfo.keySet()) {
-                    System.out.println("Peer "+key+" is messing up");
+                if(peersWithCompleteFile == neighbourInfo.size()) {
+                    System.out.println("[SHUTDOWN]: All peers have the entire file! OK to shut down...");
+                    killAll();
                 }
+            }else{
+                System.out.println(" not initiated yet...!\n");
             }
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -232,20 +232,19 @@ public class PeriodicTasks {
             shutdownPeer();
         };
         schExec.scheduleAtFixedRate(selectTopK,
-                2,
+                3,
                 topKinterval,
                 TimeUnit.SECONDS);
 
         schExec.scheduleAtFixedRate(selectOptUnchoked,
-                2,
+                3,
                 optUnchokedInt,
                 TimeUnit.SECONDS);
 
-//        schExec.scheduleAtFixedRate(shutdown,
-//                10,
-//                2,
-//                TimeUnit.SECONDS);
-
+        schExec.scheduleAtFixedRate(shutdown,
+                3,
+                5,
+                TimeUnit.SECONDS);
     }
 
 }
