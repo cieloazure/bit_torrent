@@ -104,7 +104,8 @@ class Handler {
         noh.setWhichHandler(0);
         return noh;
     }
-    public void closeConnection(){
+
+    public void closeConnection() {
         try {
             System.out.println("Closing all connections");
             this.connection.close();

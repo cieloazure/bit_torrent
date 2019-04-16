@@ -31,7 +31,7 @@ class NeighbourOutputHandler extends Handler implements Runnable {
                     while (this.outputStateRef.isEmpty()) {
                         this.outputMutex.wait();
                     }
-                    if(myPeerInfo.getKeepWorking()) {
+                    if (myPeerInfo.getKeepWorking()) {
                         while (!this.outputStateRef.isEmpty()) {
                             PeerState outputState = this.outputStateRef.poll();
                             outputState.handleMessage(this, this.myPeerInfo, this.inputStream, this.outputStream);

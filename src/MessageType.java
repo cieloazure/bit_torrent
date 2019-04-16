@@ -7,5 +7,6 @@ enum MessageType {
     BITFIELD,
     REQUEST,
     PIECE,
-    FAILED
+    FAILED,
+    LAST_BITFIELD_ACK
 }

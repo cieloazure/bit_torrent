@@ -4,13 +4,15 @@ public class NeighbourPeerInfo extends PeerInfo {
     private NeighbourState neighbourState;
     private Handler context;
     private int requestedPieceIndex;
+    private boolean receivedLastBitfieldAck;
 
     public NeighbourPeerInfo(PeerInfo.Builder b, Handler context) {
         super(b);
         this.context = context;
-        downloadSpeed = 0.0;
-        neighbourState = NeighbourState.UNKNOWN;
-        requestedPieceIndex = -1;
+        this.downloadSpeed = 0.0;
+        this.neighbourState = NeighbourState.UNKNOWN;
+        this.requestedPieceIndex = -1;
+        this.receivedLastBitfieldAck = false;
     }
 
     public int getRequestedPieceIndex() {
@@ -59,8 +61,9 @@ public class NeighbourPeerInfo extends PeerInfo {
         }
         return false;
     }
-    public boolean shutdown(){
-        if(neighbourState == NeighbourState.SHUTDOWN){
+
+    public boolean shutdown() {
+        if (neighbourState == NeighbourState.SHUTDOWN) {
             return true;
         }
         return false;
@@ -98,5 +101,13 @@ public class NeighbourPeerInfo extends PeerInfo {
 
     public void setContextState(PeerState newState, boolean isForInputState, boolean setOtherStateAsNull) {
         this.context.setState(newState, isForInputState, setOtherStateAsNull);
+    }
+
+    public boolean hasReceivedLastBitfieldAck() {
+        return receivedLastBitfieldAck;
+    }
+
+    public void setReceivedLastBitfieldAck(boolean receivedLastBitfieldAck) {
+        this.receivedLastBitfieldAck = receivedLastBitfieldAck;
     }
 }

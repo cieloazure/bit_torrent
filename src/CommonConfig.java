@@ -40,6 +40,10 @@ public class CommonConfig {
         return pieceSize;
     }
 
+    public int getPieces() {
+        return (int) Math.ceil(fileSize / (double) pieceSize);
+    }
+
     public static class Builder {
         private Integer numOfPreferredNeighbours;
         private Integer unchokingInterval;

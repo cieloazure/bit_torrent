@@ -8,24 +8,27 @@ import java.util.BitSet;
 import java.util.Map;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import java.util.logging.StreamHandler;
 
 
 public class SelfPeerInfo extends PeerInfo {
-    protected ScheduledExecutorService schExec;
-    private Boolean hasFile;
+    private ScheduledExecutorService periodicTasksSchExecutor;
+    private ScheduledExecutorService lastBitfieldMessageSchExec;
     private Map<Integer, byte[]> fileChunks;
-    private BitSet requestedbitField;
     private Logger logger;
     private Logger stdOutputLogger;
     private CommonConfig commonConfig;
     private boolean toStdOutput;
     private ConcurrentHashMap<Integer, Integer> requestedPieces; //to track the requested pieces
     private ServerSocket listener;
-    private volatile boolean keepWorking;
+    private boolean keepWorking;
+    private AtomicInteger myNeighboursCount;
+    private boolean hasFile;
 
     public SelfPeerInfo(PeerInfo.Builder b,
                         Boolean hasFile,
@@ -34,7 +37,6 @@ public class SelfPeerInfo extends PeerInfo {
                         BitSet requestedPieces,
                         CommonConfig commonConfig) {
         super(b);
-        this.hasFile = hasFile;
         this.fileChunks = fileChunks;
         this.logger = logger;
         this.stdOutputLogger = Logger.getAnonymousLogger();
@@ -46,6 +48,9 @@ public class SelfPeerInfo extends PeerInfo {
         }
         this.commonConfig = commonConfig;
         this.keepWorking = true;
+        this.lastBitfieldMessageSchExec = Executors.newScheduledThreadPool(1);
+        this.myNeighboursCount = new AtomicInteger(0);
+        this.hasFile = hasFile;
     }
 
     public static String ts() {
@@ -67,13 +72,16 @@ public class SelfPeerInfo extends PeerInfo {
         this.requestedPieces.put(index, value);
     }
 
-    public void setSchExec(ScheduledExecutorService schExec) {
-        this.schExec = schExec;
+    public void setPeriodicTasksSchExecutor(ScheduledExecutorService periodicTasksSchExecutor) {
+        this.periodicTasksSchExecutor = periodicTasksSchExecutor;
+    }
+    public ScheduledExecutorService getPeriodicTasksSchExecutor() {
+        return this.periodicTasksSchExecutor;
     }
 
     public void killAllPeriodicTasks() {
         System.out.println("Killing all periodic tasks");
-        schExec.shutdown();
+        periodicTasksSchExecutor.shutdown();
     }
 
     public Logger getLogger() {
@@ -107,7 +115,6 @@ public class SelfPeerInfo extends PeerInfo {
         dir.mkdirs();
         File f = new File("peer_" + peerID.toString() + "/" + commonConfig.getFileName());
         TreeSet<Integer> pieceIndexes = new TreeSet<>(fileChunks.keySet());
-
         try {
             FileOutputStream outputStream = new FileOutputStream(f);
             for (Integer piece : pieceIndexes) {
@@ -120,7 +127,8 @@ public class SelfPeerInfo extends PeerInfo {
             e.printStackTrace();
         }
     }
-    public CommonConfig getCommonConfig(){
+
+    public CommonConfig getCommonConfig() {
         return this.commonConfig;
     }
 
@@ -128,20 +136,48 @@ public class SelfPeerInfo extends PeerInfo {
         this.listener = listener;
     }
 
-    public void interruptListener(){
+    public void interruptListener() {
         try {
             this.listener.close();
-        }
-        catch (Exception e){
-            System.out.println("Listener closed!");
+        } catch (Exception e) {
+
         }
 
+    }
+
+    public boolean getKeepWorking() {
+        return this.keepWorking;
     }
 
     public void setKeepWorking(boolean keepWorking) {
         this.keepWorking = keepWorking;
     }
-    public boolean getKeepWorking(){
-        return this.keepWorking;
+
+    public ScheduledExecutorService getLastBitfieldMessageSchExec() {
+        return lastBitfieldMessageSchExec;
+    }
+
+    public void setLastBitfieldMessageSchExec(ScheduledExecutorService lastBitfieldMessageSchExec) {
+        this.lastBitfieldMessageSchExec = lastBitfieldMessageSchExec;
+    }
+
+    public int getMyNeighboursCount() {
+        return myNeighboursCount.get();
+    }
+
+    public void setMyNeighboursCount(int myNeighboursCount) {
+        this.myNeighboursCount.set(myNeighboursCount);
+    }
+
+    public int decrementMyNeighboursCount() {
+        return this.myNeighboursCount.decrementAndGet();
+    }
+
+    public boolean isHasFile() {
+        return hasFile;
+    }
+
+    public void setHasFile(boolean hasFile) {
+        this.hasFile = hasFile;
     }
 }

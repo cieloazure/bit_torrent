@@ -48,7 +48,6 @@ public class WaitForHandshakeMessageState implements PeerState {
                 context.setState(new ExpectedToSendHandshakeMessageState(neighbourConnectionsInfo), false, false);
             }
 
-
         } catch (EOFException e) {
             e.printStackTrace();
         } catch (IOException e) {
