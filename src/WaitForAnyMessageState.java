@@ -102,10 +102,11 @@ public class WaitForAnyMessageState implements PeerState {
     private void handleIncomingLastBitfieldAckMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
         myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "] received 'last_bitfield_ack_message' message from peer [" + context.getTheirPeerId() + "]");
 
-        if (!neighbourConnectionsInfo.get(context.getTheirPeerId()).hasReceivedLastBitfieldAck()) {
+        if (!neighbourConnectionsInfo.get(context.getTheirPeerId()).hasReceivedLastBitfieldAck() && neighbourConnectionsInfo.get(context.getTheirPeerId()).isSentLastBitfieldAck()) {
             neighbourConnectionsInfo.get(context.getTheirPeerId()).setReceivedLastBitfieldAck(true);
             int remainingNeighbours = myPeerInfo.decrementMyNeighboursCount();
-            if (remainingNeighbours == 0) {
+            System.out.println("Remaining neighbours "+ remainingNeighbours);
+            if (remainingNeighbours <= 1) {
                 triggerShutdown(myPeerInfo);
 
             }
@@ -116,15 +117,15 @@ public class WaitForAnyMessageState implements PeerState {
         myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "] received 'last_bitfield_message' message from peer [" + context.getTheirPeerId() + "]");
         if (myPeerInfo.isHasFile()){
             int remainingNeighbours = myPeerInfo.decrementMyNeighboursCount();
-            if (remainingNeighbours == 0) {
+            System.out.println("Remaining neighbours "+ remainingNeighbours);
+            if (remainingNeighbours <= 1) {
 
                 triggerShutdown(myPeerInfo);
             }
         }
         BitSet theirBitField = BitSet.valueOf(message.payload);
         neighbourConnectionsInfo.get(context.getTheirPeerId()).setBitField(theirBitField);
-
-        context.setState(new ExpectedToSendLastBitfieldAckMessage(), false, false);
+        context.setState(new ExpectedToSendLastBitfieldAckMessage(neighbourConnectionsInfo), false, false);
     }
 
     private void handleIncomingNotInterestedMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
@@ -214,6 +215,7 @@ public class WaitForAnyMessageState implements PeerState {
             //4.Set the piece index in requestedPieces bitset
             myPeerInfo.setRequestPiecesIndex(pieceToRequest, 0);
         } else {
+            myPeerInfo.combineFileChunks();
             myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "] Has the ENTIRE FILE! Sending not interested message to " + context.getTheirPeerId() + "!");
             context.setState(new ExpectedToSendInterestedOrNotInterestedMessageState(neighbourConnectionsInfo, neighbourConnectionsInfo.get(context.getTheirPeerId()).getBitField(), false), false, false);
         }
@@ -295,11 +297,16 @@ public class WaitForAnyMessageState implements PeerState {
                 for (Integer key : neighbourConnectionsInfo.keySet()) {
                     NeighbourPeerInfo peer = neighbourConnectionsInfo.get(key);
                     if (peer.getContext().connection.isClosed()){
-                        PeriodicTasks pt = new PeriodicTasks(myPeerInfo, neighbourConnectionsInfo);
-                        pt.triggerShutdown();
+//                        PeriodicTasks pt = new PeriodicTasks(myPeerInfo, neighbourConnectionsInfo);
+//                        pt.triggerShutdown();
+                        System.out.println("Connection closed!");
+                        triggerShutdown(myPeerInfo);
+                    }
+                    else{
+                        System.out.println("Connection NOT closed!");
                     }
                     if (peer.getContext() != null && !peer.hasReceivedLastBitfieldAck()) {
-                        peer.setContextState(new ExpectedToSendLastBitfieldMessage(), false, false);
+                        peer.setContextState(new ExpectedToSendLastBitfieldMessage(neighbourConnectionsInfo, myPeerInfo), false, false);
                     }
                 }
             };
@@ -339,7 +346,7 @@ public class WaitForAnyMessageState implements PeerState {
     }
     private void triggerShutdown(SelfPeerInfo myPeerInfo){
         myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "] Proceeding to cancel broadcast of bitfield");
-        myPeerInfo.getLastBitfieldMessageSchExec().shutdownNow();
+        myPeerInfo.getLastBitfieldMessageSchExec().shutdown();
         PeriodicTasks pt = new PeriodicTasks(myPeerInfo, neighbourConnectionsInfo);
         pt.triggerShutdown();
     }

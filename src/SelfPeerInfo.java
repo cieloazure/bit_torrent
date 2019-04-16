@@ -10,6 +10,7 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
@@ -29,6 +30,15 @@ public class SelfPeerInfo extends PeerInfo {
     private boolean keepWorking;
     private AtomicInteger myNeighboursCount;
     private boolean hasFile;
+    private AtomicBoolean hasTriggeredShutDown;
+
+    public boolean isHasTriggeredShutDown() {
+        return hasTriggeredShutDown.get();
+    }
+
+    public void setHasTriggeredShutDown(boolean hasTriggeredShutDown) {
+        this.hasTriggeredShutDown.compareAndSet(false, hasTriggeredShutDown);
+    }
 
     public SelfPeerInfo(PeerInfo.Builder b,
                         Boolean hasFile,
@@ -51,6 +61,7 @@ public class SelfPeerInfo extends PeerInfo {
         this.lastBitfieldMessageSchExec = Executors.newScheduledThreadPool(1);
         this.myNeighboursCount = new AtomicInteger(0);
         this.hasFile = hasFile;
+        this.hasTriggeredShutDown = new AtomicBoolean(false);
     }
 
     public static String ts() {

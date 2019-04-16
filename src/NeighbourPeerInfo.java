@@ -5,6 +5,15 @@ public class NeighbourPeerInfo extends PeerInfo {
     private Handler context;
     private int requestedPieceIndex;
     private boolean receivedLastBitfieldAck;
+    private boolean sentLastBitfieldAck;
+
+    public boolean isSentLastBitfieldAck() {
+        return sentLastBitfieldAck;
+    }
+
+    public void setSentLastBitfieldAck(boolean sentLastBitfieldAck) {
+        this.sentLastBitfieldAck = sentLastBitfieldAck;
+    }
 
     public NeighbourPeerInfo(PeerInfo.Builder b, Handler context) {
         super(b);
@@ -13,6 +22,8 @@ public class NeighbourPeerInfo extends PeerInfo {
         this.neighbourState = NeighbourState.UNKNOWN;
         this.requestedPieceIndex = -1;
         this.receivedLastBitfieldAck = false;
+        this.sentLastBitfieldAck = false;
+
     }
 
     public int getRequestedPieceIndex() {

@@ -1,17 +1,20 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.SocketException;
 import java.util.BitSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 
 public class ExpectedToSendChokeMessageState implements PeerState {
     ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionInfo;
+    SelfPeerInfo myPeerInfo;
     BitSet theirBitfield;
     boolean setState;
 
-    public ExpectedToSendChokeMessageState(ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionInfo) {
+    public ExpectedToSendChokeMessageState(ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionInfo, SelfPeerInfo myPeerInfo) {
         this.neighbourConnectionInfo = neighbourConnectionInfo;
+        this.myPeerInfo = myPeerInfo;
     }
 
     @Override
@@ -37,7 +40,17 @@ public class ExpectedToSendChokeMessageState implements PeerState {
 
             }
 
-        } catch (IOException e) {
+        }catch (SocketException e){
+            if(!myPeerInfo.isHasTriggeredShutDown()){
+                System.out.println("Triggering shutdown from socket exception in ExpectedToSendChokeMessageState");
+                myPeerInfo.getLastBitfieldMessageSchExec().shutdownNow();
+                PeriodicTasks pt = new PeriodicTasks(myPeerInfo, this.neighbourConnectionInfo);
+                myPeerInfo.setHasTriggeredShutDown(true);
+                pt.triggerImmediateShutdown(myPeerInfo);
+            }
+
+        }
+        catch (IOException e) {
             e.printStackTrace();
         }
     }
