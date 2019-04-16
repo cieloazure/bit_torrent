@@ -107,14 +107,25 @@ public class WaitForAnyMessageState implements PeerState {
             if (remainingNeighbours == 0) {
                 myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "] Proceeding to cancel broadcast of bitfield");
                 myPeerInfo.getLastBitfieldMessageSchExec().shutdownNow();
-                myPeerInfo.combineFileChunks();
-                // can be shutdown now.....
+                PeriodicTasks pt = new PeriodicTasks(myPeerInfo, neighbourConnectionsInfo);
+                pt.triggerShutdown();
+
             }
         }
     }
 
     private void handleIncomingLastBitfieldMessage(Handler context, ActualMessage message, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourConnectionsInfo, SelfPeerInfo myPeerInfo) {
         myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "] received 'last_bitfield_message' message from peer [" + context.getTheirPeerId() + "]");
+        if (myPeerInfo.isHasFile()){
+            int remainingNeighbours = myPeerInfo.decrementMyNeighboursCount();
+            if (remainingNeighbours == 0) {
+                myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "] Proceeding to cancel broadcast of bitfield");
+                myPeerInfo.getLastBitfieldMessageSchExec().shutdownNow();
+                PeriodicTasks pt = new PeriodicTasks(myPeerInfo, neighbourConnectionsInfo);
+                pt.triggerShutdown();
+
+            }
+        }
         BitSet theirBitField = BitSet.valueOf(message.payload);
         neighbourConnectionsInfo.get(context.getTheirPeerId()).setBitField(theirBitField);
 
@@ -180,8 +191,8 @@ public class WaitForAnyMessageState implements PeerState {
         theirBitSet = (BitSet) (neighbourConnectionsInfo.get(context.getTheirPeerId())).getBitField().clone();
         missing = (BitSet) (myPeerInfo.getBitField()).clone();
 
-        System.out.println("Server bitset:" + theirBitSet);
-        System.out.println("client bitset:" + missing);
+//        System.out.println("Server bitset:" + theirBitSet);
+//        System.out.println("client bitset:" + missing);
 
         missing.xor(theirBitSet);
 
@@ -192,7 +203,7 @@ public class WaitForAnyMessageState implements PeerState {
         //pieces that are not yet requested.
         toRequest.andNot(myPeerInfo.getRequestedPieces());
 
-        System.out.println("Bitset to be requested" + toRequest);
+//        System.out.println("Bitset to be requested" + toRequest);
 
         // 2. From the set bits choose any random index (which has not been requesssted before)
         if (toRequest.cardinality() > 0) {
@@ -278,13 +289,20 @@ public class WaitForAnyMessageState implements PeerState {
         // If yes, then broadcast the bitfield at a fixed interval of time
         // until, all peers acknowledge of your bitfield
         // If not, then, send a request for another piece
+        System.out.println("Cardinality "+myPeerInfo.getBitField().cardinality());
         if (myPeerInfo.getBitField().cardinality() == myPeerInfo.getCommonConfig().getPieces()) {
+            System.out.println("Got the full file writing it");
+            myPeerInfo.combineFileChunks();
             // schedule a service which sends the bitfield message periodically until the task is cancelled
             Runnable task = () -> {
                 myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "] Broadcasting 'last_bitfield_message' message");
 
                 for (Integer key : neighbourConnectionsInfo.keySet()) {
                     NeighbourPeerInfo peer = neighbourConnectionsInfo.get(key);
+                    if (peer.getContext().connection.isClosed()){
+                        PeriodicTasks pt = new PeriodicTasks(myPeerInfo, neighbourConnectionsInfo);
+                        pt.triggerShutdown();
+                    }
                     if (peer.getContext() != null && !peer.hasReceivedLastBitfieldAck()) {
                         peer.setContextState(new ExpectedToSendLastBitfieldMessage(), false, false);
                     }
@@ -293,6 +311,7 @@ public class WaitForAnyMessageState implements PeerState {
 
             myPeerInfo.getLastBitfieldMessageSchExec().scheduleAtFixedRate(task, 10, 10, TimeUnit.SECONDS);
         } else {
+
             sendRequestMessage(context, neighbourConnectionsInfo, myPeerInfo);
         }
     }

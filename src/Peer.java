@@ -133,6 +133,9 @@ public class Peer {
             String fileName = in.readLine().split(" ")[1].trim();
             long fileSize = Long.parseLong(in.readLine().split(" ")[1]);
             long pieceSize = Long.parseLong(in.readLine().split(" ")[1]);
+            if (pieceSize > 1400){
+                pieceSize = 1400;
+            }
 
             configBuilder
                     .withNumOfPreferredNeighboursAs(numOfPreferredNeighbours)

@@ -14,12 +14,17 @@ public class PeriodicTasks {
     private Integer peerCount;
     private List<Integer> kPreferred = Collections.synchronizedList(new ArrayList<>());
     private int optimisticallyUnchokedPeerID;
+    public ScheduledExecutorService schExec = Executors.newScheduledThreadPool(3);
 
     PeriodicTasks(SelfPeerInfo myPeerInfo, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourInfo, Integer peerCount) {
         this.myPeerInfo = myPeerInfo;
         this.neighbourInfo = neighbourInfo;
         this.peerCount = peerCount;
         this.optimisticallyUnchokedPeerID = 0;
+    }
+    PeriodicTasks(SelfPeerInfo myPeerInfo, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourInfo){
+        this.myPeerInfo = myPeerInfo;
+        this.neighbourInfo = neighbourInfo;
     }
 
     /**
@@ -160,6 +165,16 @@ public class PeriodicTasks {
      */
     public void shutdownPeer() {
         try {
+            for (Integer key : neighbourInfo.keySet()) {
+                myPeerInfo.log("Peer "+key);
+                if (neighbourInfo.get(key).getBitField()!= null){
+                    System.out.println("Cardinality "+neighbourInfo.get(key).getBitField().cardinality());
+                }
+                else {
+                    System.out.println("Peer "+key+" is null!!");
+                }
+
+            }
             int totalPiecesExpected = this.myPeerInfo.getCommonConfig().getPieces();
             System.out.printf("[PEER " + this.myPeerInfo.getPeerID() + "][SHUTDOWN] " + this.myPeerInfo.getBitField().cardinality() + "/" + totalPiecesExpected);
             if (this.myPeerInfo.getBitField().cardinality() == totalPiecesExpected) {
@@ -191,18 +206,17 @@ public class PeriodicTasks {
     }
 
     public void killAll() {
-        this.myPeerInfo.combineFileChunks();
         this.myPeerInfo.interruptListener();
-        myPeerInfo.setKeepWorking(false);
+        this.myPeerInfo.setKeepWorking(false);
+        System.out.println("Size of neighbor peer "+this.neighbourInfo.size());
         for (Integer key : neighbourInfo.keySet()) {
-            Handler context = neighbourInfo.get(key).getContext();
-            if (context != null) {
-                context.setState(new ExpectedToSendFailedMessageState(),
-                        false, false);
-                context.closeConnection();
-            }
+            this.neighbourInfo.get(key).getContext().closeConnection();
+            this.neighbourInfo.get(key).getContext().setState(new ExpectedToSendFailedMessageState(),
+                    false, false);
         }
         this.myPeerInfo.killAllPeriodicTasks();
+        this.myPeerInfo.getLastBitfieldMessageSchExec().shutdown();
+        schExec.shutdown();
     }
 
     /**
@@ -220,7 +234,7 @@ public class PeriodicTasks {
         // TODO: Should there be a thread for the termination check as well?
         // TODO: (which periodically checks if everyone has the file and then triggers a graceful shutdown)
 
-        ScheduledExecutorService schExec = Executors.newScheduledThreadPool(3);
+
         myPeerInfo.setPeriodicTasksSchExecutor(schExec);
 
         Runnable selectTopK = () -> {
@@ -229,9 +243,8 @@ public class PeriodicTasks {
         Runnable selectOptUnchoked = () -> {
             selectOptimisticallyUnchoked();
         };
-        Runnable shutdown = () -> {
-            shutdownPeer();
-        };
+
+
         schExec.scheduleAtFixedRate(selectTopK,
                 3,
                 topKinterval,
@@ -246,7 +259,20 @@ public class PeriodicTasks {
 //                3,
 //                5,
 //                TimeUnit.SECONDS);
+
     }
+
+    public void triggerShutdown(){
+        System.out.println("Triggering shutdown");
+        Runnable shutdown = () -> {
+            shutdownPeer();
+        };
+        myPeerInfo.getPeriodicTasksSchExecutor().scheduleAtFixedRate(shutdown,
+                                                30,
+                                                10,
+                                                TimeUnit.SECONDS);
+    }
+
 
 }
 

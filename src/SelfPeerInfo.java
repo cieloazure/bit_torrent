@@ -28,6 +28,7 @@ public class SelfPeerInfo extends PeerInfo {
     private ServerSocket listener;
     private boolean keepWorking;
     private AtomicInteger myNeighboursCount;
+    private boolean hasFile;
 
     public SelfPeerInfo(PeerInfo.Builder b,
                         Boolean hasFile,
@@ -49,6 +50,7 @@ public class SelfPeerInfo extends PeerInfo {
         this.keepWorking = true;
         this.lastBitfieldMessageSchExec = Executors.newScheduledThreadPool(1);
         this.myNeighboursCount = new AtomicInteger(0);
+        this.hasFile = hasFile;
     }
 
     public static String ts() {
@@ -72,6 +74,9 @@ public class SelfPeerInfo extends PeerInfo {
 
     public void setPeriodicTasksSchExecutor(ScheduledExecutorService periodicTasksSchExecutor) {
         this.periodicTasksSchExecutor = periodicTasksSchExecutor;
+    }
+    public ScheduledExecutorService getPeriodicTasksSchExecutor() {
+        return this.periodicTasksSchExecutor;
     }
 
     public void killAllPeriodicTasks() {
@@ -165,5 +170,13 @@ public class SelfPeerInfo extends PeerInfo {
 
     public int decrementMyNeighboursCount() {
         return this.myNeighboursCount.decrementAndGet();
+    }
+
+    public boolean isHasFile() {
+        return hasFile;
+    }
+
+    public void setHasFile(boolean hasFile) {
+        this.hasFile = hasFile;
     }
 }
