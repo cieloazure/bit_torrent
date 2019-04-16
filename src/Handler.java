@@ -106,10 +106,11 @@ class Handler {
     }
     public void closeConnection(){
         try {
+            System.out.println("Closing all connections");
             this.connection.close();
         }
         catch (Exception e){
-
+            System.out.println("Closed the socket!");
         }
 
     }

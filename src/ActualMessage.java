@@ -68,13 +68,11 @@ class ActualMessage implements Message, Serializable {
         byte[] messageLengthByteArr = Arrays.copyOfRange(message, 0, 4);
         ByteBuffer messageLengthBuffer = ByteBuffer.allocate(4).wrap(messageLengthByteArr);
         this.messageLength = messageLengthBuffer.getInt(); // 2
-        System.out.println("Message length:" + this.messageLength);
         if (messageLength < 0) {
             this.isValid = false;
             return;
         }
         int messageTypeInt = (int) message[4];
-        System.out.println("Message type:" + messageTypeInt);
         if (messageTypeInt < 0 || messageTypeInt > messageValues.length) {
             this.isValid = false;
             return;

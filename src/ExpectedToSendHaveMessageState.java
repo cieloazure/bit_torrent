@@ -20,7 +20,7 @@ public class ExpectedToSendHaveMessageState implements PeerState {
             ActualMessage message = new ActualMessage(MessageType.HAVE, haveIndexBytes);
             outputStream.write(message.serialize());
             outputStream.flush();
-//            myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Sent HAVE message for piece index " + this.haveIndex + " to " + context.getTheirPeerId());
+            myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Sent HAVE message for piece index " + this.haveIndex + " to " + context.getTheirPeerId());
         } catch (IOException e) {
             e.printStackTrace();
         }

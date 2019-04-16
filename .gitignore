@@ -8,3 +8,4 @@ bit_torrent.ipr
 bit_torrent.iws
 **/*/lineitem.tbl
 lineitem.tbl
+*.class

@@ -1,9 +1,6 @@
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * Class that holds the periodic tasks for selecting K preferred neighbours and 1 optimistically unchoked neighbour
@@ -15,12 +12,16 @@ public class PeriodicTasks {
     private Integer peerCount;
     private List<Integer> kPreferred = Collections.synchronizedList(new ArrayList<>());
     private int optimisticallyUnchokedPeerID;
+    private boolean sendBF;
+    private ScheduledFuture kPref;
+    private ScheduledFuture optUnch;
 
     PeriodicTasks(SelfPeerInfo myPeerInfo, ConcurrentHashMap<Integer, NeighbourPeerInfo> neighbourInfo, Integer peerCount) {
         this.myPeerInfo = myPeerInfo;
         this.neighbourInfo = neighbourInfo;
         this.peerCount = peerCount;
         this.optimisticallyUnchokedPeerID = 0;
+        this.sendBF = true;
     }
 
     /**
@@ -32,10 +33,6 @@ public class PeriodicTasks {
             // This TreeMap stores the mapping of download rate to an ArrayList of peerIDs
             // Using array list so as to deal with the corner case of two peers having the same download rate
             Map<Double, ArrayList<Integer>> downloadRateToPeerId = new TreeMap<>();
-
-            int totalPieces = (int)(this.myPeerInfo.getCommonConfig().getFileSize()/this.myPeerInfo.getCommonConfig().getPieceSize());
-            int peersWithCompleteFile = 0;
-            boolean canShutdown = false;
 
             for (Integer key : neighbourInfo.keySet()) {
 
@@ -53,8 +50,8 @@ public class PeriodicTasks {
 
 
             if (downloadRateToPeerId.size() == 0) {
-                killAll();
-//                myPeerInfo.log("DEBUG: downloadRateToPeerId is empty");
+//                killAll();
+                myPeerInfo.log("DEBUG: downloadRateToPeerId is empty");
             }
             Set<Map.Entry<Double, ArrayList<Integer>>> set = downloadRateToPeerId.entrySet();
             Set<Integer> selectedK = new HashSet<>();
@@ -136,7 +133,7 @@ public class PeriodicTasks {
 
                 if (!kPreferred.contains(optimisticallyUnchokedPeerID)) {
                     System.out.println("DEBUG: Choke this->" + optimisticallyUnchokedPeerID);
-                    if (optimisticallyUnchokedPeerID==0){
+                    if (optimisticallyUnchokedPeerID!=0){
                         neighbourInfo.get(optimisticallyUnchokedPeerID).setContextState(new ExpectedToSendChokeMessageState(neighbourInfo), false, false);
                     }
 
@@ -166,29 +163,53 @@ public class PeriodicTasks {
     public void shutdownPeer() {
         try {
 
-            int totalPieces = (int)(this.myPeerInfo.getCommonConfig().getFileSize()/this.myPeerInfo.getCommonConfig().getPieceSize());
-            int peersWithCompleteFile = 0;
-
             for (Integer key : neighbourInfo.keySet()) {
-                //if the Peer itself has received all pieces, check if the neighbors have received all pieces.
-                if(this.myPeerInfo.getBitField().cardinality() == totalPieces) {
-                    //if neighbour peer has all pieces
-                    if(neighbourInfo.get(key).getBitField() != null) {
-                        if(neighbourInfo.get(key).getBitField().cardinality() == totalPieces)
-                            peersWithCompleteFile ++;
+                    myPeerInfo.log("Peer "+key);
+                    if (neighbourInfo.get(key).getBitField()!= null){
+                        System.out.println("Thread Cardinality "+neighbourInfo.get(key).getBitField().cardinality());
                     }
-                }
-            }
+                    else {
+                        System.out.println("Peer "+key+" is null!!");
+                    }
 
-            if(peersWithCompleteFile == neighbourInfo.size()) {
-                killAll();
-
-            }
-            else{
-                for (Integer key : neighbourInfo.keySet()) {
-                    System.out.println("Peer "+key+" is messing up");
                 }
-            }
+
+
+//            int totalPieces = (int)(this.myPeerInfo.getCommonConfig().getFileSize()/this.myPeerInfo.getCommonConfig().getPieceSize());
+//            int peersWithCompleteFile = 0;
+//
+//            for (Integer key : neighbourInfo.keySet()) {
+//                //if the Peer itself has received all pieces, check if the neighbors have received all pieces.
+//                if(this.myPeerInfo.getBitField().cardinality() == totalPieces) {
+//                    //if neighbour peer has all pieces
+//                        if(neighbourInfo.get(key).getBitField().cardinality() == totalPieces)
+//                            peersWithCompleteFile ++;
+//                }
+//            }
+//            System.out.println("My cardinality "+ this.myPeerInfo.getBitField().cardinality());
+//            System.out.println("peersWithCompleteFile "+peersWithCompleteFile);
+//            if(peersWithCompleteFile == this.neighbourInfo.size()) {
+//                Thread.sleep(500);
+//                System.out.println("I'm in if");
+//                myPeerInfo.log("SHUTTING DOWN!");
+//                this.myPeerInfo.interruptListener();
+//                this.myPeerInfo.setKeepWorking(false);
+//                System.out.println("Size of neighbor peer "+this.neighbourInfo.size());
+//                for (Integer key : neighbourInfo.keySet()) {
+//                    this.neighbourInfo.get(key).getContext().closeConnection();
+//                    this.neighbourInfo.get(key).getContext().setState(new ExpectedToSendFailedMessageState(),
+//                            false, false);
+//                }
+//                this.myPeerInfo.schExec.shutdown();
+//
+//            }
+//            else{
+//                System.out.println("I'm in else");
+//                for (Integer key : this.neighbourInfo.keySet()) {
+//                    System.out.println("Peer "+key+" is messing up");
+//                    System.out.println("Cardinality "+neighbourInfo.get(key).getBitField().cardinality());
+//                }
+//            }
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -197,15 +218,18 @@ public class PeriodicTasks {
 
     }
     public void killAll(){
-        this.myPeerInfo.combineFileChunks();
+
         this.myPeerInfo.interruptListener();
         myPeerInfo.setKeepWorking(false);
+        System.out.println("Size of neighbor peer "+neighbourInfo.size());
         for (Integer key : neighbourInfo.keySet()) {
             neighbourInfo.get(key).getContext().setState(new ExpectedToSendFailedMessageState(),
                     false, false);
             neighbourInfo.get(key).getContext().closeConnection();
         }
-        this.myPeerInfo.killAllPeriodicTasks();
+        this.kPref.cancel(true);
+        this.optUnch.cancel(true);
+        this.myPeerInfo.schExec.shutdown();
     }
     /**
      * This function triggers the threads that periodically perform the following two actions-
@@ -234,19 +258,19 @@ public class PeriodicTasks {
         Runnable shutdown = () -> {
             shutdownPeer();
         };
-        schExec.scheduleAtFixedRate(selectTopK,
-                2,
+        kPref = schExec.scheduleAtFixedRate(selectTopK,
+                5,
                 topKinterval,
                 TimeUnit.SECONDS);
 
-        schExec.scheduleAtFixedRate(selectOptUnchoked,
-                2,
+        optUnch = schExec.scheduleAtFixedRate(selectOptUnchoked,
+                5,
                 optUnchokedInt,
                 TimeUnit.SECONDS);
 
         schExec.scheduleAtFixedRate(shutdown,
                 10,
-                2,
+                5,
                 TimeUnit.SECONDS);
 
 

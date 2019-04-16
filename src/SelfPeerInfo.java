@@ -25,7 +25,7 @@ public class SelfPeerInfo extends PeerInfo {
     private boolean toStdOutput;
     private ConcurrentHashMap<Integer, Integer> requestedPieces; //to track the requested pieces
     private ServerSocket listener;
-    private boolean keepWorking;
+    private volatile boolean keepWorking;
 
     public SelfPeerInfo(PeerInfo.Builder b,
                         Boolean hasFile,
@@ -72,6 +72,7 @@ public class SelfPeerInfo extends PeerInfo {
     }
 
     public void killAllPeriodicTasks() {
+        System.out.println("Killing all periodic tasks");
         schExec.shutdown();
     }
 
@@ -132,7 +133,7 @@ public class SelfPeerInfo extends PeerInfo {
             this.listener.close();
         }
         catch (Exception e){
-
+            System.out.println("Listener closed!");
         }
 
     }
