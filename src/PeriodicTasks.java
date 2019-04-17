@@ -275,7 +275,7 @@ public class PeriodicTasks {
         };
         PeriodicTasks.pause = true;
         myPeerInfo.getPeriodicTasksSchExecutor().scheduleAtFixedRate(shutdown,
-                                                20,
+                                                30,
                                                 10,
                                                 TimeUnit.SECONDS);
     }
