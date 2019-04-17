@@ -118,7 +118,7 @@ public class WaitForAnyMessageState implements PeerState {
         if (myPeerInfo.isHasFile()){
             int remainingNeighbours = myPeerInfo.decrementMyNeighboursCount();
             System.out.println("Remaining neighbours "+ remainingNeighbours);
-            if (remainingNeighbours <= 1) {
+            if (remainingNeighbours ==0) {
 
                 triggerShutdown(myPeerInfo);
             }
