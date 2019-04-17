@@ -20,7 +20,7 @@ public class ExpectedToSendLastBitfieldMessage implements PeerState {
             out.flush();
         }catch (SocketException e){
             if(!myPeerInfo.isHasTriggeredShutDown()){
-                System.out.println("Triggering shutdown from socket exception in ExpectedToSendLastBitfieldMessage");
+//                System.out.println("Triggering shutdown from socket exception in ExpectedToSendLastBitfieldMessage");
                 myPeerInfo.getLastBitfieldMessageSchExec().shutdownNow();
                 PeriodicTasks pt = new PeriodicTasks(myPeerInfo, this.neighbourConnectionInfo);
                 myPeerInfo.setHasTriggeredShutDown(true);

@@ -105,7 +105,6 @@ public class WaitForAnyMessageState implements PeerState {
         if (!neighbourConnectionsInfo.get(context.getTheirPeerId()).hasReceivedLastBitfieldAck() && neighbourConnectionsInfo.get(context.getTheirPeerId()).isSentLastBitfieldAck()) {
             neighbourConnectionsInfo.get(context.getTheirPeerId()).setReceivedLastBitfieldAck(true);
             int remainingNeighbours = myPeerInfo.decrementMyNeighboursCount();
-            System.out.println("Remaining neighbours "+ remainingNeighbours);
             if (remainingNeighbours <= 1) {
                 triggerShutdown(myPeerInfo);
 
@@ -117,7 +116,6 @@ public class WaitForAnyMessageState implements PeerState {
         myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "] received 'last_bitfield_message' message from peer [" + context.getTheirPeerId() + "]");
         if (myPeerInfo.isHasFile()){
             int remainingNeighbours = myPeerInfo.decrementMyNeighboursCount();
-            System.out.println("Remaining neighbours "+ remainingNeighbours);
             if (remainingNeighbours ==0) {
 
                 triggerShutdown(myPeerInfo);
@@ -325,7 +323,7 @@ public class WaitForAnyMessageState implements PeerState {
         byte[] payload = message.getPayload();
         int haveIndex = ByteBuffer.allocate(payload.length).wrap(payload).getInt();
         neighbourConnectionsInfo.get(context.getTheirPeerId()).setBitFieldIndex(haveIndex);
-        myPeerInfo.log("Peer [" + myPeerInfo.getPeerID() + "] received 'have' message from peer [" + context.getTheirPeerId() + "] for the piece" + haveIndex);
+        myPeerInfo.log("Peer [" + myPeerInfo.getPeerID() + "] received 'have' message from peer [" + context.getTheirPeerId() + "] for the piece " + haveIndex);
 
 //        if (!myPeerInfo.getBitField().get(haveIndex)) {
         context.setState(new ExpectedToSendInterestedOrNotInterestedMessageState(neighbourConnectionsInfo, neighbourConnectionsInfo.get(context.getTheirPeerId()).getBitField(), false), false, false);
@@ -345,7 +343,7 @@ public class WaitForAnyMessageState implements PeerState {
 
     }
     private void triggerShutdown(SelfPeerInfo myPeerInfo){
-        myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "] Proceeding to cancel broadcast of bitfield");
+//        myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "] Proceeding to cancel broadcast of bitfield");
         myPeerInfo.getLastBitfieldMessageSchExec().shutdown();
         PeriodicTasks pt = new PeriodicTasks(myPeerInfo, neighbourConnectionsInfo);
         pt.triggerShutdown();

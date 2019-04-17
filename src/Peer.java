@@ -42,8 +42,6 @@ public class Peer {
 
         // Build myPeerInfo object
         myPeerInfo = peerInfoBuilder.buildSelfPeerInfo();
-        System.out.println("Requested pieces set to");
-        System.out.println(myPeerInfo.getRequestedPieces());
         // Enable std output logging
         myPeerInfo.enableStdOutputLogging();
 
@@ -80,7 +78,6 @@ public class Peer {
             String neighbourHostName = splitLine[1];
             int neighbourPortNumber = Integer.parseInt(splitLine[2]);
 
-            System.out.println("Calling the parsePeerInfoConfigToMakeConnections method with linePeerId " + linePeerId);
             while (linePeerId != myPeerInfo.getPeerID()) {
                 myPeerInfo.log("linePeerId:myPeerInfo.getPeerID() " + linePeerId + " : " + myPeerInfo.getPeerID());
                 // Log previous state
@@ -169,11 +166,6 @@ public class Peer {
                     .withPortNumber(portNumber);
 
             boolean hasFile = Integer.parseInt(splitLine[3]) == 1;
-            if (hasFile) {
-                System.out.println("I have the file!");
-            } else {
-                System.out.println("I DO NOT have the file!");
-            }
 
             builder.withHasFile(hasFile);
 
@@ -185,8 +177,6 @@ public class Peer {
                 for (int i = 0; i < pieces; i++) {
                     bitField.set(i);
                 }
-//                System.out.println("Tushar debug");
-                System.out.println(commonConfig.getFileName());
                 Map<Integer, byte[]> fileChunks = splitFileIntoChunks(commonConfig.getFileName(), commonConfig.getFileSize(), commonConfig.getPieceSize());
                 builder.withBitField(bitField)
                         .withFileChunks(fileChunks);

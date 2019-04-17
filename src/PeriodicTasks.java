@@ -93,7 +93,7 @@ public class PeriodicTasks {
                     // Check for choked or unchoked state here and take action accordingly
                     // The below code can be uncommented and used once  isChoked() function is in place and
                     // the handling of choked unchoked messages is done
-                    System.out.println("Check the status of the piece " + neighbourInfo.get(temp).getNeighbourState());
+//                    System.out.println("Check the status of the piece " + neighbourInfo.get(temp).getNeighbourState());
                     if (neighbourInfo.get(temp).isChoked()) {
 //                    myPeerInfo.log("DEBUG: Unchoking " + temp);
                         neighbourInfo.get(temp).setContextState(new ExpectedToSendUnchokeMessageState(neighbourInfo), false, false);
@@ -171,16 +171,7 @@ public class PeriodicTasks {
      */
     public void shutdownPeer() {
         try {
-            for (Integer key : neighbourInfo.keySet()) {
-                myPeerInfo.log("Peer "+key);
-                if (neighbourInfo.get(key).getBitField()!= null){
-                    System.out.println("Cardinality "+neighbourInfo.get(key).getBitField().cardinality());
-                }
-                else {
-                    System.out.println("Peer "+key+" is null!!");
-                }
 
-            }
             int totalPiecesExpected = this.myPeerInfo.getCommonConfig().getPieces();
             System.out.printf("[PEER " + this.myPeerInfo.getPeerID() + "][SHUTDOWN] " + this.myPeerInfo.getBitField().cardinality() + "/" + totalPiecesExpected);
             if (this.myPeerInfo.getBitField().cardinality() == totalPiecesExpected) {
@@ -214,7 +205,6 @@ public class PeriodicTasks {
     public void killAll() {
         this.myPeerInfo.interruptListener();
         this.myPeerInfo.setKeepWorking(false);
-        System.out.println("Size of neighbor peer "+this.neighbourInfo.size());
         for (Integer key : neighbourInfo.keySet()) {
             this.neighbourInfo.get(key).getContext().closeConnection();
             this.neighbourInfo.get(key).getContext().setState(new ExpectedToSendFailedMessageState(),

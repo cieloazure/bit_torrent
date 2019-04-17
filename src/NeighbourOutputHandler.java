@@ -39,10 +39,10 @@ class NeighbourOutputHandler extends Handler implements Runnable {
                     }
                 }
             } catch (InterruptedException e) {
-                System.out.println("Output handler close");
+//                System.out.println("Output handler close");
                 e.printStackTrace();
             }
         }
-        System.out.println("Output handler close after while");
+//        System.out.println("Output handler close after while");
     }
 }

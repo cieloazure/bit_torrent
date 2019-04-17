@@ -91,7 +91,7 @@ public class SelfPeerInfo extends PeerInfo {
     }
 
     public void killAllPeriodicTasks() {
-        System.out.println("Killing all periodic tasks");
+//        System.out.println("Killing all periodic tasks");
         periodicTasksSchExecutor.shutdown();
     }
 
@@ -100,7 +100,7 @@ public class SelfPeerInfo extends PeerInfo {
     }
 
     public byte[] getFileChunk(int index) {
-        System.out.println("Index is " + index);
+//        System.out.println("Index is " + index);
         return this.fileChunks.get(index);
     }
 
