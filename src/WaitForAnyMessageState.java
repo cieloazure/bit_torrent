@@ -267,7 +267,7 @@ public class WaitForAnyMessageState implements PeerState {
         myPeerInfo.setRequestPiecesIndex(gotPieceIndex, 1);
         // 3.1. Update file chunk index
         myPeerInfo.setFileChunkIndex(gotPieceIndex, message.getPayload());
-        validatePeertoPeer(myPeerInfo.getPeerID(), context.getTheirPeerId(), gotPieceIndex);
+//        validatePeertoPeer(myPeerInfo.getPeerID(), context.getTheirPeerId(), gotPieceIndex);
         myPeerInfo.log("[Peer [" + myPeerInfo.getPeerID() + "] has downloaded the piece " + gotPieceIndex + " from Peer [" + context.getTheirPeerId() + "]. Now number of pieces it has is " + myPeerInfo.getBitField().cardinality());
 
         // 4. Send a have message to all the neighbouring peers
