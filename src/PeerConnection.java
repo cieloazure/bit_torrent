@@ -102,7 +102,7 @@ public class PeerConnection {
 
                     NeighbourPeerInfo neighbourPeerInfo = builder.buildNeighbourPeerInfo();
                     this.neighbourConnectionsInfo.putIfAbsent(peerId, neighbourPeerInfo);
-                    if(Boolean.parseBoolean(splitLine[3])) {
+                    if(splitLine[3].equals("1")) {
                         System.out.println("Setting bf act boolean true for "+peerId);
                         this.neighbourConnectionsInfo.get(peerId).setSentLastBitfieldAck(true);
                     }
