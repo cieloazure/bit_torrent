@@ -19,7 +19,6 @@ public class WaitForBitFieldMessageState implements PeerState {
     @Override
     public void handleMessage(Handler context, SelfPeerInfo myPeerInfo, DataInputStream inputStream, DataOutputStream outputStream) {
         try {
-            myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "] Waiting for bitfield message....with reply:" + this.reply + " from peer id " + context.getTheirPeerId());
 
             byte[] length = new byte[4];
             inputStream.read(length, 0, 4);

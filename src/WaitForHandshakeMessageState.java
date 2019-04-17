@@ -16,7 +16,6 @@ public class WaitForHandshakeMessageState implements PeerState {
     @Override
     public void handleMessage(Handler context, SelfPeerInfo myPeerInfo, DataInputStream inputStream, DataOutputStream outputStream) {
         try {
-            myPeerInfo.log("[PEER:" + myPeerInfo.getPeerID() + "]Waiting for handshake message....with reply:" + this.reply + " from " + context.getHostName() + ":" + context.getPortNumber() + " peer id:" + context.getTheirPeerId());
 
             byte[] messageBytes = new byte[32];
             inputStream.readFully(messageBytes);
