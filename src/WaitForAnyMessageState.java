@@ -214,7 +214,7 @@ public class WaitForAnyMessageState implements PeerState {
             myPeerInfo.setRequestPiecesIndex(pieceToRequest, 0);
         } else {
             myPeerInfo.combineFileChunks();
-            myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "] Has the ENTIRE FILE! Sending not interested message to " + context.getTheirPeerId() + "!");
+//            myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "] Has the ENTIRE FILE! Sending not interested message to " + context.getTheirPeerId() + "!");
             context.setState(new ExpectedToSendInterestedOrNotInterestedMessageState(neighbourConnectionsInfo, neighbourConnectionsInfo.get(context.getTheirPeerId()).getBitField(), false), false, false);
         }
     }
@@ -268,7 +268,7 @@ public class WaitForAnyMessageState implements PeerState {
         // 3.1. Update file chunk index
         myPeerInfo.setFileChunkIndex(gotPieceIndex, message.getPayload());
         validatePeertoPeer(myPeerInfo.getPeerID(), context.getTheirPeerId(), gotPieceIndex);
-        myPeerInfo.log("[Peer [" + myPeerInfo.getPeerID() + "] has downloaded the piece" + gotPieceIndex + " from Peer [" + context.getTheirPeerId() + "]. Now number of pieces it has is " + myPeerInfo.getBitField().cardinality());
+        myPeerInfo.log("[Peer [" + myPeerInfo.getPeerID() + "] has downloaded the piece " + gotPieceIndex + " from Peer [" + context.getTheirPeerId() + "]. Now number of pieces it has is " + myPeerInfo.getBitField().cardinality());
 
         // 4. Send a have message to all the neighbouring peers
         for (Integer peerId : neighbourConnectionsInfo.keySet()) {
@@ -284,10 +284,9 @@ public class WaitForAnyMessageState implements PeerState {
         // If yes, then broadcast the bitfield at a fixed interval of time
         // until, all peers acknowledge of your bitfield
         // If not, then, send a request for another piece
-        System.out.println("Cardinality "+myPeerInfo.getBitField().cardinality());
         if (myPeerInfo.getBitField().cardinality() == myPeerInfo.getCommonConfig().getPieces()) {
-            System.out.println("Got the full file writing it");
             myPeerInfo.combineFileChunks();
+            myPeerInfo.log("[Peer [" + myPeerInfo.getPeerID() + "] has downloaded the complete file");
             // schedule a service which sends the bitfield message periodically until the task is cancelled
             Runnable task = () -> {
                 myPeerInfo.log("[Peer:" + myPeerInfo.getPeerID() + "] Broadcasting 'last_bitfield_message' message");

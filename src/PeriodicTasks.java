@@ -136,7 +136,6 @@ public class PeriodicTasks {
                     optUnchokedPeer = optUnchokedPool.get(rand.nextInt(optUnchokedPool.size()));
 
                     if (!kPreferred.contains(optimisticallyUnchokedPeerID)) {
-                        System.out.println("DEBUG: Choke this->" + optimisticallyUnchokedPeerID);
                         if (optimisticallyUnchokedPeerID == 0) {
                             NeighbourPeerInfo neighbourPeerInfo = neighbourInfo.get(optimisticallyUnchokedPeerID);
                             if (neighbourPeerInfo != null && neighbourPeerInfo.getContext() != null) {
@@ -150,7 +149,6 @@ public class PeriodicTasks {
                     optimisticallyUnchokedPeerID = optUnchokedPeer;
 
                     // Unchoke the peer with this peer id
-                    System.out.println("DEBUG: " + optUnchokedPeer + ": Unchoke me! " + optimisticallyUnchokedPeerID);
                     myPeerInfo.log("Peer [" + myPeerInfo.getPeerID() + "] has the optimistically unchoked neighbor [" + optimisticallyUnchokedPeerID + "]");
                     neighbourInfo.get(optimisticallyUnchokedPeerID).setContextState(new ExpectedToSendUnchokeMessageState(neighbourInfo), false, false);
 
