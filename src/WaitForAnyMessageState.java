@@ -296,11 +296,7 @@ public class WaitForAnyMessageState implements PeerState {
                     if (peer.getContext().connection.isClosed()){
 //                        PeriodicTasks pt = new PeriodicTasks(myPeerInfo, neighbourConnectionsInfo);
 //                        pt.triggerShutdown();
-                        System.out.println("Connection closed!");
                         triggerShutdown(myPeerInfo);
-                    }
-                    else{
-                        System.out.println("Connection NOT closed!");
                     }
                     if (peer.getContext() != null && !peer.hasReceivedLastBitfieldAck()) {
                         peer.setContextState(new ExpectedToSendLastBitfieldMessage(neighbourConnectionsInfo, myPeerInfo), false, false);
